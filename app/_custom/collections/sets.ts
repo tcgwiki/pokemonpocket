@@ -49,6 +49,9 @@ export const Sets: CollectionConfig = {
          type: "relationship",
          relationTo: "cards",
          hasMany: true,
+         admin: {
+            isSortable: true,
+         },
       },
       {
          name: "checksum",
