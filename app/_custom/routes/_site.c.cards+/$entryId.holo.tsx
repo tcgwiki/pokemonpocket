@@ -1,8 +1,8 @@
-import css from "@mountainpass/react-pokemon-cards/dist/css/cards.css";
 import { Link } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
 
+import css from "./components/cards.css";
 import { ShinyCardRotate } from "./components/ShinyCard";
 import { useEntryLoaderData } from "../_site.c.cards+/$entryId";
 
@@ -10,7 +10,7 @@ export const links = () => [{ rel: "stylesheet", href: css }];
 
 export default function Holocard() {
    const data = useEntryLoaderData();
-   console.log("Data: ", data);
+   // console.log("Data: ", data);
 
    const card = data?.entry?.data.card as Card;
 
@@ -20,7 +20,7 @@ export default function Holocard() {
    return (
       <Link
          // make this a modal
-         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]"
          to=".."
       >
          <ShinyCardRotate

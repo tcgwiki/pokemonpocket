@@ -17,7 +17,7 @@ export function CardsMain({ data }: { data: Card }) {
          <Link to="holo">
             <ShinyCard
                rarity={rarity}
-               style={{ width: "367px", height: "512px" }}
+               style={{ width: "288px", height: "402px" }}
             >
                <Image
                   className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4"
