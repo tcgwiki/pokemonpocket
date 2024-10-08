@@ -14,13 +14,15 @@ export function CardsMain({ data }: { data: Card }) {
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <Link to="holo">
+         <Link
+            to="holo"
+            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4 align-middle"
+         >
             <ShinyCard
                rarity={rarity}
-               style={{ width: "288px", height: "402px" }}
+               // style={{ width: "288px", height: "402px" }}
             >
                <Image
-                  className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4"
                   url={
                      card.image?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
