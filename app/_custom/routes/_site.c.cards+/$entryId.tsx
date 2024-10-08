@@ -50,9 +50,10 @@ export function useEntryLoaderData() {
       "_custom/routes/_site.c.cards+/$entryId",
    );
 }
-interface EntryData {
+export interface EntryCardData {
    data: {
       card: Card;
+      relatedCards: { docs: [{ cards: Card[] }] };
    };
 }
 
@@ -63,7 +64,7 @@ export default function EntryPage() {
       <>
          <Entry
             customComponents={SECTIONS}
-            customData={(entry as EntryData)?.data.card}
+            customData={(entry as EntryCardData)?.data}
          />
          <Outlet />
       </>
@@ -71,7 +72,30 @@ export default function EntryPage() {
 }
 
 const QUERY = gql`
-   query ($entryId: String!) {
+   query ($entryId: String!, $jsonEntryId: JSON) {
+      relatedCards: allPokemon(where: { cards: { equals: $jsonEntryId } }) {
+         docs {
+            cards {
+               name
+               slug
+               rarity {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               pokemonType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               image {
+                  url
+               }
+            }
+         }
+      }
       card: Card(id: $entryId) {
          id
          slug

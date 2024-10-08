@@ -5,9 +5,10 @@ import { Badge } from "~/components/Badge";
 
 import type { Card } from "~/db/payload-custom-types";
 import { ShinyCard } from "./ShinyCard";
+import { EntryCardData } from "../$entryId";
 
-export function CardsMain({ data }: { data: Card }) {
-   const card = data;
+export function CardsMain({ data }: EntryCardData) {
+   const card = data?.card;
 
    // get card rarity type data from data
    const rarity = "rare ultra";
