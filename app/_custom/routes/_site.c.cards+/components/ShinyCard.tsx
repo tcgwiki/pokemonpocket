@@ -41,14 +41,19 @@ export const ShinyCard = ({
       }
    };
    // update spring positions on mouse movement...
-   const handleMouseOver = (e: React.MouseEvent<HTMLElement>) => {
+   const handleMouseOver = (
+      e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+   ) => {
       const target = e.target as HTMLButtonElement;
       const rect = target.getBoundingClientRect();
-      // get mouse position from left / top
+      const clientX = "touches" in e ? e.touches?.[0]?.clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches?.[0]?.clientY : e.clientY;
+
       const absolute = {
-         x: e.clientX - rect.left,
-         y: e.clientY - rect.top,
+         x: clientX - rect.left,
+         y: clientY - rect.top,
       };
+
       // get mouse position from left / top in percent
       const percent = {
          x: Math.floor((100 / rect.width) * absolute.x),
@@ -103,6 +108,9 @@ export const ShinyCard = ({
                   onMouseEnter={handleMouseIn}
                   onMouseMove={handleMouseOver}
                   onMouseLeave={handleMouseOut}
+                  onTouchStart={handleMouseIn}
+                  onTouchMove={handleMouseOver}
+                  onTouchEnd={handleMouseOut}
                >
                   <div className="card__front">
                      <div {...props}>{children}</div>
@@ -146,14 +154,19 @@ export const ShinyCardRotate = ({
       }
    };
    // update spring positions on mouse movement...
-   const handleMouseOver = (e: React.MouseEvent<HTMLElement>) => {
+   const handleMouseOver = (
+      e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+   ) => {
       const target = e.target as HTMLButtonElement;
       const rect = target.getBoundingClientRect();
-      // get mouse position from left / top
+      const clientX = "touches" in e ? e.touches?.[0]?.clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches?.[0]?.clientY : e.clientY;
+
       const absolute = {
-         x: e.clientX - rect.left,
-         y: e.clientY - rect.top,
+         x: clientX - rect.left,
+         y: clientY - rect.top,
       };
+
       // get mouse position from left / top in percent
       const percent = {
          x: Math.floor((100 / rect.width) * absolute.x),
@@ -208,6 +221,9 @@ export const ShinyCardRotate = ({
                   onMouseEnter={handleMouseIn}
                   onMouseMove={handleMouseOver}
                   onMouseLeave={handleMouseOut}
+                  onTouchStart={handleMouseIn}
+                  onTouchMove={handleMouseOver}
+                  onTouchEnd={handleMouseOut}
                >
                   <div className="card__front">
                      <div {...props}>{children}</div>
