@@ -15,7 +15,7 @@ export default function Holocard() {
    const card = data?.entry?.data.card as Card;
 
    // get card rarity type data from data
-   const rarity = "rare secret";
+   const rarity = "rare ultra";
 
    return (
       <Link
@@ -24,7 +24,7 @@ export default function Holocard() {
          to=".."
       >
          <ShinyCardRotate
-            rarity="rare ultra"
+            rarity={rarity}
             style={{ width: "367px", height: "512px" }}
          >
             <Image
