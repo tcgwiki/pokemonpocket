@@ -1,22 +1,36 @@
-import { Card } from "~/db/payload-custom-types";
+import { Link } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
 import { Badge } from "~/components/Badge";
-import { CardEntryData } from "../$entryId";
 
-export function CardsMain({ data }: CardEntryData) {
-   const card = data.card;
+import type { Card } from "~/db/payload-custom-types";
+import { ShinyCard } from "./ShinyCard";
+
+export function CardsMain({ data }: { data: Card }) {
+   const card = data;
+
+   // get card rarity type data from data
+   const rarity = "rare ultra";
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <Image
-            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4"
-            url={
-               card.image?.url ??
-               "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
-            }
-            alt={card.name ?? "Card Image"}
-         />
+         <Link
+            to="holo"
+            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4 align-middle"
+         >
+            <ShinyCard
+               rarity={rarity}
+               // style={{ width: "288px", height: "402px" }}
+            >
+               <Image
+                  url={
+                     card.image?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                  }
+                  alt={card.name ?? "Card Image"}
+               />
+            </ShinyCard>
+         </Link>
          <section className="flex-grow">
             <div
                className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg 
