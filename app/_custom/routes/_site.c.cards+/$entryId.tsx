@@ -1,8 +1,14 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import {
+   Outlet,
+   useLoaderData,
+   useMatches,
+   useRouteLoaderData,
+} from "@remix-run/react";
 import { gql } from "graphql-request";
 
+import css from "./components/cards.css";
 import type { Card } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
@@ -12,6 +18,8 @@ import { CardsMain } from "./components/Cards.Main";
 import { CardsRelated } from "./components/Cards.Related";
 
 export { entryMeta as meta };
+
+export const links = () => [{ rel: "stylesheet", href: css }];
 
 export async function loader({
    context: { payload, user },
@@ -37,6 +45,11 @@ const SECTIONS = {
    related: CardsRelated,
 };
 
+export function useEntryLoaderData() {
+   return useRouteLoaderData<typeof loader>(
+      "_custom/routes/_site.c.cards+/$entryId",
+   );
+}
 interface EntryData {
    data: {
       card: Card;
@@ -47,10 +60,13 @@ export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
    return (
-      <Entry
-         customComponents={SECTIONS}
-         customData={(entry as EntryData)?.data.card}
-      />
+      <>
+         <Entry
+            customComponents={SECTIONS}
+            customData={(entry as EntryData)?.data.card}
+         />
+         <Outlet />
+      </>
    );
 }
 
