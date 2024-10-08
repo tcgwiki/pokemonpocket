@@ -9,6 +9,7 @@ import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/ent
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
 import { CardsMain } from "./components/Cards.Main";
+import { CardsRelated } from "./components/Cards.Related";
 
 export { entryMeta as meta };
 
@@ -33,15 +34,24 @@ export async function loader({
 
 const SECTIONS = {
    main: CardsMain,
+   related: CardsRelated,
 };
+
+interface EntryData {
+   data: {
+      card: Card;
+   };
+}
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
-   //@ts-ignore
-   const card = entry?.data.card as Card;
-
-   return <Entry customComponents={SECTIONS} customData={card} />;
+   return (
+      <Entry
+         customComponents={SECTIONS}
+         customData={(entry as EntryData)?.data.card}
+      />
+   );
 }
 
 const QUERY = gql`
@@ -52,6 +62,66 @@ const QUERY = gql`
          name
          hp
          retreatCost
+         cardType
+         trainerType
+         desc
+         illustrators {
+            name
+         }
+         packs {
+            pack {
+               name
+            }
+            rates {
+               slot
+               percent
+            }
+         }
+         movesInfo {
+            damage
+            move {
+               slug
+               desc
+               name
+            }
+            cost {
+               type {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               amount
+            }
+         }
+         abilities {
+            name
+            desc
+         }
+         pokemonType {
+            name
+            icon {
+               url
+            }
+         }
+         weaknessType {
+            name
+            icon {
+               url
+            }
+         }
+         rarity {
+            name
+            icon {
+               url
+            }
+         }
+         set {
+            name
+            logo {
+               url
+            }
+         }
          image {
             url
          }
