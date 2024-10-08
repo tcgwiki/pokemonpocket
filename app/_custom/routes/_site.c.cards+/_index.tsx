@@ -57,6 +57,7 @@ const gridView = columnHelper.accessor("name", {
          className="block relative"
          to={`/c/cards/${info.row.original.slug}`}
       >
+         <div className="text-sm font-bold pb-2">{info.getValue()}</div>
          <Image
             className="object-contain"
             width={400}
@@ -65,8 +66,12 @@ const gridView = columnHelper.accessor("name", {
                "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
             }
          />
-         <div className="flex items-center gap-2 justify-between pt-2">
-            <div className="text-sm font-semibold">{info.getValue()}</div>
+         <div className="flex items-center gap-2 justify-between pt-1.5">
+            <Image
+               className="object-contain h-5"
+               height={24}
+               url={info.row.original.rarity?.icon?.url}
+            />
             {info.row.original.pokemonType?.icon?.url ? (
                <Image
                   className="size-4 object-contain"
@@ -90,15 +95,14 @@ const columns = [
                to={`/c/cards/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
-               {info.row.original.image?.url ? (
-                  <Image
-                     className="w-9 object-contain"
-                     width={100}
-                     url={info.row.original.image?.url}
-                  />
-               ) : (
-                  <div className="w-9 h-12 dark:bg-dark500 bg-zinc-300 rounded" />
-               )}
+               <Image
+                  className="w-9 object-contain"
+                  width={100}
+                  url={
+                     info.row.original.image?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                  }
+               />
                <span
                   className="space-y-1.5 font-semibold group-hover:underline 
                 decoration-zinc-400 underline-offset-2 truncate"

@@ -3,12 +3,12 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
-import type { Card } from "~/db/payload-custom-types";
+import type { Set } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
-import { CardsMain } from "./components/Cards.Main";
+import { SetsMain } from "./components/Sets.Main";
 
 export { entryMeta as meta };
 
@@ -32,29 +32,24 @@ export async function loader({
 }
 
 const SECTIONS = {
-   main: CardsMain,
+   main: SetsMain,
 };
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
    //@ts-ignore
-   const card = entry?.data.card as Card;
+   const set = entry?.data.set as Set;
 
-   return <Entry customComponents={SECTIONS} customData={card} />;
+   return <Entry customComponents={SECTIONS} customData={set} />;
 }
 
 const QUERY = gql`
    query ($entryId: String!) {
-      card: Card(id: $entryId) {
+      set: Set(id: $entryId) {
          id
          slug
          name
-         hp
-         retreatCost
-         image {
-            url
-         }
       }
    }
 `;

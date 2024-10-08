@@ -6,7 +6,7 @@ import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Card } from "~/db/payload-custom-types";
+import { Card, Set } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -37,26 +37,30 @@ export default function ListPage() {
          columnViewability={{}}
          gridView={gridView}
          columns={columns}
+         defaultViewType="grid"
          //@ts-ignore
          filters={filters}
       />
    );
 }
 
-const columnHelper = createColumnHelper<Card>();
+const columnHelper = createColumnHelper<Set>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
-         className="block relative"
-         prefetch="intent"
+         className="flex items-center flex-col justify-center relative"
          to={`/c/sets/${info.row.original.slug}`}
       >
-         <div
-            className="truncate text-xs font-semibold text-center pt-1
-               group-hover:underline decoration-zinc-400 underline-offset-2"
-         >
+         {info.row.original.logo?.url ? (
+            <Image
+               className="object-contain"
+               height={100}
+               url={info.row.original.logo?.url}
+            />
+         ) : undefined}
+         <div className="text-sm text-center font-semibold">
             {info.getValue()}
          </div>
       </Link>
@@ -98,6 +102,12 @@ const SETS = gql`
             id
             name
             slug
+            logo {
+               url
+            }
+            icon {
+               url
+            }
          }
       }
    }

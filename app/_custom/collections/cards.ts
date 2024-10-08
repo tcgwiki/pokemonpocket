@@ -47,10 +47,16 @@ export const Cards: CollectionConfig = {
          type: "relationship",
          relationTo: "rarities",
       },
+      {
+         name: "pokemon",
+         type: "relationship",
+         relationTo: "pokemon",
+      },
       // Set data. Set number is the card number in the set collection.
       {
          name: "set",
          type: "relationship",
+         hasMany: false,
          relationTo: "sets",
       },
       {
@@ -195,6 +201,7 @@ export const Cards: CollectionConfig = {
          name: "abilities",
          type: "relationship",
          relationTo: "abilities",
+         hasMany: false,
          admin: {
             condition: (_, siblingData) => siblingData.cardType === "pokemon",
          },
