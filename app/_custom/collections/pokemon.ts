@@ -33,5 +33,11 @@ export const Pokemon: CollectionConfig = {
          type: "upload",
          relationTo: "images",
       },
+      {
+         name: "cards",
+         type: "relationship",
+         relationTo: "cards",
+         hasMany: true,
+      },
    ],
 };
