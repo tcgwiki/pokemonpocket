@@ -37,9 +37,10 @@ const SECTIONS = {
    related: CardsRelated,
 };
 
-interface EntryData {
+export interface CardEntryData {
    data: {
       card: Card;
+      relatedCards: { docs: [{ cards: Card[] }] };
    };
 }
 
@@ -49,13 +50,36 @@ export default function EntryPage() {
    return (
       <Entry
          customComponents={SECTIONS}
-         customData={(entry as EntryData)?.data.card}
+         customData={(entry as CardEntryData)?.data}
       />
    );
 }
 
 const QUERY = gql`
-   query ($entryId: String!) {
+   query ($entryId: String!, $jsonEntryId: JSON) {
+      relatedCards: allPokemon(where: { cards: { equals: $jsonEntryId } }) {
+         docs {
+            cards {
+               name
+               slug
+               rarity {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               pokemonType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               image {
+                  url
+               }
+            }
+         }
+      }
       card: Card(id: $entryId) {
          id
          slug

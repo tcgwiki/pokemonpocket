@@ -2,9 +2,10 @@ import { Card } from "~/db/payload-custom-types";
 
 import { Image } from "~/components/Image";
 import { Badge } from "~/components/Badge";
+import { CardEntryData } from "../$entryId";
 
-export function CardsMain({ data }: { data: Card }) {
-   const card = data;
+export function CardsMain({ data }: CardEntryData) {
+   const card = data.card;
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
