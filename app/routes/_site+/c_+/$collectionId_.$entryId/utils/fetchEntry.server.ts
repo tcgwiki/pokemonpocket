@@ -21,9 +21,9 @@ export async function fetchEntry({
       user,
    });
 
-   const restPath = `http://localhost:4000/api/${entry.collectionSlug}/${
-      entry.id
-   }?depth=${rest?.depth ?? 2}`;
+   const restPath = `https://pokemonpocket.tcg.wiki:4000/api/${
+      entry.collectionSlug
+   }/${entry.id}?depth=${rest?.depth ?? 2}`;
 
    const GQLorREST = gql?.query
       ? await gqlFetch({

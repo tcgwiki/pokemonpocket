@@ -13,7 +13,7 @@ export function gqlEndpoint({
    if (customPath) return customPath;
 
    //Internal host custom DB
-   if (isCustomDB) return "http://localhost:4000/api/graphql";
+   if (isCustomDB) return "https://pokemonpocket.tcg.wiki:4000/api/graphql";
 
    //Internal host core DB
    return "http://localhost:3000/api/graphql";

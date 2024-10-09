@@ -122,7 +122,7 @@ export async function loader({
                      //@ts-ignore
                      const { entryData }: { entryData: PaginatedDocs<Entry> } =
                         await gqlRequest(
-                           url.origin + ":4000/api/graphql",
+                           "https://pokemonpocket.tcg.wiki:4000/api/graphql",
                            entryQuery,
                            {
                               entryId,

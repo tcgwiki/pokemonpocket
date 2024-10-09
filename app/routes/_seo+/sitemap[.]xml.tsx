@@ -63,7 +63,7 @@ export async function loader({
       collections!.map(async (collection: Collection) => {
          if (!collection.customDatabase) return [];
 
-         const url = `http://localhost:4000/api/${collection.slug}?depth=0&limit=0&select[slug]=true`;
+         const url = `https://pokemonpocket.tcg.wiki:4000/api/${collection.slug}?depth=0&limit=0&select[slug]=true`;
 
          const { docs } = await (await fetch(url)).json();
          return docs.map(
