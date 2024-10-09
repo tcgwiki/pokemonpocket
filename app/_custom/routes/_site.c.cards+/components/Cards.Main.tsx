@@ -6,23 +6,34 @@ import { Badge } from "~/components/Badge";
 import type { Card } from "~/db/payload-custom-types";
 import { ShinyCard } from "./ShinyCard";
 import { EntryCardData } from "../$entryId";
+import { TextLink } from "~/components/Text";
 
 export function CardsMain({ data }: EntryCardData) {
    const card = data?.card;
 
-   // get card rarity type data from data
-   const rarity = "rare ultra";
+   const rarityEnum = {
+      C: "common",
+      U: "uncommon",
+      R: "rare holo",
+      RR: "rare ultra",
+      AR: "rare ultra",
+      SAR: "rare ultra",
+      SR: "rare ultra",
+      IM: "rare secret",
+      UR: "rare ultra",
+   };
+
+   const cardType = card?.cardType === "pokemon" ? "pokémon" : "trainer";
+
+   const rarity =
+      card?.rarity?.name && card.rarity.name in rarityEnum
+         ? rarityEnum[card.rarity.name as keyof typeof rarityEnum]
+         : "common";
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <div
-            to="holo"
-            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4 align-middle p-4"
-         >
-            <ShinyCard
-               rarity={rarity}
-               // style={{ width: "288px", height: "402px" }}
-            >
+         <div className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle">
+            <ShinyCard supertype={cardType} rarity={rarity}>
                <Image
                   url={
                      card.image?.url ??
@@ -37,6 +48,24 @@ export function CardsMain({ data }: EntryCardData) {
                className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg 
                mb-3 [&>*:nth-of-type(odd)]:bg-zinc-50 dark:[&>*:nth-of-type(odd)]:bg-dark350 overflow-hidden"
             >
+               <div className="p-3 justify-between flex items-center gap-2">
+                  <span className="font-semibold text-sm">Set</span>
+                  <TextLink
+                     href={`/c/sets/${card.set?.slug}`}
+                     className="text-sm font-semibold flex items-center gap-2"
+                  >
+                     <span className="sr-only">{card.set?.name}</span>
+                     {card.set?.logo?.url ? (
+                        <Image
+                           height={40}
+                           className="h-7"
+                           url={card.set?.logo?.url}
+                        />
+                     ) : (
+                        card.set?.name
+                     )}
+                  </TextLink>
+               </div>
                <div className="p-3 justify-between flex items-center gap-2">
                   <span className="font-semibold text-sm">Rarity</span>
                   <span className="text-sm font-semibold flex items-center gap-2">
@@ -91,7 +120,6 @@ export function CardsMain({ data }: EntryCardData) {
                   </div>
                ) : undefined}
             </div>
-
             {card?.abilities ? (
                <div className="flex flex-col border border-color-sub rounded-lg bg-2-sub shadow-sm shadow-1 mb-3 p-3">
                   <div className="flex items-center gap-2 text-sm pb-1 font-bold">

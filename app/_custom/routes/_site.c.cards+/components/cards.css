@@ -1113,12 +1113,15 @@
    transform-style: preserve-3d;
    -webkit-transform: rotateY(var(--rx)) rotateX(var(--ry));
    -webkit-transform-style: preserve-3d;
-   box-shadow: 0px 10px 20px -5px black;
+   box-shadow: 0px 10px 20px -5px #ddd;
    border-radius: var(--radius);
    outline: none;
    transition:
       box-shadow 0.4s ease,
       outline 0.2s ease;
+}
+.dark .card__rotator {
+   box-shadow: 0px 10px 20px -5px #161616 !important;
 }
 button.card__rotator {
    appearance: none;

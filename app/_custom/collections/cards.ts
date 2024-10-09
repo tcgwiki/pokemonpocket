@@ -202,12 +202,6 @@ export const Cards: CollectionConfig = {
          },
       },
       {
-         name: "pokemon",
-         type: "relationship",
-         relationTo: "pokemon",
-         hasMany: false,
-      },
-      {
          name: "illustrators",
          type: "relationship",
          relationTo: "illustrators",
