@@ -3,8 +3,8 @@ import type { CollectionConfig } from "payload/types";
 import { isStaff } from "../../db/collections/users/users.access";
 
 export const CardMain: CollectionConfig = {
-   slug: "main",
-   labels: { singular: "Card Main", plural: "Card Mains" },
+   slug: "card-main",
+   labels: { singular: "Card Collection", plural: "Card Collections" },
    admin: {
       group: "Custom",
       useAsTitle: "name",

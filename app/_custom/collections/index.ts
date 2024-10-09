@@ -6,7 +6,7 @@ import { Packs } from "./packs";
 import { Rarities } from "./rarities";
 import { Sets } from "./sets";
 import { Types } from "./types";
-import { CardMain } from "./main";
+import { CardMain } from "./card-main";
 
 export const CustomCollections = [
    CardMain,

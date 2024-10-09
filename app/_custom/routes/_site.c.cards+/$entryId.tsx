@@ -4,7 +4,7 @@ import { Outlet, useLoaderData, useRouteLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
 import css from "./components/cards.css";
-import type { Card, Pokemon } from "~/db/payload-custom-types";
+import type { Card, CardMain } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
@@ -48,7 +48,7 @@ export function useEntryLoaderData() {
 export interface EntryCardData {
    data: {
       card: Card;
-      relatedPokemon: { docs: Pokemon[] };
+      relatedPokemon: { docs: CardMain[] };
    };
 }
 
@@ -68,7 +68,7 @@ export default function EntryPage() {
 
 const QUERY = gql`
    query ($entryId: String!, $jsonEntryId: JSON) {
-      relatedPokemon: Mains(where: { cards: { equals: $jsonEntryId } }) {
+      relatedPokemon: CardMains(where: { cards: { equals: $jsonEntryId } }) {
          docs {
             name
             cards {

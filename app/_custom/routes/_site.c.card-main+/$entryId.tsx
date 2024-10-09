@@ -3,12 +3,12 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
-import type { Pokemon, Set } from "~/db/payload-custom-types";
+import type { CardMain, Set } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
-import { PokemonMain } from "./components/Pokemon.Main";
+import { CardMainMain } from "./components/CardMain.Main";
 
 export { entryMeta as meta };
 
@@ -32,20 +32,20 @@ export async function loader({
 }
 
 const SECTIONS = {
-   main: PokemonMain,
+   main: CardMainMain,
 };
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
    return (
-      <Entry customComponents={SECTIONS} customData={entry?.data as Pokemon} />
+      <Entry customComponents={SECTIONS} customData={entry?.data as CardMain} />
    );
 }
 
 const QUERY = gql`
    query ($entryId: String!) {
-      pokemon: Pokemon(id: $entryId) {
+      pokemon: CardMains(id: $entryId) {
          id
          slug
          name

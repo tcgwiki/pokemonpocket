@@ -1,8 +1,8 @@
-import { Pokemon } from "~/db/payload-custom-types";
+import { CardMain } from "~/db/payload-custom-types";
 
 import { Image } from "~/components/Image";
 
-export function PokemonMain({ data }: { data: Pokemon }) {
+export function CardMainMain({ data }: { data: CardMain }) {
    const pokemon = data;
 
    return (

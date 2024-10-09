@@ -57,7 +57,9 @@ const gridView = columnHelper.accessor("name", {
          className="block relative"
          to={`/c/cards/${info.row.original.slug}`}
       >
-         <div className="text-sm font-bold pb-2">{info.getValue()}</div>
+         <div className="text-xs font-semibold pb-2 truncate">
+            {info.getValue()}
+         </div>
          <Image
             className="object-contain"
             width={400}

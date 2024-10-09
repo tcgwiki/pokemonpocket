@@ -1,6 +1,6 @@
 import Payload from "payload";
 
-import { manaSlug } from "../app/utils/url-slug";
+import { manaSlug } from "../../../../app/utils/url-slug";
 
 require("dotenv").config();
 
@@ -32,7 +32,7 @@ const resaveCollection = async () => {
    for (const result of results.docs) {
       const charactersUpTillFirstSpace = result.name.split("[")[0].trim();
       const exisintingCard = await payload.find({
-         collection: "main",
+         collection: "card-main",
          depth: 0,
          where: {
             name: {
@@ -44,7 +44,7 @@ const resaveCollection = async () => {
       if (exisintingCard.totalDocs > 0) {
          console.log("adding existing card", exisintingCard.docs[0]?.name);
          await payload.update({
-            collection: "main",
+            collection: "card-main",
             id: exisintingCard.docs[0].id,
             data: {
                cards: [...exisintingCard.docs[0].cards, result.id],
@@ -52,7 +52,7 @@ const resaveCollection = async () => {
          });
       } else
          await payload.create({
-            collection: "main",
+            collection: "card-main",
             data: {
                id: result.id,
                name: `${charactersUpTillFirstSpace} - ${result.set.name}`,

@@ -6,7 +6,7 @@ import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Card, Pokemon, Set } from "~/db/payload-custom-types";
+import { Card, CardMain, Set } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -25,7 +25,7 @@ export async function loader({
       payload,
       user,
       gql: {
-         query: POKEMON,
+         query: COLLECTION,
       },
    });
    return json({ list });
@@ -43,7 +43,7 @@ export default function ListPage() {
    );
 }
 
-const columnHelper = createColumnHelper<Pokemon>();
+const columnHelper = createColumnHelper<CardMain>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
@@ -74,7 +74,7 @@ const columns = [
          return (
             <Link
                prefetch="intent"
-               to={`/c/pokemon/${info.row.original.slug}`}
+               to={`/c/card-main/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
                {info.row.original.icon?.url ? (
@@ -93,9 +93,9 @@ const columns = [
    }),
 ];
 
-const POKEMON = gql`
+const COLLECTION = gql`
    query {
-      listData: allPokemon(limit: 5000) {
+      listData: CardMains(limit: 5000) {
          totalDocs
          docs {
             id
