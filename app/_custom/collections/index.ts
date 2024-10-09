@@ -6,10 +6,10 @@ import { Packs } from "./packs";
 import { Rarities } from "./rarities";
 import { Sets } from "./sets";
 import { Types } from "./types";
-import { CardMain } from "./card-main";
+import { CardGroups } from "./card-groups";
 
 export const CustomCollections = [
-   CardMain,
+   CardGroups,
    Abilities,
    Cards,
    Illustrators,

@@ -32,7 +32,7 @@ const resaveCollection = async () => {
    for (const result of results.docs) {
       const charactersUpTillFirstSpace = result.name.split("[")[0].trim();
       const exisintingCard = await payload.find({
-         collection: "card-main",
+         collection: "card",
          depth: 0,
          where: {
             name: {
@@ -44,7 +44,7 @@ const resaveCollection = async () => {
       if (exisintingCard.totalDocs > 0) {
          console.log("adding existing card", exisintingCard.docs[0]?.name);
          await payload.update({
-            collection: "card-main",
+            collection: "card",
             id: exisintingCard.docs[0].id,
             data: {
                cards: [...exisintingCard.docs[0].cards, result.id],
@@ -52,7 +52,7 @@ const resaveCollection = async () => {
          });
       } else
          await payload.create({
-            collection: "card-main",
+            collection: "card",
             data: {
                id: result.id,
                name: `${charactersUpTillFirstSpace} - ${result.set.name}`,
