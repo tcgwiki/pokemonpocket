@@ -1,11 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import {
-   Outlet,
-   useLoaderData,
-   useMatches,
-   useRouteLoaderData,
-} from "@remix-run/react";
+import { Outlet, useLoaderData, useRouteLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
 import css from "./components/cards.css";
@@ -82,35 +77,34 @@ const QUERY = gql`
          trainerType
          desc
          pokemon {
-            pokemonSets {
+            name
+            set {
                name
-               set {
+               logo {
+                  url
+               }
+            }
+            cards {
+               name
+               slug
+               pokemonType {
                   name
-                  logo {
+                  icon {
                      url
                   }
                }
-               cards {
+               rarity {
                   name
-                  slug
-                  pokemonType {
-                     name
-                     icon {
-                        url
-                     }
-                  }
-                  rarity {
-                     name
-                     icon {
-                        url
-                     }
-                  }
-                  image {
+                  icon {
                      url
                   }
+               }
+               image {
+                  url
                }
             }
          }
+
          illustrators {
             name
          }
