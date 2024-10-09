@@ -129,7 +129,7 @@ export async function cacheThis<T>(
       ttl: ttl ?? 300_000, // how long to live in ms
       swr: 365 * 24 * 60 * 60 * 1000, // allow stale items to be returned until they are removed
       checkValue<T>(value: T) {
-         return Boolean(value);
+         return value === null || Boolean(value);
       },
       fallbackToCache: true,
       // staleRefreshTimeout
