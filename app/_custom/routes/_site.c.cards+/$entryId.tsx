@@ -53,7 +53,6 @@ export function useEntryLoaderData() {
 export interface EntryCardData {
    data: {
       card: Card;
-      relatedCards: { docs: [{ cards: Card[] }] };
    };
 }
 
@@ -72,30 +71,7 @@ export default function EntryPage() {
 }
 
 const QUERY = gql`
-   query ($entryId: String!, $jsonEntryId: JSON) {
-      relatedCards: allPokemon(where: { cards: { equals: $jsonEntryId } }) {
-         docs {
-            cards {
-               name
-               slug
-               rarity {
-                  name
-                  icon {
-                     url
-                  }
-               }
-               pokemonType {
-                  name
-                  icon {
-                     url
-                  }
-               }
-               image {
-                  url
-               }
-            }
-         }
-      }
+   query ($entryId: String!) {
       card: Card(id: $entryId) {
          id
          slug
@@ -105,6 +81,36 @@ const QUERY = gql`
          cardType
          trainerType
          desc
+         pokemon {
+            pokemonSets {
+               name
+               set {
+                  name
+                  logo {
+                     url
+                  }
+               }
+               cards {
+                  name
+                  slug
+                  pokemonType {
+                     name
+                     icon {
+                        url
+                     }
+                  }
+                  rarity {
+                     name
+                     icon {
+                        url
+                     }
+                  }
+                  image {
+                     url
+                  }
+               }
+            }
+         }
          illustrators {
             name
          }

@@ -2,9 +2,9 @@ import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const Pokemon: CollectionConfig = {
-   slug: "pokemon",
-   labels: { singular: "Pokemon", plural: "Pokemon" },
+export const PokemonSets: CollectionConfig = {
+   slug: "pokemon-sets",
+   labels: { singular: "Pokemon in Set", plural: "Pokemon in Sets" },
    admin: {
       group: "Custom",
       useAsTitle: "name",
@@ -34,9 +34,15 @@ export const Pokemon: CollectionConfig = {
          relationTo: "images",
       },
       {
-         name: "pokemonSets",
+         name: "set",
          type: "relationship",
-         relationTo: "pokemon-sets",
+         relationTo: "sets",
+         hasMany: false,
+      },
+      {
+         name: "cards",
+         type: "relationship",
+         relationTo: "cards",
          hasMany: true,
       },
    ],
