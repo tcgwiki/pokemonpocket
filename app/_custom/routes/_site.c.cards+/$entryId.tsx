@@ -68,7 +68,7 @@ export default function EntryPage() {
 
 const QUERY = gql`
    query ($entryId: String!, $jsonEntryId: JSON) {
-      relatedPokemon: allPokemon(where: { cards: { equals: $jsonEntryId } }) {
+      relatedPokemon: Mains(where: { cards: { equals: $jsonEntryId } }) {
          docs {
             name
             cards {
@@ -87,7 +87,7 @@ const QUERY = gql`
                      url
                   }
                }
-               image {
+               icon {
                   url
                }
             }
@@ -102,6 +102,9 @@ const QUERY = gql`
          cardType
          trainerType
          desc
+         icon {
+            url
+         }
          illustrators {
             name
          }
@@ -155,12 +158,10 @@ const QUERY = gql`
          }
          set {
             name
+            slug
             logo {
                url
             }
-         }
-         image {
-            url
          }
       }
    }

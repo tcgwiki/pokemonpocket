@@ -39,7 +39,7 @@ export function CardsRelated({ data }: EntryCardData) {
                            className="object-contain"
                            width={400}
                            url={
-                              card.image?.url ??
+                              card.icon?.url ??
                               "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
                            }
                         />

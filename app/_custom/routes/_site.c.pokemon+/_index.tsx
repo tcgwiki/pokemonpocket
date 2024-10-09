@@ -6,7 +6,7 @@ import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Card, Set } from "~/db/payload-custom-types";
+import { Card, Pokemon, Set } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -25,7 +25,7 @@ export async function loader({
       payload,
       user,
       gql: {
-         query: SETS,
+         query: POKEMON,
       },
    });
    return json({ list });
@@ -37,27 +37,26 @@ export default function ListPage() {
          columnViewability={{}}
          gridView={gridView}
          columns={columns}
-         defaultViewType="grid"
          //@ts-ignore
          filters={filters}
       />
    );
 }
 
-const columnHelper = createColumnHelper<Set>();
+const columnHelper = createColumnHelper<Pokemon>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
          className="flex items-center flex-col justify-center relative"
-         to={`/c/sets/${info.row.original.slug}`}
+         to={`/c/pokemon/${info.row.original.slug}`}
       >
-         {info.row.original.logo?.url ? (
+         {info.row.original.icon?.url ? (
             <Image
                className="object-contain"
                height={100}
-               url={info.row.original.logo?.url}
+               url={info.row.original.icon?.url}
             />
          ) : undefined}
          <div className="text-sm text-center font-semibold">
@@ -75,9 +74,18 @@ const columns = [
          return (
             <Link
                prefetch="intent"
-               to={`/c/sets/${info.row.original.slug}`}
+               to={`/c/pokemon/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
+               {info.row.original.icon?.url ? (
+                  <Image
+                     className="w-9 object-contain"
+                     width={100}
+                     url={info.row.original.icon?.url}
+                  />
+               ) : (
+                  <div className="w-9 h-12 dark:bg-dark500 bg-zinc-300 rounded" />
+               )}
                {info.getValue()}
             </Link>
          );
@@ -85,17 +93,14 @@ const columns = [
    }),
 ];
 
-const SETS = gql`
+const POKEMON = gql`
    query {
-      listData: Sets(limit: 5000) {
+      listData: allPokemon(limit: 5000) {
          totalDocs
          docs {
             id
             name
             slug
-            logo {
-               url
-            }
             icon {
                url
             }

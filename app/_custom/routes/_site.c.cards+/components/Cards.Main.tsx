@@ -1,9 +1,6 @@
-import { Link } from "@remix-run/react";
-
 import { Image } from "~/components/Image";
 import { Badge } from "~/components/Badge";
 
-import type { Card } from "~/db/payload-custom-types";
 import { ShinyCard } from "./ShinyCard";
 import { EntryCardData } from "../$entryId";
 import { TextLink } from "~/components/Text";
@@ -33,10 +30,11 @@ export function CardsMain({ data }: EntryCardData) {
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
          <div className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle">
+            {/* @ts-ignore */}
             <ShinyCard supertype={cardType} rarity={rarity}>
                <Image
                   url={
-                     card.image?.url ??
+                     card.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
                   }
                   alt={card.name ?? "Card Image"}

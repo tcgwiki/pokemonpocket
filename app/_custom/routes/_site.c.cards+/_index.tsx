@@ -62,7 +62,7 @@ const gridView = columnHelper.accessor("name", {
             className="object-contain"
             width={400}
             url={
-               info.row.original.image?.url ??
+               info.row.original.icon?.url ??
                "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
             }
          />
@@ -99,7 +99,7 @@ const columns = [
                   className="w-9 object-contain"
                   width={100}
                   url={
-                     info.row.original.image?.url ??
+                     info.row.original.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
                   }
                />
@@ -202,6 +202,9 @@ const CARDS = gql`
             retreatCost
             hp
             cardType
+            icon {
+               url
+            }
             pokemonType {
                name
                icon {
@@ -219,9 +222,6 @@ const CARDS = gql`
                icon {
                   url
                }
-            }
-            image {
-               url
             }
          }
       }

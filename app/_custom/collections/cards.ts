@@ -38,11 +38,6 @@ export const Cards: CollectionConfig = {
          relationTo: "images",
       },
       {
-         name: "image",
-         type: "upload",
-         relationTo: "images",
-      },
-      {
          name: "rarity",
          type: "relationship",
          relationTo: "rarities",
