@@ -15,9 +15,9 @@ export function CardsMain({ data }: EntryCardData) {
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <Link
+         <div
             to="holo"
-            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4 align-middle"
+            className="rounded-lg max-w-72 object-contain overflow-hidden flex-none mx-auto max-tablet:mb-4 align-middle p-4"
          >
             <ShinyCard
                rarity={rarity}
@@ -31,7 +31,7 @@ export function CardsMain({ data }: EntryCardData) {
                   alt={card.name ?? "Card Image"}
                />
             </ShinyCard>
-         </Link>
+         </div>
          <section className="flex-grow">
             <div
                className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg 

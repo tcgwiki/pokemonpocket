@@ -18,6 +18,7 @@ export const ShinyCard = ({
    image,
    dataGallery = "false",
    children = undefined,
+   className = "",
    ...props
 }: {
    supertype: Supertype;
@@ -25,119 +26,7 @@ export const ShinyCard = ({
    rarity: Rarity;
    image?: string;
    dataGallery: "true" | "false";
-   children: any;
-}) => {
-   const rotatorRef = React.useRef<HTMLDivElement>(null);
-   const { setSpringBackground } = useSpringBackground(rotatorRef);
-   const { setSpringRotate } = useSpringRotator(rotatorRef);
-   const { setSpringGlare } = useSpringGlare(rotatorRef);
-   const handleMouseIn = () => {
-      if (
-         rarity === "custom" &&
-         typeof image === "string" &&
-         rotatorRef.current
-      ) {
-         rotatorRef.current.style.setProperty("--customimage", `url(${image})`);
-      }
-   };
-   // update spring positions on mouse movement...
-   const handleMouseOver = (
-      e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
-   ) => {
-      const target = e.target as HTMLButtonElement;
-      const rect = target.getBoundingClientRect();
-      const clientX = "touches" in e ? e.touches?.[0]?.clientX : e.clientX;
-      const clientY = "touches" in e ? e.touches?.[0]?.clientY : e.clientY;
-
-      const absolute = {
-         x: clientX - rect.left,
-         y: clientY - rect.top,
-      };
-
-      // get mouse position from left / top in percent
-      const percent = {
-         x: Math.floor((100 / rect.width) * absolute.x),
-         y: Math.floor((100 / rect.height) * absolute.y),
-      };
-      // get mouse position from center
-      const center = {
-         x: percent.x - 50,
-         y: percent.y - 50,
-      };
-      // set the constants... this is redundant but meh
-      if (rotatorRef.current) {
-         rotatorRef.current.style.setProperty("--s", "1");
-         rotatorRef.current.style.setProperty("--tx", "0px");
-         rotatorRef.current.style.setProperty("--ty", "0px");
-      }
-      setSpringBackground({
-         x: Math.round(50 + percent.x / 4 - 12.5),
-         y: Math.round(50 + percent.y / 3 - 16.67),
-      });
-      //   setSpringRotate({
-      //      x: Math.floor(-(center.x / 3.5)),
-      //      y: Math.floor(center.y / 2),
-      //   });
-      setSpringGlare({
-         x: Math.round(percent.x),
-         y: Math.round(percent.y),
-         o: 1,
-      });
-   };
-   // reset springs, when mouse exits...
-   const handleMouseOut = () => {
-      setTimeout(() => {
-         //  setSpringRotate({ x: 0, y: 0 });
-         setSpringGlare({ x: 50, y: 50, o: 0 });
-         setSpringBackground({ x: 50, y: 50 });
-      }, 100);
-   };
-   return (
-      <React.Fragment>
-         <div
-            className="card"
-            data-supertype={supertype}
-            data-subtypes={subtype}
-            data-rarity={rarity}
-            data-gallery={dataGallery}
-         >
-            <div className="card__translater">
-               <div
-                  ref={rotatorRef}
-                  className="card__rotator"
-                  onMouseEnter={handleMouseIn}
-                  onMouseMove={handleMouseOver}
-                  onMouseLeave={handleMouseOut}
-                  onTouchStart={handleMouseIn}
-                  onTouchMove={handleMouseOver}
-                  onTouchEnd={handleMouseOut}
-               >
-                  <div className="card__front">
-                     <div {...props}>{children}</div>
-                     <div className={`card__shine ${subtype} ${supertype}`} />
-                     <div className={`card__glare ${subtype} ${rarity}`} />
-                  </div>
-               </div>
-            </div>
-         </div>
-      </React.Fragment>
-   );
-};
-
-export const ShinyCardRotate = ({
-   supertype = "pokémon",
-   subtype = "basic",
-   rarity = "common",
-   image,
-   dataGallery = "false",
-   children = undefined,
-   ...props
-}: {
-   supertype: Supertype;
-   subtype: Subtype;
-   rarity: Rarity;
-   image?: string;
-   dataGallery: "true" | "false";
+   className?: string;
    children: any;
 }) => {
    const rotatorRef = React.useRef<HTMLDivElement>(null);
@@ -206,34 +95,32 @@ export const ShinyCardRotate = ({
       }, 100);
    };
    return (
-      <React.Fragment>
-         <div
-            className="card"
-            data-supertype={supertype}
-            data-subtypes={subtype}
-            data-rarity={rarity}
-            data-gallery={dataGallery}
-         >
-            <div className="card__translater">
-               <div
-                  ref={rotatorRef}
-                  className="card__rotator"
-                  onMouseEnter={handleMouseIn}
-                  onMouseMove={handleMouseOver}
-                  onMouseLeave={handleMouseOut}
-                  onTouchStart={handleMouseIn}
-                  onTouchMove={handleMouseOver}
-                  onTouchEnd={handleMouseOut}
-               >
-                  <div className="card__front">
-                     <div {...props}>{children}</div>
-                     <div className={`card__shine ${subtype} ${supertype}`} />
-                     <div className={`card__glare ${subtype} ${rarity}`} />
-                  </div>
+      <div
+         className={"card " + className}
+         data-supertype={supertype}
+         data-subtypes={subtype}
+         data-rarity={rarity}
+         data-gallery={dataGallery}
+      >
+         <div className="card__translater">
+            <div
+               ref={rotatorRef}
+               className="card__rotator"
+               onMouseEnter={handleMouseIn}
+               onMouseMove={handleMouseOver}
+               onMouseLeave={handleMouseOut}
+               onTouchStart={handleMouseIn}
+               onTouchMove={handleMouseOver}
+               onTouchEnd={handleMouseOut}
+            >
+               <div className="card__front">
+                  <div {...props}>{children}</div>
+                  <div className={`card__shine ${subtype} ${supertype}`} />
+                  <div className={`card__glare ${subtype} ${rarity}`} />
                </div>
             </div>
          </div>
-      </React.Fragment>
+      </div>
    );
 };
 
