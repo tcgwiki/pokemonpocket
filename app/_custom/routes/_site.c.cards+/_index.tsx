@@ -39,18 +39,18 @@ export default function ListPage() {
             isEX: false,
             cardType: false,
          }}
-         gridView={gridView}
+         gridView={cardGridView}
          defaultViewType="grid"
-         columns={columns}
+         columns={cardColumns}
          //@ts-ignore
-         filters={filters}
+         filters={cardFilters}
       />
    );
 }
 
 const columnHelper = createColumnHelper<Card>();
 
-const gridView = columnHelper.accessor("name", {
+export const cardGridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
@@ -87,7 +87,7 @@ const gridView = columnHelper.accessor("name", {
    ),
 });
 
-const columns = [
+export const cardColumns = [
    columnHelper.accessor("name", {
       header: "Card",
       filterFn: fuzzyFilter,
@@ -230,7 +230,7 @@ const CARDS = gql`
    }
 `;
 
-const filters: {
+export const cardFilters: {
    id: string;
    label: string;
    cols?: 1 | 2 | 3 | 4 | 5;

@@ -12,6 +12,8 @@ import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { List } from "~/routes/_site+/c_+/_components/List";
 
+import dt from "date-and-time";
+
 export { listMeta as meta };
 
 export async function loader({
@@ -50,9 +52,12 @@ const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
-         className="flex items-center flex-col justify-center relative"
+         className="flex items-center flex-col justify-center relative gap-1"
          to={`/c/sets/${info.row.original.slug}`}
       >
+         <div className="text-sm text-center font-semibold">
+            {info.getValue()}
+         </div>
          {info.row.original.logo?.url ? (
             <Image
                className="object-contain"
@@ -60,8 +65,13 @@ const gridView = columnHelper.accessor("name", {
                url={info.row.original.logo?.url}
             />
          ) : undefined}
-         <div className="text-sm text-center font-semibold">
-            {info.getValue()}
+         <div className="text-[10px] text-center font-semibold text-1">
+            {info.row.original.releaseDate
+               ? dt.format(
+                    new Date(info.row.original.releaseDate),
+                    "MMM DD, YYYY",
+                 )
+               : ""}
          </div>
       </Link>
    ),
@@ -93,6 +103,7 @@ const SETS = gql`
             id
             name
             slug
+            releaseDate
             logo {
                url
             }

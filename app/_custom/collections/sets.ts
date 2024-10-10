@@ -21,6 +21,10 @@ export const Sets: CollectionConfig = {
          type: "text",
       },
       {
+         name: "releaseDate",
+         type: "date",
+      },
+      {
          name: "name",
          type: "text",
       },

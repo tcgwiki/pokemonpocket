@@ -9,6 +9,7 @@ import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/ent
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
 import { SetsMain } from "./components/Sets.Main";
+import { SetsCards } from "./components/Sets.Cards";
 
 export { entryMeta as meta };
 
@@ -33,6 +34,7 @@ export async function loader({
 
 const SECTIONS = {
    main: SetsMain,
+   cards: SetsCards,
 };
 
 export default function EntryPage() {
@@ -50,6 +52,44 @@ const QUERY = gql`
          id
          slug
          name
+         releaseDate
+         packs {
+            name
+            slug
+            icon {
+               url
+            }
+         }
+         cards {
+            id
+            name
+            slug
+            isEX
+            retreatCost
+            hp
+            cardType
+            icon {
+               url
+            }
+            pokemonType {
+               name
+               icon {
+                  url
+               }
+            }
+            weaknessType {
+               name
+               icon {
+                  url
+               }
+            }
+            rarity {
+               name
+               icon {
+                  url
+               }
+            }
+         }
       }
    }
 `;
