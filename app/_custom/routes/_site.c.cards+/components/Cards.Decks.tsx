@@ -3,7 +3,6 @@ import { Image } from "~/components/Image";
 import { EntryCardData } from "../$entryId";
 import { SectionTitle } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/SectionTitle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
-import clsx from "clsx";
 
 export function CardsDecks({ data }: EntryCardData) {
    const { decks } = data;
@@ -15,7 +14,7 @@ export function CardsDecks({ data }: EntryCardData) {
                <div className="grid laptop:grid-cols-3 grid-cols-2 gap-3">
                   {decks.map((deck) => (
                      <Link
-                        to={`/decks/${deck.slug}`}
+                        to={`/c/decks/${deck.slug}`}
                         className="flex gap-3 flex-col justify-center border border-color-sub rounded-lg p-3 dark:bg-dark400 bg-zinc-50 shadow-sm shadow-1"
                         key={deck.id}
                      >
@@ -34,12 +33,15 @@ export function CardsDecks({ data }: EntryCardData) {
                                        alt={card.name ?? ""}
                                        className="w-20 object-contain"
                                        width={200}
+                                       height={280}
                                     />
                                  </TooltipTrigger>
                                  <TooltipContent>
                                     <Image
                                        url={card.icon?.url}
                                        alt={card.name ?? ""}
+                                       width={367}
+                                       height={512}
                                        className="w-full object-contain"
                                     />
                                  </TooltipContent>

@@ -37,7 +37,8 @@ export function CardsRelated({ data }: EntryCardData) {
                         ) : undefined}
                         <Image
                            className="object-contain"
-                           width={400}
+                           width={367}
+                           height={512}
                            url={
                               card.icon?.url ??
                               "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"

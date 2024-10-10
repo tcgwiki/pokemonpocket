@@ -33,6 +33,8 @@ export function CardsMain({ data }: EntryCardData) {
             {/* @ts-ignore */}
             <ShinyCard supertype={cardType} rarity={rarity}>
                <Image
+                  width={367}
+                  height={512}
                   url={
                      card.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
@@ -130,7 +132,7 @@ export function CardsMain({ data }: EntryCardData) {
             {card?.movesInfo && card?.movesInfo?.length > 0 ? (
                <div className="flex flex-col border border-color-sub rounded-lg bg-2-sub shadow-sm shadow-1 divide-y divide-color-sub">
                   {card.movesInfo.map((move) => (
-                     <div className="p-3" key={move.id}>
+                     <div className="p-3" key={move.move?.name}>
                         <div className="flex items-center justify-between gap-2">
                            <div className="flex items-center gap-2">
                               {move.cost && move.cost.length > 0 ? (
