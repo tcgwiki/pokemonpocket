@@ -50,7 +50,7 @@ export const Cards: CollectionConfig = {
          relationTo: "sets",
       },
       {
-         name: "setNnum",
+         name: "setNum",
          type: "number",
       },
       {
