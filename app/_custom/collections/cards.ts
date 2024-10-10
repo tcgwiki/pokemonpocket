@@ -107,6 +107,21 @@ export const Cards: CollectionConfig = {
       },
       // Pokemon Cards
       {
+         name: "stage",
+         type: "number",
+         admin: {
+            condition: (_, siblingData) => siblingData.cardType === "pokemon",
+         },
+      },
+      {
+         name: "relatedCards",
+         type: "relationship",
+         relationTo: "cards",
+         admin: {
+            condition: (_, siblingData) => siblingData.cardType === "pokemon",
+         },
+      },
+      {
          name: "hp",
          type: "number",
          admin: {
