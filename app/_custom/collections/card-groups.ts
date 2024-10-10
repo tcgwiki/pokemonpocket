@@ -25,10 +25,6 @@ export const CardGroups: CollectionConfig = {
          type: "text",
       },
       {
-         name: "simpleName",
-         type: "text",
-      },
-      {
          name: "slug",
          type: "text",
       },
@@ -38,10 +34,8 @@ export const CardGroups: CollectionConfig = {
          relationTo: "images",
       },
       {
-         name: "set",
-         type: "relationship",
-         relationTo: "sets",
-         hasMany: false,
+         name: "deckUsage",
+         type: "number",
       },
       {
          name: "cards",

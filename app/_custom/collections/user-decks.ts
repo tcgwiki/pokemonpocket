@@ -2,9 +2,9 @@ import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const Decks: CollectionConfig = {
-   slug: "decks",
-   labels: { singular: "Deck", plural: "Decks" },
+export const Archetypes: CollectionConfig = {
+   slug: "user-decks",
+   labels: { singular: "User Deck", plural: "User Decks" },
    admin: {
       group: "Custom",
       useAsTitle: "name",
@@ -29,11 +29,6 @@ export const Decks: CollectionConfig = {
          type: "text",
       },
       {
-         name: "cost",
-         type: "select",
-         options: ["low", "medium", "high"],
-      },
-      {
          name: "icon",
          type: "upload",
          relationTo: "images",
@@ -42,12 +37,6 @@ export const Decks: CollectionConfig = {
          name: "highlightCards",
          type: "relationship",
          relationTo: "card-groups",
-         hasMany: true,
-      },
-      {
-         name: "deckTypes",
-         type: "relationship",
-         relationTo: "types",
          hasMany: true,
       },
       {
@@ -63,7 +52,6 @@ export const Decks: CollectionConfig = {
             {
                name: "count",
                type: "number",
-               max: 2,
             },
          ],
       },

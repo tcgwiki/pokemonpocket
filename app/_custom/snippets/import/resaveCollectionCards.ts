@@ -30,13 +30,13 @@ const resaveCollection = async () => {
    });
 
    for (const result of results.docs) {
-      const charactersUpTillFirstSpace = result.name.split("[")[0].trim();
+      const charactersUpTillFirstSpace = result.name.split("-")[0].trim();
       const exisintingCard = await payload.find({
-         collection: "card",
+         collection: "card-groups",
          depth: 0,
          where: {
             name: {
-               equals: `${charactersUpTillFirstSpace} - ${result.set.name}`,
+               equals: charactersUpTillFirstSpace,
             },
          },
       });
@@ -44,7 +44,7 @@ const resaveCollection = async () => {
       if (exisintingCard.totalDocs > 0) {
          console.log("adding existing card", exisintingCard.docs[0]?.name);
          await payload.update({
-            collection: "card",
+            collection: "card-groups",
             id: exisintingCard.docs[0].id,
             data: {
                cards: [...exisintingCard.docs[0].cards, result.id],
@@ -52,17 +52,13 @@ const resaveCollection = async () => {
          });
       } else
          await payload.create({
-            collection: "card",
+            collection: "card-groups",
             data: {
-               id: result.id,
-               name: `${charactersUpTillFirstSpace} - ${result.set.name}`,
-               simpleName: charactersUpTillFirstSpace,
-               set: result.set.id,
+               id: manaSlug(charactersUpTillFirstSpace),
+               name: charactersUpTillFirstSpace,
                cards: [result.id],
                icon: result.icon.id,
-               slug: manaSlug(
-                  `${charactersUpTillFirstSpace} - ${result.set.name}`,
-               ),
+               slug: manaSlug(charactersUpTillFirstSpace),
             },
          });
    }
