@@ -12,14 +12,14 @@ export function CardsDecks({ data }: EntryCardData) {
          {decks && decks.length > 0 && (
             <>
                <SectionTitle customTitle="Decks" />
-               <div className="grid laptop:grid-cols-3 grid-cols-2 gap-4 pt-1">
+               <div className="grid laptop:grid-cols-3 grid-cols-2 gap-3">
                   {decks.map((deck) => (
                      <Link
                         to={`/decks/${deck.slug}`}
-                        className="flex gap-3 flex-col justify-center border border-color-sub rounded-lg p-3 bg-zinc-50 shadow-sm shadow-1"
+                        className="flex gap-3 flex-col justify-center border border-color-sub rounded-lg p-3 dark:bg-dark400 bg-zinc-50 shadow-sm shadow-1"
                         key={deck.id}
                      >
-                        <div className="text-center text-sm font-bold border-b pb-2 border-color-sub">
+                        <div className="text-center text-sm font-bold border-b pb-1 border-color-sub">
                            {deck.name}
                         </div>
                         <div className="inline-flex mx-auto -space-x-8">
@@ -46,6 +46,7 @@ export function CardsDecks({ data }: EntryCardData) {
                               </Tooltip>
                            ))}
                         </div>
+                        {}
                      </Link>
                   ))}
                </div>

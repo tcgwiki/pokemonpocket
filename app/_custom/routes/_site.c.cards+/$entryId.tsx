@@ -93,8 +93,15 @@ const RELATED_DECKS_QUERY = gql`
             id
             name
             slug
+            cost
             icon {
                url
+            }
+            deckTypes {
+               name
+               icon {
+                  url
+               }
             }
             highlightCards {
                id
