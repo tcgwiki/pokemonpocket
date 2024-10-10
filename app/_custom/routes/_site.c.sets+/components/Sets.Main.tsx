@@ -24,21 +24,22 @@ export function SetsMain({ data }: { data: Set }) {
             </div>
          </div>
          {set?.packs && set?.packs?.length > 0 && (
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-3">
                {set.packs.map((pack) => (
                   <Link
                      key={pack.name}
                      to={`/c/packs/${pack.slug}`}
-                     className="text-sm font-semibold w-full border border-color-sub shadow-sm shadow-1 p-2 rounded-lg"
+                     className="text-sm font-semibold w-full bg-zinc-50 dark:bg-dark400
+                      border border-zinc-200 dark:border-zinc-600/70 shadow-sm shadow-1 p-3 rounded-lg space-y-2"
                   >
                      {pack.icon?.url ? (
                         <Image
-                           className="object-contain"
+                           className="object-contain h-14 mx-auto"
                            height={100}
                            url={pack.icon?.url}
                         />
                      ) : undefined}
-                     <div className="text-center">{pack.name}</div>
+                     <div className="text-center text-xs">{pack.name}</div>
                   </Link>
                ))}
             </div>
