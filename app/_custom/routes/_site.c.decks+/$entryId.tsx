@@ -26,7 +26,6 @@ export async function loader({
          query: QUERY,
       },
    });
-   console.log(entry);
    return json({
       entry,
    });
