@@ -1,8 +1,9 @@
 import {
    cachified,
-   lruCacheAdapter,
+   type Cache,
    type CreateReporter,
    type CacheEntry,
+   totalTtl,
 } from "@epic-web/cachified";
 import { request as gqlRequest } from "graphql-request";
 import { LRUCache } from "lru-cache";
@@ -22,7 +23,21 @@ export const lruCache = remember(
    }),
 );
 
-export const cache = lruCacheAdapter(lruCache);
+export const cache: Cache = {
+   set(key, value) {
+      const ttl = totalTtl(value?.metadata);
+      return lruCache.set(key, value, {
+         ttl: ttl === Infinity ? undefined : ttl,
+         start: value?.metadata?.createdTime,
+      });
+   },
+   get(key) {
+      return lruCache.get(key);
+   },
+   delete(key) {
+      return lruCache.delete(key);
+   },
+};
 
 /**
  * Setup a lru-cache for layout data, so we don't have to fetch it every time. Params are based on browser fetch api.
