@@ -57,7 +57,7 @@ export async function fetchWithCache<T>(
       checkValue<T>(value: T) {
          return value && typeof value === "object" && !Array.isArray(value);
       },
-      ttl: ttl ?? 300_000, // how long to live in ms
+      ttl: ttl ?? 60_000, // how long to live in ms
       swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
       reporter: verboseReporter(),
@@ -94,7 +94,7 @@ export async function gqlRequestWithCache<T>(
       checkValue<T>(value: T) {
          return value && typeof value === "object" && !Array.isArray(value);
       },
-      ttl: ttl ?? 300_000, // how long to live in ms
+      ttl: ttl ?? 60_000, // how long to live in ms
       swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
       reporter: verboseReporter(),
@@ -137,7 +137,7 @@ export async function cacheThis<T>(
       checkValue<T>(value: T) {
          return value === null || Boolean(value);
       },
-      ttl: ttl ?? 300_000, // how long to live in ms
+      ttl: ttl ?? 60_000, // how long to live in ms
       swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
       reporter: verboseReporter(),
@@ -185,7 +185,7 @@ export async function cacheWithSelect<T>(
       checkValue<T>(value: T) {
          return value && typeof value === "object" && !Array.isArray(value);
       },
-      ttl: ttl ?? 300_000, // how long to live in ms
+      ttl: ttl ?? 60_000, // how long to live in ms
       swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
       // staleRefreshTimeout
