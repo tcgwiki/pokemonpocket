@@ -56,27 +56,29 @@ export async function fetchWithCache<T>(
       ? (init.body as string).replace(/\s/g, "").replace(/\n/g, " ")
       : url;
 
-   return cachified<T>({
-      cache,
-      key,
-      async getFreshValue() {
-         try {
-            const response = await fetch(url, init);
-            return (await response.json()) as T;
-         } catch (error) {
-            console.error(error);
-            // return the error as a response
-            return undefined as T;
-         }
+   return cachified<T>(
+      {
+         cache,
+         key,
+         async getFreshValue() {
+            try {
+               const response = await fetch(url, init);
+               return (await response.json()) as T;
+            } catch (error) {
+               console.error(error);
+               // return the error as a response
+               return undefined as T;
+            }
+         },
+         checkValue<T>(value: T) {
+            return value && typeof value === "object" && !Array.isArray(value);
+         },
+         ttl: ttl ?? 300_000, // how long to live in ms
+         swr: Infinity, // allow stale items to be returned until they are removed
+         fallbackToCache: true,
       },
-      checkValue<T>(value: T) {
-         return value && typeof value === "object" && !Array.isArray(value);
-      },
-      ttl: ttl ?? 300_000, // how long to live in ms
-      swr: Infinity, // allow stale items to be returned until they are removed
-      fallbackToCache: true,
-      reporter: verboseReporter(),
-   });
+      verboseReporter(),
+   );
 }
 
 //Instead of native fetch, we'll use gqlRequest from "graphql-request" to make the request.
@@ -89,31 +91,33 @@ export async function gqlRequestWithCache<T>(
 ) {
    const key = `${url}${query}${JSON.stringify(variables)}`;
 
-   return cachified<T>({
-      cache,
-      key,
-      async getFreshValue() {
-         try {
-            // We need to catch this to avoid graphql throwing crashing the server
-            const response = await gqlRequest(url, query, variables, {
-               cookie: request?.headers.get("cookie") ?? "",
-            });
-            // console.log("cached: ", key);
-            return response as T;
-         } catch (error) {
-            console.error(error);
-            // return the error as a response
-            return undefined as T;
-         }
+   return cachified<T>(
+      {
+         cache,
+         key,
+         async getFreshValue() {
+            try {
+               // We need to catch this to avoid graphql throwing crashing the server
+               const response = await gqlRequest(url, query, variables, {
+                  cookie: request?.headers.get("cookie") ?? "",
+               });
+               // console.log("cached: ", key);
+               return response as T;
+            } catch (error) {
+               console.error(error);
+               // return the error as a response
+               return undefined as T;
+            }
+         },
+         checkValue<T>(value: T) {
+            return value && typeof value === "object" && !Array.isArray(value);
+         },
+         ttl: ttl ?? 300_000, // how long to live in ms
+         swr: Infinity, // allow stale items to be returned until they are removed
+         fallbackToCache: true,
       },
-      checkValue<T>(value: T) {
-         return value && typeof value === "object" && !Array.isArray(value);
-      },
-      ttl: ttl ?? 300_000, // how long to live in ms
-      swr: Infinity, // allow stale items to be returned until they are removed
-      fallbackToCache: true,
-      reporter: verboseReporter(),
-   });
+      verboseReporter(),
+   );
 }
 
 /**
@@ -136,27 +140,29 @@ export async function cacheThis<T>(
            : params.toString()
       : func.toString();
 
-   return cachified<T>({
-      cache,
-      key,
-      async getFreshValue() {
-         try {
-            // console.log("cached: ", key);
-            return (await func(params)) as T;
-         } catch (error) {
-            console.error(error);
-            // return the error as a response
-            return undefined as T;
-         }
+   return cachified<T>(
+      {
+         cache,
+         key,
+         async getFreshValue() {
+            try {
+               // console.log("cached: ", key);
+               return (await func(params)) as T;
+            } catch (error) {
+               console.error(error);
+               // return the error as a response
+               return undefined as T;
+            }
+         },
+         checkValue<T>(value: T) {
+            return value === null || Boolean(value);
+         },
+         ttl: ttl ?? 300_000, // how long to live in ms
+         swr: Infinity, // allow stale items to be returned until they are removed
+         fallbackToCache: true,
       },
-      checkValue<T>(value: T) {
-         return value === null || Boolean(value);
-      },
-      ttl: ttl ?? 300_000, // how long to live in ms
-      swr: Infinity, // allow stale items to be returned until they are removed
-      fallbackToCache: true,
-      reporter: verboseReporter(),
-   });
+      verboseReporter(),
+   );
 }
 
 /**
@@ -184,33 +190,44 @@ export async function cacheWithSelect<T>(
       key += JSON.stringify(selectOptions);
    }
 
-   return cachified<T>({
-      cache,
-      key,
-      async getFreshValue() {
-         try {
-            const result = await func();
-            return selectFunction(result, selectOptions) as T;
-         } catch (error) {
-            console.error(error);
-            // return the error as a response
-            return undefined as T;
-         }
+   return cachified<T>(
+      {
+         cache,
+         key,
+         async getFreshValue() {
+            try {
+               const result = await func();
+               return selectFunction(result, selectOptions) as T;
+            } catch (error) {
+               console.error(error);
+               // return the error as a response
+               return undefined as T;
+            }
+         },
+         checkValue<T>(value: T) {
+            return value && typeof value === "object" && !Array.isArray(value);
+         },
+         ttl: ttl ?? 300_000, // how long to live in ms
+         swr: Infinity, // allow stale items to be returned until they are removed
+         fallbackToCache: true,
       },
-      checkValue<T>(value: T) {
-         return value && typeof value === "object" && !Array.isArray(value);
-      },
-      ttl: ttl ?? 300_000, // how long to live in ms
-      swr: Infinity, // allow stale items to be returned until they are removed
-      fallbackToCache: true,
-      // staleRefreshTimeout
-      reporter: verboseReporter(),
-   });
+      verboseReporter(),
+   );
+}
+
+interface ReporterOpts {
+   formatDuration?: (ms: number) => string;
+   logger?: Pick<typeof console, "log" | "warn" | "error">;
+   performance?: Pick<typeof Date, "now">;
 }
 
 //This reports the cache status, simplified from https://github.com/Xiphe/cachified/blob/main/src/reporter.ts
-export function verboseReporter<T>(): CreateReporter<T> {
-   return ({ key, fallbackToCache, forceFresh }) => {
+export function verboseReporter<Value>({
+   formatDuration = defaultFormatDuration,
+   logger = console,
+   performance = globalThis.performance || Date,
+}: ReporterOpts = {}): CreateReporter<Value> {
+   return ({ key, fallbackToCache, forceFresh, metadata, cache }) => {
       let cached: unknown;
       let freshValue: unknown;
       let getFreshValueStartTs: number;
@@ -307,4 +324,4 @@ export function verboseReporter<T>(): CreateReporter<T> {
       };
    };
 }
-const formatDuration = (ms: number) => `${Math.round(ms)}ms`;
+const defaultFormatDuration = (ms: number) => `${Math.round(ms)}ms`;
