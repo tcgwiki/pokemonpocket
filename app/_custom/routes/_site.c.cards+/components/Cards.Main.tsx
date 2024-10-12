@@ -5,26 +5,26 @@ import { ShinyCard } from "./ShinyCard";
 import { EntryCardData } from "../$entryId";
 import { TextLink } from "~/components/Text";
 
+export const cardRarityEnum = {
+   C: "common",
+   U: "uncommon",
+   R: "rare holo",
+   RR: "rare ultra",
+   AR: "rare ultra",
+   SAR: "rare ultra",
+   SR: "rare ultra",
+   IM: "rare secret",
+   UR: "rare ultra",
+};
+
 export function CardsMain({ data }: EntryCardData) {
    const card = data?.card;
-
-   const rarityEnum = {
-      C: "common",
-      U: "uncommon",
-      R: "rare holo",
-      RR: "rare ultra",
-      AR: "rare ultra",
-      SAR: "rare ultra",
-      SR: "rare ultra",
-      IM: "rare secret",
-      UR: "rare ultra",
-   };
 
    const cardType = card?.cardType === "pokemon" ? "pokémon" : "trainer";
 
    const rarity =
-      card?.rarity?.name && card.rarity.name in rarityEnum
-         ? rarityEnum[card.rarity.name as keyof typeof rarityEnum]
+      card?.rarity?.name && card.rarity.name in cardRarityEnum
+         ? cardRarityEnum[card.rarity.name as keyof typeof cardRarityEnum]
          : "common";
 
    return (

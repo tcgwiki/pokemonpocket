@@ -8,7 +8,7 @@ import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/En
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
-import { DecksMain } from "./components/Decks.Main";
+import { DecksDeck } from "./components/Decks.Deck";
 
 export { entryMeta as meta };
 
@@ -32,14 +32,13 @@ export async function loader({
 }
 
 const SECTIONS = {
-   main: DecksMain,
+   deck: DecksDeck,
 };
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
-   //@ts-ignore
-   const deck = entry?.data.deck as Deck;
+   const deck = (entry?.data as { deck: Deck }).deck;
 
    return <Entry customComponents={SECTIONS} customData={deck} />;
 }
@@ -50,6 +49,45 @@ const QUERY = gql`
          id
          slug
          name
+         cost
+         deckTypes {
+            id
+            name
+            icon {
+               url
+            }
+         }
+         cards {
+            count
+            card {
+               name
+               slug
+               hp
+               isEX
+               cardType
+               retreatCost
+               rarity {
+                  name
+               }
+               weaknessType {
+                  id
+                  name
+                  icon {
+                     url
+                  }
+               }
+               icon {
+                  url
+               }
+               pokemonType {
+                  id
+                  name
+                  icon {
+                     url
+                  }
+               }
+            }
+         }
       }
    }
 `;
