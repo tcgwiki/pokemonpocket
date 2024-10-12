@@ -1,8 +1,10 @@
 import { Link } from "@remix-run/react";
+
 import { Image } from "~/components/Image";
-import { EntryCardData } from "../$entryId";
-import { SectionTitle } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/SectionTitle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
+import { SectionTitle } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/SectionTitle";
+
+import type { EntryCardData } from "../$entryId";
 
 export function CardsDecks({ data }: EntryCardData) {
    const { decks } = data;

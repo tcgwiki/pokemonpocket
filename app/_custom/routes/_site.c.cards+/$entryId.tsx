@@ -3,7 +3,6 @@ import { json } from "@remix-run/node";
 import { Outlet, useLoaderData, useRouteLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
-import css from "./components/cards.css";
 import type { Card, CardGroup, Deck } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
@@ -15,11 +14,6 @@ import { gqlFetch } from "~/utils/fetchers.server";
 import { CardsDecks } from "./components/Cards.Decks";
 
 export { entryMeta as meta };
-
-export const links = () => [
-   { rel: "preload", as: "style", href: css },
-   { rel: "stylesheet", href: css },
-];
 
 export async function loader({
    context: { payload, user },

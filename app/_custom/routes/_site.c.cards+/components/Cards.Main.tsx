@@ -1,9 +1,9 @@
-import { Image } from "~/components/Image";
 import { Badge } from "~/components/Badge";
+import { Image } from "~/components/Image";
+import { TextLink } from "~/components/Text";
 
 import { ShinyCard } from "./ShinyCard";
-import { EntryCardData } from "../$entryId";
-import { TextLink } from "~/components/Text";
+import type { EntryCardData } from "../$entryId";
 
 export const cardRarityEnum = {
    C: "common",

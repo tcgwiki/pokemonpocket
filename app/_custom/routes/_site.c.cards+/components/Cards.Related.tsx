@@ -1,7 +1,9 @@
 import { Link } from "@remix-run/react";
+
 import { Image } from "~/components/Image";
-import { EntryCardData } from "../$entryId";
 import { SectionTitle } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/SectionTitle";
+
+import type { EntryCardData } from "../$entryId";
 
 export function CardsRelated({ data }: EntryCardData) {
    const relatedCards = data.relatedPokemon.docs[0]?.cards;
