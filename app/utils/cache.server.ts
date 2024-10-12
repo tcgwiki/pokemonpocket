@@ -45,18 +45,21 @@ export async function fetchWithCache<T>(
       cache,
       key,
       async getFreshValue() {
-         const response = await fetch(url, init);
-         // console.log("cached: ", key);
-         return response.json() as T;
+         try {
+            const response = await fetch(url, init);
+            return (await response.json()) as T;
+         } catch (error) {
+            console.error(error);
+            // return the error as a response
+            return undefined as T;
+         }
       },
       checkValue<T>(value: T) {
-         // console.log(value);
          return value && typeof value === "object" && !Array.isArray(value);
       },
       ttl: ttl ?? 300_000, // how long to live in ms
-      swr: 365 * 24 * 60 * 60 * 1000, // allow stale items to be returned until they are removed
+      swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
-      // staleRefreshTimeout
       reporter: verboseReporter(),
    });
 }
@@ -85,16 +88,15 @@ export async function gqlRequestWithCache<T>(
          } catch (error) {
             console.error(error);
             // return the error as a response
-            return null as T;
+            return undefined as T;
          }
       },
       checkValue<T>(value: T) {
          return value && typeof value === "object" && !Array.isArray(value);
       },
       ttl: ttl ?? 300_000, // how long to live in ms
-      swr: 365 * 24 * 60 * 60 * 1000, // allow stale items to be returned until they are removed
+      swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
-      // staleRefreshTimeout
       reporter: verboseReporter(),
    });
 }
@@ -123,16 +125,21 @@ export async function cacheThis<T>(
       cache,
       key,
       async getFreshValue() {
-         // console.log("cached: ", key);
-         return await func(params);
+         try {
+            // console.log("cached: ", key);
+            return (await func(params)) as T;
+         } catch (error) {
+            console.error(error);
+            // return the error as a response
+            return undefined as T;
+         }
       },
-      ttl: ttl ?? 300_000, // how long to live in ms
-      swr: 365 * 24 * 60 * 60 * 1000, // allow stale items to be returned until they are removed
       checkValue<T>(value: T) {
          return value === null || Boolean(value);
       },
+      ttl: ttl ?? 300_000, // how long to live in ms
+      swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
-      // staleRefreshTimeout
       reporter: verboseReporter(),
    });
 }
@@ -166,14 +173,20 @@ export async function cacheWithSelect<T>(
       cache,
       key,
       async getFreshValue() {
-         const result = await func();
-         return selectFunction(result, selectOptions);
+         try {
+            const result = await func();
+            return selectFunction(result, selectOptions) as T;
+         } catch (error) {
+            console.error(error);
+            // return the error as a response
+            return undefined as T;
+         }
       },
       checkValue<T>(value: T) {
          return value && typeof value === "object" && !Array.isArray(value);
       },
       ttl: ttl ?? 300_000, // how long to live in ms
-      swr: 365 * 24 * 60 * 60 * 1000, // allow stale items to be returned until they are removed
+      swr: Infinity, // allow stale items to be returned until they are removed
       fallbackToCache: true,
       // staleRefreshTimeout
       reporter: verboseReporter(),
