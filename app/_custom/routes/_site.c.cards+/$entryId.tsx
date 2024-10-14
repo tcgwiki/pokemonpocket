@@ -30,8 +30,6 @@ export async function loader({
       },
    });
 
-   console.trace("entry", entry);
-
    const cardGroupId = (entry?.data as any)?.relatedPokemon?.docs?.[0]?.id;
 
    //@ts-ignore
