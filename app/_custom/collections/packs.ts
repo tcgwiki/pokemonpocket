@@ -34,9 +34,9 @@ export const Packs: CollectionConfig = {
          relationTo: "images",
       },
       {
-         name: "set",
+         name: "expansion",
          type: "relationship",
-         relationTo: "sets",
+         relationTo: "expansions",
       },
       {
          name: "cards",

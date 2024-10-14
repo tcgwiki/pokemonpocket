@@ -2,9 +2,9 @@ import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const Sets: CollectionConfig = {
-   slug: "sets",
-   labels: { singular: "Set", plural: "Sets" },
+export const Expansions: CollectionConfig = {
+   slug: "expansions",
+   labels: { singular: "Expansion", plural: "Expansions" },
    admin: {
       group: "Custom",
       useAsTitle: "name",
