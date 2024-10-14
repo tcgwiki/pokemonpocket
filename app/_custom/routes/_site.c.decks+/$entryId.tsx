@@ -50,6 +50,7 @@ const QUERY = gql`
          slug
          name
          cost
+         tier
          deckTypes {
             id
             name
@@ -57,33 +58,36 @@ const QUERY = gql`
                url
             }
          }
-         cards {
-            count
-            card {
-               name
-               slug
-               hp
-               isEX
-               cardType
-               retreatCost
-               rarity {
+         builds {
+            name
+            cards {
+               count
+               card {
                   name
-               }
-               weaknessType {
-                  id
-                  name
+                  slug
+                  hp
+                  isEX
+                  cardType
+                  retreatCost
+                  rarity {
+                     name
+                  }
+                  weaknessType {
+                     id
+                     name
+                     icon {
+                        url
+                     }
+                  }
                   icon {
                      url
                   }
-               }
-               icon {
-                  url
-               }
-               pokemonType {
-                  id
-                  name
-                  icon {
-                     url
+                  pokemonType {
+                     id
+                     name
+                     icon {
+                        url
+                     }
                   }
                }
             }

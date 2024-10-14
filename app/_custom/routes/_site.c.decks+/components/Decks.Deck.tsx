@@ -17,18 +17,32 @@ import { Dialog } from "~/components/Dialog";
 import { useState } from "react";
 import { Button } from "~/components/Button";
 import { Icon } from "~/components/Icon";
+import { H3 } from "~/components/Headers";
+import {
+   Disclosure,
+   DisclosureButton,
+   DisclosurePanel,
+} from "@headlessui/react";
+import clsx from "clsx";
 
 const columnHelper = createColumnHelper<Card & { count: number }>();
 
 export function DecksDeck({ data }: { data: Deck }) {
    const deck = data;
-   const flattenedCards =
-      deck.cards?.flatMap((card) => ({ ...card.card, count: card.count })) ||
-      [];
+   const decks =
+      deck.builds?.map((build) => {
+         return {
+            name: build.name,
+            cards: build.cards?.flatMap((card) => ({
+               ...card.card,
+               count: card.count,
+            })),
+         };
+      }) || [];
 
    return (
       <>
-         <div className="flex justify-between items-center border border-color-sub bg-2-sub p-3 rounded-lg shadow-sm shadow-1 mb-0.5">
+         <div className="flex justify-between items-center border border-color-sub bg-2-sub p-3 rounded-lg shadow-sm shadow-1 mb-3">
             <div className="flex items-center gap-2">
                {deck.deckTypes && (
                   <div className="flex gap-1 justify-center">
@@ -45,23 +59,64 @@ export function DecksDeck({ data }: { data: Deck }) {
                )}
                <div className="text-sm font-semibold">Energy</div>
             </div>
+            <Button color="red">
+               Pull
+               <Icon name="chevron-right" size={16} />
+            </Button>
          </div>
-         <ListTable
-            columnViewability={{
-               pokemonType: false,
-               cardType: false,
-               isEX: false,
-            }}
-            gridView={deckCardGridView}
-            gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
-            gridCellClassNames="relative flex items-center justify-center"
-            defaultViewType="grid"
-            defaultSort={[{ id: "rarity", desc: true }]}
-            data={{ listData: { docs: flattenedCards } }}
-            columns={deckCardColumns}
-            filters={deckCardFilters}
-            pager={false}
-         />
+         {decks.map((deckRow, _deckRowIndex) => (
+            <Disclosure defaultOpen={_deckRowIndex === 0}>
+               {({ open }) => (
+                  <>
+                     <DisclosureButton
+                        className={clsx(
+                           open ? "rounded-b-none " : "mb-2.5 shadow-sm",
+                           "shadow-1 border-color-sub bg-2-sub flex w-full items-center gap-2 overflow-hidden rounded-lg border px-2 py-3",
+                        )}
+                     >
+                        <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full border bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600/30 dark:bg-dark450 dark:shadow-zinc-800">
+                           <Icon
+                              name="chevron-right"
+                              className={clsx(
+                                 open ? "rotate-90" : "",
+                                 "transform pl-0.5 transition duration-300 ease-in-out",
+                              )}
+                              size={16}
+                           />
+                        </div>
+                        <div className="flex-grow text-left text-[15px] font-bold">
+                           {deckRow.name}
+                        </div>
+                     </DisclosureButton>
+                     <DisclosurePanel
+                        contentEditable={false}
+                        unmount={false}
+                        className={clsx(
+                           open ? "mb-3 border-t" : "",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 pt-0 text-sm shadow-sm",
+                        )}
+                     >
+                        <ListTable
+                           columnViewability={{
+                              pokemonType: false,
+                              cardType: false,
+                              isEX: false,
+                           }}
+                           gridView={deckCardGridView}
+                           gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
+                           gridCellClassNames="relative flex items-center justify-center"
+                           defaultViewType="grid"
+                           defaultSort={[{ id: "rarity", desc: true }]}
+                           data={{ listData: { docs: deckRow.cards } }}
+                           columns={deckCardColumns}
+                           filters={deckCardFilters}
+                           pager={false}
+                        />
+                     </DisclosurePanel>
+                  </>
+               )}
+            </Disclosure>
+         ))}
       </>
    );
 }
@@ -110,7 +165,7 @@ const deckCardGridView = columnHelper.accessor("name", {
                   </Button>
                </div>
             </Dialog>
-            <div className="relative">
+            <>
                <div className="sr-only">{info.row.original?.name}</div>
                <span className="absolute top-0 right-0 rounded-tr rounded-bl bg-red-500 text-white p-1.5 text-xs font-bold">
                   x{info.row.original?.count}
@@ -128,13 +183,13 @@ const deckCardGridView = columnHelper.accessor("name", {
                   />
                </button>
                <Button
-                  className="!absolute bottom-3 right-1 !size-8 !p-0"
+                  className="!absolute bottom-1 right-1 !size-8 !p-0"
                   color="zinc"
                   href={`/c/cards/${info.row.original?.slug}`}
                >
                   <Icon name="chevron-right" size={16} />
                </Button>
-            </div>
+            </>
          </>
       );
    },

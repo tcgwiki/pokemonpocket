@@ -25,9 +25,20 @@ export const Decks: CollectionConfig = {
          type: "text",
       },
       {
+         name: "tier",
+         type: "select",
+         options: [
+            { label: "D Tier", value: "d" },
+            { label: "C Tier", value: "c" },
+            { label: "B Tier", value: "b" },
+            { label: "A Tier", value: "a" },
+            { label: "S Tier", value: "s" },
+         ],
+      },
+      {
          name: "cost",
          type: "select",
-         options: ["low", "medium", "high"],
+         options: ["Low", "Medium", "High"],
       },
       {
          name: "icon",
@@ -47,19 +58,26 @@ export const Decks: CollectionConfig = {
          hasMany: true,
       },
       {
-         name: "cards",
+         name: "builds",
          type: "array",
-         maxRows: 20,
          fields: [
+            { name: "name", type: "text" },
             {
-               name: "card",
-               type: "relationship",
-               relationTo: "cards",
-            },
-            {
-               name: "count",
-               type: "number",
-               max: 2,
+               name: "cards",
+               type: "array",
+               maxRows: 20,
+               fields: [
+                  {
+                     name: "card",
+                     type: "relationship",
+                     relationTo: "cards",
+                  },
+                  {
+                     name: "count",
+                     type: "number",
+                     max: 2,
+                  },
+               ],
             },
          ],
       },
