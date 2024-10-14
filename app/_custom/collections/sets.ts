@@ -43,6 +43,10 @@ export const Sets: CollectionConfig = {
          relationTo: "images",
       },
       {
+         name: "isPromo",
+         type: "checkbox",
+      },
+      {
          name: "packs",
          type: "relationship",
          relationTo: "packs",
@@ -56,6 +60,10 @@ export const Sets: CollectionConfig = {
          admin: {
             isSortable: true,
          },
+      },
+      {
+         name: "cardCount",
+         type: "text",
       },
       {
          name: "checksum",
