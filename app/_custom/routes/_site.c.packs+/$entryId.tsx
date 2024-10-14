@@ -50,7 +50,7 @@ const PACK_QUERY = gql`
          id
          slug
          name
-         set {
+         expansion {
             slug
             logo {
                url

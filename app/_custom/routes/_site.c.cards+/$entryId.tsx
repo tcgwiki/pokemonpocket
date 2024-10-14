@@ -30,6 +30,8 @@ export async function loader({
       },
    });
 
+   console.trace("entry", entry);
+
    const cardGroupId = (entry?.data as any)?.relatedPokemon?.docs?.[0]?.id;
 
    //@ts-ignore
@@ -121,7 +123,7 @@ const CARD_QUERY = gql`
             cards {
                id
                name
-               set {
+               expansion {
                   slug
                   logo {
                      url
@@ -203,7 +205,7 @@ const CARD_QUERY = gql`
                url
             }
          }
-         set {
+         expansion {
             name
             slug
             logo {
