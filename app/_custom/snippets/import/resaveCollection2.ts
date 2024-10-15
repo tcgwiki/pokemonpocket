@@ -36,11 +36,11 @@ const resaveCollection = async () => {
          data: {
             // name: `${result.name}${
             //    result.rarity.name ? ` [${result.rarity.name}]` : ""
-            // } - ${result.set.name}`,
+            // } - ${result.expansion.name}`,
             // slug: manaSlug(
             //    `${result.name}${
             //       result.rarity.name ? `-${result.rarity.name}` : ""
-            //    }-${result.set.name}`,
+            //    }-${result.expansion.name}`,
             // ),
             // icon: result.image.id,
          },

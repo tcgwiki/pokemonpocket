@@ -3,13 +3,13 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
-import type { Set } from "~/db/payload-custom-types";
+import type { Expansion } from "~/db/payload-custom-types";
 import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/Entry";
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
-import { SetsMain } from "./components/Sets.Main";
-import { SetsCards } from "./components/Sets.Cards";
+import { ExpansionsMain } from "./components/Expansions.Main";
+import { ExpansionsCards } from "./components/Expansions.Cards";
 
 export { entryMeta as meta };
 
@@ -33,22 +33,22 @@ export async function loader({
 }
 
 const SECTIONS = {
-   main: SetsMain,
-   cards: SetsCards,
+   main: ExpansionsMain,
+   cards: ExpansionsCards,
 };
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
    //@ts-ignore
-   const set = entry?.data.set as Set;
+   const expansion = entry?.data.expansion as Expansion;
 
-   return <Entry customComponents={SECTIONS} customData={set} />;
+   return <Entry customComponents={SECTIONS} customData={expansion} />;
 }
 
 const QUERY = gql`
    query ($entryId: String!) {
-      set: Set(id: $entryId) {
+      expansion: Expansion(id: $entryId) {
          id
          slug
          name

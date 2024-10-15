@@ -30,11 +30,11 @@ export function CardsRelated({ data }: EntryCardData) {
                         <div className="text-sm font-bold pb-1 sr-only">
                            {card.name}
                         </div>
-                        {card.set?.logo?.url ? (
+                        {card.expansion?.logo?.url ? (
                            <Image
                               className="object-contain h-9 -mb-4 z-20 relative"
                               height={72}
-                              url={card.set?.logo?.url}
+                              url={card.expansion?.logo?.url}
                            />
                         ) : undefined}
                         <Image

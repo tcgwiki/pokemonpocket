@@ -1,4 +1,4 @@
-import { Set } from "~/db/payload-custom-types";
+import { Expansion } from "~/db/payload-custom-types";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import {
    cardFilters,
@@ -6,7 +6,7 @@ import {
    cardColumns,
 } from "../../_site.c.cards+/_index";
 
-export function SetsCards({ data }: { data: Set }) {
+export function ExpansionsCards({ data }: { data: Expansion }) {
    return (
       <ListTable
          gridView={cardGridView}

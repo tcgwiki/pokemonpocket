@@ -51,18 +51,18 @@ export function CardsMain({ data }: EntryCardData) {
                <div className="p-3 justify-between flex items-center gap-2">
                   <span className="font-semibold text-sm">Set</span>
                   <TextLink
-                     href={`/c/sets/${card.set?.slug}`}
+                     href={`/c/expansions/${card.expansion?.slug}`}
                      className="text-sm font-semibold flex items-center gap-2"
                   >
-                     <span className="sr-only">{card.set?.name}</span>
-                     {card.set?.logo?.url ? (
+                     <span className="sr-only">{card.expansion?.name}</span>
+                     {card.expansion?.logo?.url ? (
                         <Image
                            height={40}
                            className="h-7"
-                           url={card.set?.logo?.url}
+                           url={card.expansion?.logo?.url}
                         />
                      ) : (
-                        card.set?.name
+                        card.expansion?.name
                      )}
                   </TextLink>
                </div>

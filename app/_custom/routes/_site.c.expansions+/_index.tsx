@@ -5,8 +5,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
-import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Card, Set } from "~/db/payload-custom-types";
+import { Expansion } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -27,7 +26,7 @@ export async function loader({
       payload,
       user,
       gql: {
-         query: SETS,
+         query: EXPANSIONS,
       },
    });
    return json({ list });
@@ -46,14 +45,14 @@ export default function ListPage() {
    );
 }
 
-const columnHelper = createColumnHelper<Set>();
+const columnHelper = createColumnHelper<Expansion>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
          className="flex items-center flex-col justify-center relative gap-1"
-         to={`/c/sets/${info.row.original.slug}`}
+         to={`/c/expansions/${info.row.original.slug}`}
       >
          <div className="text-sm text-center font-semibold">
             {info.getValue()}
@@ -85,7 +84,7 @@ const columns = [
          return (
             <Link
                prefetch="intent"
-               to={`/c/sets/${info.row.original.slug}`}
+               to={`/c/expansions/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
                {info.getValue()}
@@ -95,9 +94,9 @@ const columns = [
    }),
 ];
 
-const SETS = gql`
+const EXPANSIONS = gql`
    query {
-      listData: Sets(limit: 5000) {
+      listData: Expansions(limit: 5000) {
          totalDocs
          docs {
             id

@@ -1,10 +1,10 @@
-import { Card, Set } from "~/db/payload-custom-types";
+import { Expansion } from "~/db/payload-custom-types";
 
 import { Image } from "~/components/Image";
 import { Link } from "@remix-run/react";
 import dt from "date-and-time";
-export function SetsMain({ data }: { data: Set }) {
-   const set = data;
+export function ExpansionsMain({ data }: { data: Expansion }) {
+   const expansion = data;
 
    return (
       <div>
@@ -16,16 +16,19 @@ export function SetsMain({ data }: { data: Set }) {
                <span className="font-semibold text-sm">Release Date</span>
                <span className="text-sm font-semibold flex items-center gap-2">
                   <span>
-                     {set.releaseDate
-                        ? dt.format(new Date(set.releaseDate), "MMM DD, YYYY")
+                     {expansion.releaseDate
+                        ? dt.format(
+                             new Date(expansion.releaseDate),
+                             "MMM DD, YYYY",
+                          )
                         : ""}
                   </span>
                </span>
             </div>
          </div>
-         {set?.packs && set?.packs?.length > 0 && (
+         {expansion?.packs && expansion?.packs?.length > 0 && (
             <div className="flex items-center justify-between gap-3">
-               {set.packs.map((pack) => (
+               {expansion.packs.map((pack) => (
                   <Link
                      key={pack.name}
                      to={`/c/packs/${pack.slug}`}

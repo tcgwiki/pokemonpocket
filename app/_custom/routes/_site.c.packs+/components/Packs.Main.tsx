@@ -1,4 +1,4 @@
-import { Card, Pack, Set } from "~/db/payload-custom-types";
+import { Pack } from "~/db/payload-custom-types";
 
 import { Image } from "~/components/Image";
 import { Link } from "@remix-run/react";
@@ -12,7 +12,7 @@ export function PacksMain({ data }: { data: Pack }) {
    return (
       <>
          <Link
-            to={`/c/sets/${pack.set?.slug}`}
+            to={`/c/expansions/${pack.expansion?.slug}`}
             className="justify-between flex items-center gap-2 border py-1 pl-3 rounded-xl shadow-sm dark:shadow-zinc-800/50
                border-zinc-200 bg-zinc-100 dark:border-zinc-600 dark:bg-dark450 group"
          >
@@ -30,7 +30,7 @@ export function PacksMain({ data }: { data: Pack }) {
             <Image
                className="object-contain h-11"
                height={100}
-               url={pack.set?.logo?.url}
+               url={pack.expansion?.logo?.url}
             />
          </Link>
       </>

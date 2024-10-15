@@ -42,7 +42,7 @@ export function DecksDeck({ data }: { data: Deck }) {
 
    return (
       <>
-         <div className="flex justify-between items-center border border-color-sub bg-2-sub p-3 rounded-lg shadow-sm shadow-1 mb-3">
+         <div className="flex justify-between items-center border-2 border-color-sub bg-2-sub p-3 rounded-xl shadow-sm shadow-1 mb-3">
             <div className="flex items-center gap-2">
                {deck.deckTypes && (
                   <div className="flex gap-1 justify-center">
@@ -59,8 +59,12 @@ export function DecksDeck({ data }: { data: Deck }) {
                )}
                <div className="text-sm font-semibold">Energy</div>
             </div>
-            <Button color="red">
-               Pull
+            <Button
+               href="/c//pack-simulator"
+               color="purple"
+               className="!px-2 !gap-1.5"
+            >
+               Pack Simulator
                <Icon name="chevron-right" size={16} />
             </Button>
          </div>
@@ -71,7 +75,7 @@ export function DecksDeck({ data }: { data: Deck }) {
                      <DisclosureButton
                         className={clsx(
                            open ? "rounded-b-none " : "mb-2.5 shadow-sm",
-                           "shadow-1 border-color-sub bg-2-sub flex w-full items-center gap-2 overflow-hidden rounded-lg border px-2 py-3",
+                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border-2 px-2 py-3",
                         )}
                      >
                         <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full border bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600/30 dark:bg-dark450 dark:shadow-zinc-800">
@@ -93,7 +97,7 @@ export function DecksDeck({ data }: { data: Deck }) {
                         unmount={false}
                         className={clsx(
                            open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 pt-0 text-sm shadow-sm",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border-2 border-t-0 p-3 pt-0 text-sm shadow-sm",
                         )}
                      >
                         <ListTable
