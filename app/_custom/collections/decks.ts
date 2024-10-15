@@ -63,6 +63,12 @@ export const Decks: CollectionConfig = {
          fields: [
             { name: "name", type: "text" },
             {
+               name: "highlightCard",
+               type: "relationship",
+               relationTo: "card-groups",
+               hasMany: false,
+            },
+            {
                name: "cards",
                type: "array",
                maxRows: 20,

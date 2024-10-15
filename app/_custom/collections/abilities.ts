@@ -43,5 +43,10 @@ export const Abilities: CollectionConfig = {
          type: "text",
          required: true,
       },
+      {
+         name: "icon",
+         type: "upload",
+         relationTo: "images",
+      },
    ],
 };
