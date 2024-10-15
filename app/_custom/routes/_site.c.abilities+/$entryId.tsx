@@ -8,6 +8,7 @@ import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/ent
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 import { AbilitiesMain } from "./components/Abilities.Main";
 import { Ability } from "~/db/payload-custom-types";
+import { AbilitiesCards } from "./components/Abilities.Cards";
 
 export { entryMeta as meta };
 
@@ -32,6 +33,7 @@ export async function loader({
 
 const SECTIONS = {
    main: AbilitiesMain,
+   cards: AbilitiesCards,
 };
 
 export default function EntryPage() {
@@ -49,6 +51,37 @@ const QUERY = gql`
          slug
          name
          desc
+         cards {
+            name
+            slug
+            hp
+            isEX
+            cardType
+            retreatCost
+            rarity {
+               name
+               icon {
+                  url
+               }
+            }
+            weaknessType {
+               id
+               name
+               icon {
+                  url
+               }
+            }
+            icon {
+               url
+            }
+            pokemonType {
+               id
+               name
+               icon {
+                  url
+               }
+            }
+         }
       }
    }
 `;

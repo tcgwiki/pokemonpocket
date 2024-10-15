@@ -3,10 +3,10 @@ import { json } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { gql } from "graphql-request";
+import { descriptionParser } from "~/_custom/utils/descriptionParser";
+import { TextLink } from "~/components/Text";
 
-import { Image } from "~/components/Image";
-import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Ability, Card } from "~/db/payload-custom-types";
+import { Ability } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -61,24 +61,25 @@ const columns = [
       filterFn: fuzzyFilter,
       cell: (info) => {
          return (
-            <Link
-               prefetch="intent"
-               to={`/c/abilities/${info.row.original.slug}`}
-               className="flex items-center gap-3 group py-0.5"
+            <TextLink
+               className="pr-3"
+               href={`/c/abilities/${info.row.original.slug}`}
             >
-               {/* <Image
-                  width={36}
-                  height={36}
-                  url={info.row.original.icon?.url}
-                  options="aspect_ratio=1:1&height=80&width=80"
-               /> */}
-               <span
-                  className="space-y-0.5 font-semibold group-hover:underline 
-                decoration-zinc-400 underline-offset-2 truncate"
-               >
-                  <div className="truncate">{info.getValue()}</div>
-               </span>
-            </Link>
+               {info.getValue()}
+            </TextLink>
+         );
+      },
+   }),
+   columnHelper.accessor("desc", {
+      header: "Description",
+      cell: (info) => {
+         return (
+            <div
+               className="whitespace-pre-wrap py-2"
+               dangerouslySetInnerHTML={{
+                  __html: descriptionParser(info.getValue() ?? ""),
+               }}
+            />
          );
       },
    }),
@@ -92,6 +93,7 @@ const ABILITIES = gql`
             id
             name
             slug
+            desc
          }
       }
    }

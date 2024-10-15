@@ -4,6 +4,7 @@ import { TextLink } from "~/components/Text";
 
 import { ShinyCard } from "./ShinyCard";
 import type { EntryCardData } from "../$entryId";
+import { descriptionParser } from "~/_custom/utils/descriptionParser";
 
 export const cardRarityEnum = {
    C: "common",
@@ -172,8 +173,15 @@ export function CardsMain({ data }: EntryCardData) {
                            ) : undefined}
                         </div>
                         {move.move?.desc ? (
-                           <div className="text-sm text-1 pt-1.5">
-                              {move.move?.desc}
+                           <div
+                              dangerouslySetInnerHTML={{
+                                 __html: descriptionParser(
+                                    move.move?.desc ?? "",
+                                 ),
+                              }}
+                              className="text-sm text-1 pt-1.5"
+                           >
+                              {}
                            </div>
                         ) : undefined}
                      </div>
