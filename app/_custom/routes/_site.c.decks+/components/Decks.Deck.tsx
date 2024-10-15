@@ -17,13 +17,13 @@ import { Dialog } from "~/components/Dialog";
 import { useState } from "react";
 import { Button } from "~/components/Button";
 import { Icon } from "~/components/Icon";
-import { H3 } from "~/components/Headers";
 import {
    Disclosure,
    DisclosureButton,
    DisclosurePanel,
 } from "@headlessui/react";
 import clsx from "clsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 
 const columnHelper = createColumnHelper<Card & { count: number }>();
 
@@ -49,35 +49,83 @@ export function DecksDeck({ data }: { data: Deck }) {
 
    return (
       <>
-         <div className="flex justify-between items-center border-2 border-color-sub bg-2-sub p-3 rounded-xl shadow-sm shadow-1 mb-3">
-            <div className="flex items-center gap-2">
-               {deck.deckTypes && (
-                  <div className="flex gap-1 justify-center">
-                     {deck.deckTypes?.map((type) => (
-                        <Image
-                           width={32}
-                           height={32}
-                           url={type.icon?.url}
-                           alt={deck.name ?? ""}
-                           className="size-6 object-contain"
-                        />
-                     ))}
-                  </div>
-               )}
-               <div className="text-sm font-bold">Energy</div>
+         <div className="flex items-start gap-4 pb-5">
+            <div className="flex flex-col gap-3">
+               <Badge color="zinc" className="!justify-center">
+                  Highlight Cards
+               </Badge>
+               <div className="inline-flex space-x-2">
+                  {deck.highlightCards?.map((card) => (
+                     <Tooltip placement="top">
+                        <TooltipTrigger
+                           className="shadow-sm shadow-1 z-10"
+                           key={card.id}
+                        >
+                           <Image
+                              url={card.icon?.url}
+                              alt={card.name ?? ""}
+                              className="w-36 object-contain"
+                              width={200}
+                              height={280}
+                           />
+                        </TooltipTrigger>
+                        <TooltipContent className="!p-0 !bg-transparent !border-0 !z-50">
+                           <Image
+                              url={card.icon?.url}
+                              alt={card.name ?? ""}
+                              width={367}
+                              height={512}
+                              className="w-full object-contain"
+                           />
+                        </TooltipContent>
+                     </Tooltip>
+                  ))}
+               </div>
             </div>
-            <Badge className="!text-base" color="purple">
-               {deck.tier ? tierEnum[deck.tier] : ""} Tier
-            </Badge>
+            <div className="flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1 mb-3">
+               <div className="flex items-center justify-between gap-2 w-full p-3">
+                  <div className="flex items-center gap-2">
+                     <div className="text-sm font-bold">Energy</div>
+                  </div>
+                  {deck.deckTypes && (
+                     <div className="flex gap-1 justify-center">
+                        {deck.deckTypes?.map((type) => (
+                           <Image
+                              width={32}
+                              height={32}
+                              url={type.icon?.url}
+                              alt={deck.name ?? ""}
+                              className="size-5 object-contain"
+                           />
+                        ))}
+                     </div>
+                  )}
+               </div>
+               <div className="flex items-center justify-between gap-2 w-full p-3">
+                  <div className="text-sm font-bold">Tier Rating</div>
+                  <Badge color="purple">
+                     {deck.tier
+                        ? tierEnum[deck.tier as keyof typeof tierEnum]
+                        : ""}{" "}
+                     Tier
+                  </Badge>
+               </div>
+               <div className="flex items-center justify-between gap-2 w-full p-3">
+                  <div className="flex items-center gap-2">
+                     <div className="text-sm font-bold">Cost</div>
+                  </div>
+                  <div className="text-1 text-sm">{deck.cost}</div>
+               </div>
+            </div>
          </div>
          {decks.map((deckRow, _deckRowIndex) => (
-            <Disclosure defaultOpen={_deckRowIndex === 0}>
+            <Disclosure defaultOpen={true}>
                {({ open }) => (
                   <>
                      <DisclosureButton
                         className={clsx(
                            open ? "rounded-b-none " : "mb-2.5 shadow-sm",
-                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border-2 px-2 py-3",
+                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2 py-3",
                         )}
                      >
                         <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full border bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600/30 dark:bg-dark450 dark:shadow-zinc-800">
@@ -99,7 +147,7 @@ export function DecksDeck({ data }: { data: Deck }) {
                         unmount={false}
                         className={clsx(
                            open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border-2 border-t-0 p-3 pt-0 text-sm shadow-sm",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 pt-0 text-sm shadow-sm",
                         )}
                      >
                         <ListTable

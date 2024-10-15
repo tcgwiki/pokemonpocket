@@ -58,6 +58,13 @@ const QUERY = gql`
                url
             }
          }
+         highlightCards {
+            id
+            name
+            icon {
+               url
+            }
+         }
          builds {
             name
             cards {
