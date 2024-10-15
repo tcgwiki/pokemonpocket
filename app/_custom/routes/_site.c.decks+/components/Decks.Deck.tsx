@@ -209,7 +209,12 @@ const deckCardGridView = columnHelper.accessor("name", {
                onClose={setIsOpen}
                open={isOpen}
             >
-               <div className="flex items-center flex-col gap-5 justify-center">
+               <div
+                  className="flex items-center flex-col gap-5 justify-center"
+                  style={{
+                     viewTransitionName: info.row.original?.slug ?? undefined,
+                  }}
+               >
                   {/* @ts-ignore */}
                   <ShinyCard supertype={cardType} rarity={rarity}>
                      <Image

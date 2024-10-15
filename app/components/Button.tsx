@@ -214,6 +214,7 @@ export const Button = React.forwardRef(function Button(
          {...props}
          className={classes}
          ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+         viewTransition
       >
          <TouchTarget>{children}</TouchTarget>
       </Link>
