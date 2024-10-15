@@ -1,4 +1,4 @@
-import { Expansion } from "~/db/payload-custom-types";
+import { Move } from "~/db/payload-custom-types";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import {
    cardFilters,
@@ -6,7 +6,7 @@ import {
    cardColumns,
 } from "../../_site.c.cards+/_index";
 
-export function AbilitiesCards({ data }: { data: Expansion }) {
+export function MovesCards({ data }: { data: Move }) {
    return (
       <ListTable
          gridView={cardGridView}

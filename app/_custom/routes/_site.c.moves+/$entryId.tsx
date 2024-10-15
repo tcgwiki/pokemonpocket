@@ -7,6 +7,8 @@ import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/En
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 import { MovesMain } from "./components/Moves.Main";
+import { MovesCards } from "./components/Moves.Cards";
+import { Move } from "~/db/payload-custom-types";
 
 export { entryMeta as meta };
 
@@ -31,13 +33,13 @@ export async function loader({
 
 const SECTIONS = {
    main: MovesMain,
+   cards: MovesCards,
 };
 
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
-   //@ts-ignore
-   const move = entry?.data.move as Move;
+   const move = (entry?.data as { move: Move })?.move;
 
    return <Entry customComponents={SECTIONS} customData={move} />;
 }
@@ -48,6 +50,38 @@ const QUERY = gql`
          id
          slug
          name
+         desc
+         cards {
+            name
+            slug
+            hp
+            isEX
+            cardType
+            retreatCost
+            rarity {
+               name
+               icon {
+                  url
+               }
+            }
+            weaknessType {
+               id
+               name
+               icon {
+                  url
+               }
+            }
+            icon {
+               url
+            }
+            pokemonType {
+               id
+               name
+               icon {
+                  url
+               }
+            }
+         }
       }
    }
 `;

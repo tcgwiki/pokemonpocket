@@ -3,9 +3,9 @@ import { json } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { gql } from "graphql-request";
+import { descriptionParser } from "~/_custom/utils/descriptionParser";
+import { TextLink } from "~/components/Text";
 
-import { Image } from "~/components/Image";
-import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
 import { Card } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
@@ -32,8 +32,7 @@ export async function loader({
 }
 
 export default function ListPage() {
-   //@ts-ignore
-   return <List gridView={gridView} columns={columns} filters={filters} />;
+   return <List gridView={gridView} columns={columns} />;
 }
 
 const columnHelper = createColumnHelper<Card>();
@@ -43,7 +42,6 @@ const gridView = columnHelper.accessor("name", {
    cell: (info) => (
       <Link
          className="block relative"
-         prefetch="intent"
          to={`/c/moves/${info.row.original.slug}`}
       >
          <div
@@ -62,24 +60,27 @@ const columns = [
       filterFn: fuzzyFilter,
       cell: (info) => {
          return (
-            <Link
-               prefetch="intent"
-               to={`/c/moves/${info.row.original.slug}`}
-               className="flex items-center gap-3 group py-0.5"
+            <TextLink
+               className="pr-3"
+               href={`/c/moves/${info.row.original.slug}`}
             >
-               {/* <Image
-                  width={36}
-                  height={36}
-                  url={info.row.original.icon?.url}
-                  options="aspect_ratio=1:1&height=80&width=80"
-               /> */}
-               <span
-                  className="space-y-0.5 font-semibold group-hover:underline 
-                decoration-zinc-400 underline-offset-2 truncate"
-               >
-                  <div className="truncate">{info.getValue()}</div>
-               </span>
-            </Link>
+               {info.getValue()}
+            </TextLink>
+         );
+      },
+   }),
+   columnHelper.accessor("desc", {
+      header: "Description",
+      cell: (info) => {
+         return info.getValue() ? (
+            <div
+               className="whitespace-pre-wrap py-2"
+               dangerouslySetInnerHTML={{
+                  __html: descriptionParser(info.getValue() ?? ""),
+               }}
+            />
+         ) : (
+            "-"
          );
       },
    }),
@@ -93,107 +94,8 @@ const MOVES = gql`
             id
             name
             slug
+            desc
          }
       }
    }
 `;
-
-const filters = [
-   {
-      id: "type",
-      label: "Type",
-      cols: 3,
-      options: [
-         {
-            label: "Bug",
-            value: "bug",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Bug.svg",
-         },
-         {
-            label: "Dark",
-            value: "dark",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Dark.svg",
-         },
-         {
-            label: "Dragon",
-            value: "dragon",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Dragon.svg",
-         },
-         {
-            label: "Electric",
-            value: "electric",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Electric.svg",
-         },
-         {
-            label: "Fairy",
-            value: "fairy",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Fairy.svg",
-         },
-         {
-            label: "Fighting",
-            value: "fighting",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Fighting.svg",
-         },
-         {
-            label: "Fire",
-            value: "fire",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Fire.svg",
-         },
-         {
-            label: "Flying",
-            value: "flying",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Flying.svg",
-         },
-         {
-            label: "Ghost",
-            value: "ghost",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Ghost.svg",
-         },
-         {
-            label: "Grass",
-            value: "grass",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Grass.svg",
-         },
-         {
-            label: "Ground",
-            value: "ground",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Ground.svg",
-         },
-         {
-            label: "Ice",
-            value: "ice",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Ice.svg",
-         },
-         {
-            label: "Normal",
-            value: "normal",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Normal.svg",
-         },
-         {
-            label: "Poison",
-            value: "poison",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Poison.svg",
-         },
-         {
-            label: "Psychic",
-            value: "psychic",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Psychic.svg",
-         },
-         {
-            label: "Rock",
-            value: "rock",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Rock.svg",
-         },
-         {
-            label: "Steel",
-            value: "steel",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Steel.svg",
-         },
-         {
-            label: "Water",
-            value: "water",
-            icon: "https://static.mana.wiki/pokemongo/Pokemon_Type_Icon_Water.svg",
-         },
-      ],
-   },
-];

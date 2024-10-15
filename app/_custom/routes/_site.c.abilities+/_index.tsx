@@ -42,7 +42,6 @@ const gridView = columnHelper.accessor("name", {
    cell: (info) => (
       <Link
          className="block relative"
-         prefetch="intent"
          to={`/c/abilities/${info.row.original.slug}`}
       >
          <div
