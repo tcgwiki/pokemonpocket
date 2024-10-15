@@ -26,6 +26,10 @@ export function CardsRelated({ data }: EntryCardData) {
                         className="block border border-zinc-200 dark:border-zinc-600/50
                         rounded-lg bg-3-sub relative p-2 shadow-sm shadow-1"
                         to={`/c/cards/${card.slug}`}
+                        viewTransition
+                        style={{
+                           viewTransitionName: card.slug ?? undefined,
+                        }}
                      >
                         <div className="text-sm font-bold pb-1 sr-only">
                            {card.name}

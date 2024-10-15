@@ -30,7 +30,12 @@ export function CardsMain({ data }: EntryCardData) {
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <div className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle">
+         <div
+            className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle"
+            style={{
+               viewTransitionName: card.slug ?? undefined,
+            }}
+         >
             {/* @ts-ignore */}
             <ShinyCard supertype={cardType} rarity={rarity}>
                <Image
