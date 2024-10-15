@@ -40,6 +40,13 @@ export function DecksDeck({ data }: { data: Deck }) {
          };
       }) || [];
 
+   const tierEnum = {
+      s: "S",
+      a: "A",
+      b: "B",
+      c: "C",
+   };
+
    return (
       <>
          <div className="flex justify-between items-center border-2 border-color-sub bg-2-sub p-3 rounded-xl shadow-sm shadow-1 mb-3">
@@ -52,21 +59,16 @@ export function DecksDeck({ data }: { data: Deck }) {
                            height={32}
                            url={type.icon?.url}
                            alt={deck.name ?? ""}
-                           className="size-5 object-contain"
+                           className="size-6 object-contain"
                         />
                      ))}
                   </div>
                )}
-               <div className="text-sm font-semibold">Energy</div>
+               <div className="text-sm font-bold">Energy</div>
             </div>
-            <Button
-               href="/c//pack-simulator"
-               color="purple"
-               className="!px-2 !gap-1.5"
-            >
-               Pack Simulator
-               <Icon name="chevron-right" size={16} />
-            </Button>
+            <Badge className="!text-base" color="purple">
+               {deck.tier ? tierEnum[deck.tier] : ""} Tier
+            </Badge>
          </div>
          {decks.map((deckRow, _deckRowIndex) => (
             <Disclosure defaultOpen={_deckRowIndex === 0}>
@@ -88,7 +90,7 @@ export function DecksDeck({ data }: { data: Deck }) {
                               size={16}
                            />
                         </div>
-                        <div className="flex-grow text-left text-[15px] font-bold">
+                        <div className="flex-grow text-left text-lg font-bold font-header">
                            {deckRow.name}
                         </div>
                      </DisclosureButton>
@@ -121,6 +123,16 @@ export function DecksDeck({ data }: { data: Deck }) {
                )}
             </Disclosure>
          ))}
+         <div className="border-y-2 border-color-sub border-dashed py-4 mt-4">
+            <Button
+               href="/c//pack-simulator"
+               color="purple"
+               className="!px-2 !gap-1.5 !text-sm"
+            >
+               Pack Simulator
+               <Icon name="chevron-right" size={16} />
+            </Button>
+         </div>
       </>
    );
 }

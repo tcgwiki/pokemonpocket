@@ -16,7 +16,7 @@ export function CardsRelated({ data }: EntryCardData) {
 
    return (
       <div>
-         {listWithoutCurrentCard && (
+         {listWithoutCurrentCard && listWithoutCurrentCard.length > 0 ? (
             <>
                <SectionTitle customSlug="related" customTitle="Related Cards" />
                <div className="grid grid-cols-2 tablet:grid-cols-4 gap-4">
@@ -65,7 +65,7 @@ export function CardsRelated({ data }: EntryCardData) {
                   ))}
                </div>
             </>
-         )}
+         ) : undefined}
       </div>
    );
 }

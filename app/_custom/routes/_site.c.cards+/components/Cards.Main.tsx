@@ -127,7 +127,12 @@ export function CardsMain({ data }: EntryCardData) {
                      <Badge color="red">Ability</Badge>
                      <span>{card.abilities.name}</span>
                   </div>
-                  <div className="text-sm text-1">{card.abilities.desc}</div>
+                  <div
+                     dangerouslySetInnerHTML={{
+                        __html: descriptionParser(card.abilities.desc ?? ""),
+                     }}
+                     className="text-sm text-1"
+                  />
                </div>
             ) : undefined}
             {card?.movesInfo && card?.movesInfo?.length > 0 ? (

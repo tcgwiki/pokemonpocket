@@ -28,7 +28,6 @@ export const Decks: CollectionConfig = {
          name: "tier",
          type: "select",
          options: [
-            { label: "D Tier", value: "d" },
             { label: "C Tier", value: "c" },
             { label: "B Tier", value: "b" },
             { label: "A Tier", value: "a" },
