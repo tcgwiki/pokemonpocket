@@ -59,7 +59,7 @@ export default function TierList() {
             </div>
             <ListTableContainer
                className="border border-color-sub rounded-lg divide-y divide-color-sub overflow-hidden mb-4"
-               // filters={filters}
+               filters={tierListFilters}
             >
                <div className="flex items-stretch max-tablet:flex-col max-tablet:divide-y tablet:divide-x divide-color-sub">
                   <div className="p-3 w-full tablet:w-24 mx-auto flex tablet:items-start tablet:justify-center bg-2-sub">
@@ -83,7 +83,7 @@ export default function TierList() {
                         },
                      }}
                      columns={columns}
-                     columnViewability={{ tier: false }}
+                     columnViewability={{ deckTypes: false }}
                      gridCellClassNames="border border-color-sub rounded-lg pt-3 dark:bg-dark400 pb-2 shadow-sm shadow-1 bg-zinc-50"
                      gridContainerClassNames={gridContainerClassNames}
                   />
@@ -111,7 +111,7 @@ export default function TierList() {
                      }}
                      columns={columns}
                      columnViewability={{ tier: false }}
-                     gridCellClassNames=" "
+                     gridCellClassNames="border border-color-sub rounded-lg pt-3 dark:bg-dark400 pb-2 shadow-sm shadow-1 bg-zinc-50"
                      gridContainerClassNames={gridContainerClassNames}
                   />
                </div>
@@ -138,7 +138,7 @@ export default function TierList() {
                      }}
                      columns={columns}
                      columnViewability={{ tier: false }}
-                     gridCellClassNames=" "
+                     gridCellClassNames="border border-color-sub rounded-lg pt-3 dark:bg-dark400 pb-2 shadow-sm shadow-1 bg-zinc-50"
                      gridContainerClassNames={gridContainerClassNames}
                   />
                </div>
@@ -165,7 +165,7 @@ export default function TierList() {
                      }}
                      columns={columns}
                      columnViewability={{ tier: false }}
-                     gridCellClassNames=" "
+                     gridCellClassNames="border border-color-sub rounded-lg pt-3 dark:bg-dark400 pb-2 shadow-sm shadow-1 bg-zinc-50"
                      gridContainerClassNames={gridContainerClassNames}
                   />
                </div>
@@ -196,7 +196,7 @@ const gridView = columnHelper.accessor("name", {
                         <Image
                            url={card.icon?.url}
                            alt={card.name ?? ""}
-                           className="w-12 object-contain"
+                           className="w-14 object-contain"
                            width={200}
                            height={280}
                         />
@@ -260,6 +260,125 @@ const columns = [
          </Link>
       ),
    }),
+   columnHelper.accessor("deckTypes", {
+      header: "Type",
+      filterFn: (row, columnId, filterValue) => {
+         const existingFilter =
+            filterValue && filterValue.length > 0
+               ? row?.original?.deckTypes?.some((type: any) =>
+                    filterValue.includes(type.name),
+                 )
+               : true;
+
+         return existingFilter ?? true;
+      },
+      cell: (info) => {
+         return (
+            <div className="flex items-center gap-1">
+               <span>
+                  {info
+                     .getValue()
+                     ?.map((type: any) => type.name)
+                     .join(", ")}
+               </span>
+               {info.row.original?.deckTypes &&
+                  info.row.original?.deckTypes.length > 0 &&
+                  info.row.original?.deckTypes.map((type: any) => (
+                     <Image
+                        width={13}
+                        height={13}
+                        options="height=80&width=80"
+                        url={type.icon?.url}
+                        alt={type.name}
+                     />
+                  ))}
+            </div>
+         );
+      },
+   }),
+   columnHelper.accessor("cost", {
+      header: "Cost",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.cost?.toString());
+      },
+      cell: (info) => <span>{info.getValue()}</span>,
+   }),
+];
+
+const tierListFilters: {
+   id: string;
+   label: string;
+   cols?: 1 | 2 | 3 | 4 | 5;
+   options: { label?: string; value: string; icon?: string }[];
+}[] = [
+   {
+      id: "deckTypes",
+      label: "Pokémon Type",
+      cols: 3,
+      options: [
+         {
+            label: "Colorless",
+            value: "Colorless",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Colorless.png",
+         },
+         {
+            label: "Metal",
+            value: "Metal",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Metal.png",
+         },
+         {
+            label: "Darkness",
+            value: "Darkness",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Darkness.png",
+         },
+         {
+            label: "Dragon",
+            value: "Dragon",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Dragon.png",
+         },
+         {
+            label: "Fighting",
+            value: "Fighting",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fighting.png",
+         },
+         {
+            label: "Fire",
+            value: "Fire",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fire.png",
+         },
+         {
+            label: "Grass",
+            value: "Grass",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Grass.png",
+         },
+         {
+            label: "Lightning",
+            value: "Lightning",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Lightning.png",
+         },
+         {
+            label: "Psychic",
+            value: "Psychic",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Psychic.png",
+         },
+
+         {
+            label: "Water",
+            value: "Water",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Water.png",
+         },
+      ],
+   },
+   {
+      id: "cost",
+      label: "Cost",
+      cols: 3,
+      options: [
+         { label: "Low", value: "Low" },
+         { label: "Medium", value: "Medium" },
+         { label: "High", value: "High" },
+      ],
+   },
 ];
 
 const QUERY = gql`
@@ -271,6 +390,7 @@ const QUERY = gql`
             slug
             name
             tier
+            cost
             icon {
                id
                url

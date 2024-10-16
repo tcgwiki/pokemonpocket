@@ -56,29 +56,14 @@ export function DecksDeck({ data }: { data: Deck }) {
                </Badge>
                <div className="inline-flex space-x-2">
                   {deck.highlightCards?.map((card) => (
-                     <Tooltip placement="top">
-                        <TooltipTrigger
-                           className="shadow-sm shadow-1 z-10"
-                           key={card.id}
-                        >
-                           <Image
-                              url={card.icon?.url}
-                              alt={card.name ?? ""}
-                              className="w-36 object-contain"
-                              width={200}
-                              height={280}
-                           />
-                        </TooltipTrigger>
-                        <TooltipContent className="!p-0 !bg-transparent !border-0 !z-50">
-                           <Image
-                              url={card.icon?.url}
-                              alt={card.name ?? ""}
-                              width={367}
-                              height={512}
-                              className="w-full object-contain"
-                           />
-                        </TooltipContent>
-                     </Tooltip>
+                     <Link key={card.id} to={`/c/cards/${card.slug}`}>
+                        <Image                           url={card.icon?.url}
+                           alt={card.name ?? ""}
+                           className="w-36 object-contain"
+                           width={200}
+                           height={280}
+                        />
+                     </Link>
                   ))}
                </div>
             </div>
