@@ -56,8 +56,9 @@ export function DecksDeck({ data }: { data: Deck }) {
                </Badge>
                <div className="inline-flex space-x-2">
                   {deck.highlightCards?.map((card) => (
-                     <Link key={card.id} to={`/c/cards/${card.slug}`}>
-                        <Image                           url={card.icon?.url}
+                     <Link key={card.id} to={`/c/card-groups/${card.slug}`}>
+                        <Image
+                           url={card.icon?.url}
                            alt={card.name ?? ""}
                            className="w-36 object-contain"
                            width={200}
