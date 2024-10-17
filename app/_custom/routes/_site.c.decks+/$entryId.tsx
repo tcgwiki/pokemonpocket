@@ -61,6 +61,7 @@ const QUERY = gql`
          highlightCards {
             id
             name
+            slug
             icon {
                url
             }
