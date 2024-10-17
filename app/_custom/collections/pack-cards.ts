@@ -43,7 +43,7 @@ export const PackCards: CollectionConfig = {
          type: "select",
          options: [
             { label: "1st - 5th slot", value: "12345" },
-            { label: "1st - 3rd slot", value: "13" },
+            { label: "1st - 3rd slot", value: "123" },
             { label: "4th slot", value: "4" },
             { label: "5th slot", value: "5" },
          ],
