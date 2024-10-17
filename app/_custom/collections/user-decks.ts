@@ -21,6 +21,11 @@ export const Archetypes: CollectionConfig = {
          type: "text",
       },
       {
+         name: "user",
+         type: "text",
+         required: true,
+      },
+      {
          name: "name",
          type: "text",
       },
@@ -32,12 +37,6 @@ export const Archetypes: CollectionConfig = {
          name: "icon",
          type: "upload",
          relationTo: "images",
-      },
-      {
-         name: "highlightCards",
-         type: "relationship",
-         relationTo: "card-groups",
-         hasMany: true,
       },
       {
          name: "cards",

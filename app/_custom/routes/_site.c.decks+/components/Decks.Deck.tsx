@@ -49,26 +49,25 @@ export function DecksDeck({ data }: { data: Deck }) {
 
    return (
       <>
-         <div className="flex items-start gap-4 pb-5">
-            <div className="flex flex-col gap-3">
+         <div className="flex max-tablet:flex-col w-full items-start gap-3 pb-5">
+            <div className="flex flex-col justify-center gap-2 flex-none">
                <Badge color="zinc" className="!justify-center">
                   Highlight Cards
                </Badge>
-               <div className="inline-flex space-x-2">
+               <div className="flex mx-auto space-x-2">
                   {deck.highlightCards?.map((card) => (
-                     <Link key={card.id} to={`/c/card-groups/${card.slug}`}>
-                        <Image
-                           url={card.icon?.url}
-                           alt={card.name ?? ""}
-                           className="w-36 object-contain"
-                           width={200}
-                           height={280}
-                        />
-                     </Link>
+                     <Image
+                        key={card.id}
+                        url={card.icon?.url}
+                        alt={card.name ?? ""}
+                        className="w-36 object-contain"
+                        width={200}
+                        height={280}
+                     />
                   ))}
                </div>
             </div>
-            <div className="flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1 mb-3">
+            <div className="w-full flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1 mb-3">
                <div className="flex items-center justify-between gap-2 w-full p-3">
                   <div className="flex items-center gap-2">
                      <div className="text-sm font-bold">Energy</div>
