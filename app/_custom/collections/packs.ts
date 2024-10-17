@@ -40,33 +40,9 @@ export const Packs: CollectionConfig = {
       },
       {
          name: "cards",
-         type: "array",
-         fields: [
-            {
-               name: "card",
-               type: "relationship",
-               relationTo: "cards",
-            },
-            {
-               name: "rates",
-               type: "array",
-               fields: [
-                  {
-                     name: "slot",
-                     type: "select",
-                     options: [
-                        { label: "1-3", value: "1-3" },
-                        { label: "4", value: "4" },
-                        { label: "5", value: "5" },
-                     ],
-                  },
-                  {
-                     name: "percent",
-                     type: "number",
-                  },
-               ],
-            },
-         ],
+         type: "relationship",
+         relationTo: "pack-cards",
+         hasMany: true,
       },
       {
          name: "checksum",
