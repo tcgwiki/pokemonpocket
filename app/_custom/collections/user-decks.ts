@@ -2,7 +2,7 @@ import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const Archetypes: CollectionConfig = {
+export const UserDecks: CollectionConfig = {
    slug: "user-decks",
    labels: { singular: "User Deck", plural: "User Decks" },
    admin: {

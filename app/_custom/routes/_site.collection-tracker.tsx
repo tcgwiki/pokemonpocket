@@ -1,19 +1,21 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json, Link, useLoaderData } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
-import clsx from "clsx";
 import { gql } from "graphql-request";
 
 import { CustomPageHeader } from "~/components/CustomPageHeader";
 import { Image } from "~/components/Image";
 
-import type { Deck } from "payload/generated-custom-types";
-import { AdUnit } from "~/routes/_site+/_components/RampUnit";
+import type { Card } from "payload/generated-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
-import ListTableContainer from "~/routes/_site+/c_+/_components/ListTableContainer";
 import { gqlFetch } from "~/utils/fetchers.server";
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
+import { useState } from "react";
+import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
+import { Dialog } from "~/components/Dialog";
+import { Button } from "~/components/Button";
+import { ShinyCard } from "./_site.c.cards+/components/ShinyCard";
+import { Icon } from "~/components/Icon";
 
 export async function loader({ request }: LoaderFunctionArgs) {
    const deckTierList = await gqlFetch({
@@ -34,102 +36,219 @@ export const meta: MetaFunction = () => {
 };
 
 export default function CollectionTracker() {
-   const data = useLoaderData<typeof loader>();
+   const data = useLoaderData<typeof loader>() as {
+      cards: { docs: Array<{ card: Card; count: number }>; totalDocs: number };
+   };
+
+   const cardsList = data.cards.docs.flatMap((item) => ({
+      ...item.card,
+      count: item.count,
+   }));
 
    return (
       <>
          <CustomPageHeader
-            name="Collection Tracker"
+            name="My Collection"
             iconUrl="https://static.mana.wiki/servant-tier-list-icon.png"
          />
-         <div className="relative z-20 mx-auto max-w-[728px] justify-center max-tablet:px-3 tablet:pb-36">
-            asd
+         <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3">
+            <ListTable
+               gridView={gridView}
+               columnViewability={{
+                  pokemonType: false,
+                  isEX: false,
+                  cardType: false,
+               }}
+               gridCellClassNames=" "
+               gridContainerClassNames="grid-cols-8 grid gap-3"
+               defaultViewType="grid"
+               defaultSort={[{ id: "updatedAt", desc: true }]}
+               data={{ listData: { docs: cardsList } }}
+               columns={columns}
+               filters={cardCollectionFilters}
+               pager={data.cards.totalDocs > 50 ? true : false}
+            />
          </div>
       </>
    );
 }
 
-const columnHelper = createColumnHelper<Deck>();
+const columnHelper = createColumnHelper<Card & { count: number }>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => {
+      const [isOpen, setIsOpen] = useState(false);
+
+      const cardType =
+         info.row.original?.cardType === "pokemon" ? "pokémon" : "trainer";
+
+      const rarity =
+         info.row.original?.rarity?.name &&
+         info.row.original?.rarity.name in cardRarityEnum
+            ? cardRarityEnum[
+                 info.row.original?.rarity.name as keyof typeof cardRarityEnum
+              ]
+            : "common";
+
       return (
-         <Link
-            to={`/c/decks/${info.row.original.slug}`}
-            className="flex gap-3 flex-col justify-center"
-            key={info.row.original.id}
-         >
-            <div className="inline-flex mx-auto -space-x-8">
-               {info.row.original?.highlightCards?.map((card) => (
-                  <Tooltip placement="bottom">
-                     <TooltipTrigger
-                        className="shadow-sm shadow-1 z-10"
-                        key={card.id}
-                     >
-                        <Image
-                           url={card.icon?.url}
-                           alt={card.name ?? ""}
-                           className="w-14 object-contain"
-                           width={200}
-                           height={280}
-                        />
-                     </TooltipTrigger>
-                     <TooltipContent className="!p-0 !bg-transparent !border-0 !z-50">
-                        <Image
-                           url={card.icon?.url}
-                           alt={card.name ?? ""}
-                           width={367}
-                           height={512}
-                           className="w-full object-contain"
-                        />
-                     </TooltipContent>
-                  </Tooltip>
-               ))}
+         <>
+            <Dialog
+               className="relative flex items-center justify-center"
+               size="tablet"
+               onClose={setIsOpen}
+               open={isOpen}
+            >
+               <div
+                  className="flex items-center flex-col gap-5 justify-center"
+                  style={{
+                     viewTransitionName: info.row.original?.slug ?? undefined,
+                  }}
+               >
+                  {/* @ts-ignore */}
+                  <ShinyCard supertype={cardType} rarity={rarity}>
+                     <Image
+                        className="object-contain"
+                        width={367}
+                        height={512}
+                        url={
+                           info.row.original?.icon?.url ??
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        alt={info.row.original?.name ?? "Card Image"}
+                     />
+                  </ShinyCard>
+                  <Button href={`/c/cards/${info.row.original?.slug}`}>
+                     Go to card
+                     <Icon name="chevron-right" size={16} />
+                  </Button>
+               </div>
+            </Dialog>
+            <div className="relative">
+               <div className="sr-only">{info.row.original?.name}</div>
+               <span className="absolute top-0 right-0 rounded-tr rounded-bl bg-red-500 text-white p-1.5 text-xs font-bold">
+                  x{info.row.original?.count}
+               </span>
+               <button onClick={() => setIsOpen(true)}>
+                  <Image
+                     className="object-contain"
+                     width={367}
+                     height={512}
+                     url={
+                        info.row.original?.icon?.url ??
+                        "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                     }
+                     alt={info.row.original?.name ?? "Card Image"}
+                  />
+               </button>
             </div>
-            <div className="text-center text-sm font-bold border-t pt-1 dark:border-zinc-600 space-y-1">
-               {info.row.original.deckTypes && (
-                  <div
-                     className={clsx(
-                        "flex gap-1 justify-center",
-                        info.row.original.deckTypes.length > 0 && "-mt-3",
-                     )}
-                  >
-                     {info.row.original.deckTypes?.map((type) => (
-                        <Image
-                           width={32}
-                           height={32}
-                           url={type.icon?.url}
-                           alt={info.row.original.name ?? ""}
-                           className="size-4 object-contain"
-                        />
-                     ))}
-                  </div>
-               )}
-               <div>{info.getValue()}</div>
-            </div>
-         </Link>
+         </>
       );
    },
 });
 
 const columns = [
    columnHelper.accessor("name", {
-      header: "Name",
-      cell: (info) => (
-         <div className="flex items-center gap-2 group py-0.5">
+      header: "Card",
+      filterFn: fuzzyFilter,
+      cell: (info) => {
+         return (
+            <Link
+               to={`/c/cards/${info.row.original.slug}`}
+               className="flex items-center gap-3 group py-0.5"
+            >
+               <Image
+                  className="w-9 object-contain"
+                  width={100}
+                  url={
+                     info.row.original.icon?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                  }
+               />
+               <span
+                  className="space-y-1.5 font-semibold group-hover:underline
+                decoration-zinc-400 underline-offset-2 truncate"
+               >
+                  <div className="truncate">{info.getValue()}</div>
+                  {info.row.original.pokemonType?.icon?.url ? (
+                     <Image
+                        className="size-4 object-contain"
+                        width={40}
+                        height={40}
+                        url={info.row.original.pokemonType?.icon?.url}
+                     />
+                  ) : undefined}
+               </span>
+            </Link>
+         );
+      },
+   }),
+   columnHelper.accessor("pokemonType", {
+      header: "Type",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.pokemonType?.name);
+      },
+   }),
+   columnHelper.accessor("rarity", {
+      header: "Rarity",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.rarity?.name);
+      },
+      cell: (info) => {
+         return info.getValue()?.icon?.url ? (
             <Image
-               width={132}
-               height={144}
-               className="w-7 flex-none"
-               loading="lazy"
-               url={info.row.original.icon?.url}
+               className="h-6"
+               height={40}
+               url={info.getValue()?.icon?.url}
             />
-            <span className="font-bold group-hover:underline decoration-zinc-400 underline-offset-2">
-               <span>{info.getValue()}</span>
-            </span>
-         </div>
-      ),
+         ) : (
+            "-"
+         );
+      },
+   }),
+   columnHelper.accessor("weaknessType", {
+      header: "Weakness",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.weaknessType?.name);
+      },
+      cell: (info) => {
+         return info.getValue()?.icon?.url ? (
+            <Image
+               className="size-4"
+               width={40}
+               height={40}
+               url={info.getValue()?.icon?.url}
+            />
+         ) : (
+            "-"
+         );
+      },
+   }),
+
+   columnHelper.accessor("retreatCost", {
+      header: "Retreat",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.retreatCost);
+      },
+      cell: (info) => {
+         return info.getValue() ? info.getValue() : "-";
+      },
+   }),
+   columnHelper.accessor("isEX", {
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.isEX?.toString());
+      },
+   }),
+   columnHelper.accessor("cardType", {
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.cardType?.toString());
+      },
+   }),
+   columnHelper.accessor("hp", {
+      header: "HP",
+      cell: (info) => {
+         return info.getValue() ? info.getValue() : "-";
+      },
    }),
 ];
 
@@ -211,12 +330,42 @@ const cardCollectionFilters: {
 
 const QUERY = gql`
    query {
-      sTier: Decks(where: { tier: { equals: s } }, limit: 100, sort: "name") {
+      cards: UserCards {
          totalDocs
          docs {
             id
-            slug
-            name
+            updatedAt
+            count
+            card {
+               id
+               name
+               slug
+               isEX
+               retreatCost
+               hp
+               cardType
+               icon {
+                  url
+               }
+               pokemonType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               weaknessType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               rarity {
+                  name
+                  icon {
+                     url
+                  }
+               }
+            }
          }
       }
    }

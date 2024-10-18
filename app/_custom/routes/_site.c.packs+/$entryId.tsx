@@ -57,38 +57,32 @@ const PACK_QUERY = gql`
             }
          }
          cards {
-            rates {
-               slot
-               percent
+            id
+            name
+            slug
+            isEX
+            retreatCost
+            hp
+            cardType
+            icon {
+               url
             }
-            card {
-               id
+            pokemonType {
                name
-               slug
-               isEX
-               retreatCost
-               hp
-               cardType
                icon {
                   url
                }
-               pokemonType {
-                  name
-                  icon {
-                     url
-                  }
+            }
+            weaknessType {
+               name
+               icon {
+                  url
                }
-               weaknessType {
-                  name
-                  icon {
-                     url
-                  }
-               }
-               rarity {
-                  name
-                  icon {
-                     url
-                  }
+            }
+            rarity {
+               name
+               icon {
+                  url
                }
             }
          }

@@ -3,7 +3,7 @@ import type { User } from "payload/generated-types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const UserCard: CollectionConfig = {
+export const UserCards: CollectionConfig = {
    slug: "user-cards",
    labels: { singular: "User Card", plural: "User Cards" },
    admin: {

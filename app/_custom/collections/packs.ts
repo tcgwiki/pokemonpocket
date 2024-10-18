@@ -39,7 +39,7 @@ export const Packs: CollectionConfig = {
          relationTo: "expansions",
       },
       {
-         name: "cards",
+         name: "packCards",
          type: "relationship",
          relationTo: "pack-cards",
          hasMany: true,
