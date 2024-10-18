@@ -47,7 +47,7 @@ export function CardsRelated({ data }: EntryCardData) {
                            height={512}
                            url={
                               card.icon?.url ??
-                              "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                              "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                            }
                         />
                         <div className="flex items-center gap-2 justify-between pt-2">

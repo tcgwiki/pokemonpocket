@@ -43,7 +43,7 @@ export function CardsMain({ data }: EntryCardData) {
                   height={512}
                   url={
                      card.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
                   alt={card.name ?? "Card Image"}
                />
@@ -51,7 +51,7 @@ export function CardsMain({ data }: EntryCardData) {
          </div>
          <section className="flex-grow">
             <div
-               className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg 
+               className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg
                mb-3 [&>*:nth-of-type(odd)]:bg-zinc-50 dark:[&>*:nth-of-type(odd)]:bg-dark350 overflow-hidden"
             >
                <div className="p-3 justify-between flex items-center gap-2">

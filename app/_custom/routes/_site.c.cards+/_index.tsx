@@ -65,7 +65,7 @@ export const cardGridView = columnHelper.accessor("name", {
             width={400}
             url={
                info.row.original.icon?.url ??
-               "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+               "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
             }
          />
          <div className="flex items-center gap-2 justify-between pt-1.5">
@@ -102,11 +102,11 @@ export const cardColumns = [
                   width={100}
                   url={
                      info.row.original.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
                />
                <span
-                  className="space-y-1.5 font-semibold group-hover:underline 
+                  className="space-y-1.5 font-semibold group-hover:underline
                 decoration-zinc-400 underline-offset-2 truncate"
                >
                   <div className="truncate">{info.getValue()}</div>
@@ -194,7 +194,7 @@ export const cardColumns = [
 
 const CARDS = gql`
    query {
-      listData: Cards(limit: 5000, sort: "-rarity") {
+      listData: Cards(limit: 5000, sort: "") {
          totalDocs
          docs {
             id
@@ -268,39 +268,39 @@ export const cardFilters: {
       options: [
          {
             value: "UR",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/UR-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
          },
          {
             value: "IM",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/IM-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
          },
          {
             value: "SAR",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/SRSAR-Rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SAR.png",
          },
          {
             value: "SR",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/SRSAR-Rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SR.png",
          },
          {
             value: "AR",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/AR-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
          },
          {
             value: "RR",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RR-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
          },
          {
             value: "R",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/R-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
          },
          {
             value: "U",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/U-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
          },
          {
             value: "C",
-            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/c-rarity.png",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_C.png",
          },
       ],
    },

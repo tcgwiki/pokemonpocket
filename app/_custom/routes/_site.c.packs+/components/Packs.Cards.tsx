@@ -116,67 +116,67 @@ const ratesPerRarity = {
    _1_3: {
       C: {
          value: 100,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/c-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_C.png",
       },
    },
    _4: {
       UR: {
          value: 0.04,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/UR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
       },
       IM: {
          value: 0.222,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/IM-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
       },
       SR: {
          value: 0.5,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/SRSAR-Rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SR.png",
       },
       AR: {
          value: 2.572,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/AR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
       },
       RR: {
          value: 1.666,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
       },
       R: {
          value: 5.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/R-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
       },
       U: {
          value: 90.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/U-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
       },
    },
    _5: {
       UR: {
          value: 0.16,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/UR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
       },
       IM: {
          value: 0.888,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/IM-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
       },
       SR: {
          value: 2.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/SRSAR-Rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SAR.png",
       },
       AR: {
          value: 10.288,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/AR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
       },
       RR: {
          value: 6.664,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RR-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
       },
       R: {
          value: 20.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/R-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
       },
       U: {
          value: 60.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/U-rarity.png",
+         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
       },
    },
 };

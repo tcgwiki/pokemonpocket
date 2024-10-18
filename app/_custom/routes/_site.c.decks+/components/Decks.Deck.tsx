@@ -208,7 +208,7 @@ const deckCardGridView = columnHelper.accessor("name", {
                         height={512}
                         url={
                            info.row.original?.icon?.url ??
-                           "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                         }
                         alt={info.row.original?.name ?? "Card Image"}
                      />
@@ -231,7 +231,7 @@ const deckCardGridView = columnHelper.accessor("name", {
                      height={512}
                      url={
                         info.row.original?.icon?.url ??
-                        "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                        "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                      }
                      alt={info.row.original?.name ?? "Card Image"}
                   />
@@ -264,11 +264,11 @@ export const deckCardColumns = [
                   width={100}
                   url={
                      info.row.original?.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/Card_Back.png"
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
                />
                <span
-                  className="space-y-1.5 font-semibold group-hover:underline 
+                  className="space-y-1.5 font-semibold group-hover:underline
                 decoration-zinc-400 underline-offset-2 truncate"
                >
                   <div className="truncate">{info.getValue()}</div>
