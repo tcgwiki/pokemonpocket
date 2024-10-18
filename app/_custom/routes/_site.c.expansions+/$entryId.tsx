@@ -13,6 +13,11 @@ import { ExpansionsCards } from "./components/Expansions.Cards";
 
 export { entryMeta as meta };
 
+const SECTIONS = {
+   main: ExpansionsMain,
+   cards: ExpansionsCards,
+};
+
 export async function loader({
    context: { payload, user },
    params,
@@ -32,18 +37,15 @@ export async function loader({
    });
 }
 
-const SECTIONS = {
-   main: ExpansionsMain,
-   cards: ExpansionsCards,
-};
-
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
-   //@ts-ignore
-   const expansion = entry?.data.expansion as Expansion;
-
-   return <Entry customComponents={SECTIONS} customData={expansion} />;
+   return (
+      <Entry
+         customComponents={SECTIONS}
+         customData={(entry?.data as { expansion: Expansion }).expansion}
+      />
+   );
 }
 
 const QUERY = gql`

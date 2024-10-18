@@ -39,8 +39,6 @@ export default function ListPage() {
          gridView={gridView}
          columns={columns}
          defaultViewType="grid"
-         //@ts-ignore
-         filters={filters}
       />
    );
 }
@@ -59,7 +57,7 @@ const gridView = columnHelper.accessor("name", {
          </div>
          {info.row.original.logo?.url ? (
             <Image
-               className="object-contain"
+               className="object-contain h-12"
                height={100}
                url={info.row.original.logo?.url}
             />
@@ -113,10 +111,3 @@ const EXPANSIONS = gql`
       }
    }
 `;
-
-const filters: {
-   id: string;
-   label: string;
-   cols?: 1 | 2 | 3 | 4 | 5;
-   options: { label?: string; value: string; icon?: string }[];
-}[] = [];
