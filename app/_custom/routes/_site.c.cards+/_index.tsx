@@ -194,7 +194,7 @@ export const cardColumns = [
 
 const CARDS = gql`
    query {
-      listData: Cards(limit: 5000, sort: "") {
+      listData: Cards(limit: 5000, sort: "-rarity") {
          totalDocs
          docs {
             id
