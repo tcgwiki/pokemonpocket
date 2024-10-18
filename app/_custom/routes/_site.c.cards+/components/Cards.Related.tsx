@@ -39,6 +39,7 @@ export function CardsRelated({ data }: EntryCardData) {
                               className="object-contain h-9 -mb-4 z-20 relative"
                               height={72}
                               url={card.expansion?.logo?.url}
+                              loading="lazy"
                            />
                         ) : undefined}
                         <Image
@@ -49,12 +50,14 @@ export function CardsRelated({ data }: EntryCardData) {
                               card.icon?.url ??
                               "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                            }
+                           loading="lazy"
                         />
                         <div className="flex items-center gap-2 justify-between pt-2">
                            <Image
                               className="object-contain h-5"
                               height={48}
                               url={card.rarity?.icon?.url}
+                              loading="lazy"
                            />
                            {card.pokemonType?.icon?.url ? (
                               <Image
@@ -62,6 +65,7 @@ export function CardsRelated({ data }: EntryCardData) {
                                  width={40}
                                  height={40}
                                  url={card.pokemonType?.icon?.url}
+                                 loading="lazy"
                               />
                            ) : undefined}
                         </div>

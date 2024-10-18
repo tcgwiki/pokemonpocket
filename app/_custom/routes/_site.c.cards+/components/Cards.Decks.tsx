@@ -25,17 +25,15 @@ export function CardsDecks({ data }: EntryCardData) {
                         </div>
                         <div className="inline-flex mx-auto -space-x-8">
                            {deck?.highlightCards?.map((card) => (
-                              <Tooltip placement="right-start">
-                                 <TooltipTrigger
-                                    className="shadow-sm shadow-1 z-10"
-                                    key={card.id}
-                                 >
+                              <Tooltip placement="right-start" key={card.id}>
+                                 <TooltipTrigger className="shadow-sm shadow-1 z-10">
                                     <Image
                                        url={card.icon?.url}
                                        alt={card.name ?? ""}
                                        className="w-20 object-contain"
                                        width={200}
                                        height={280}
+                                       loading="lazy"
                                     />
                                  </TooltipTrigger>
                                  <TooltipContent>
@@ -45,6 +43,7 @@ export function CardsDecks({ data }: EntryCardData) {
                                        width={367}
                                        height={512}
                                        className="w-full object-contain"
+                                       loading="lazy"
                                     />
                                  </TooltipContent>
                               </Tooltip>

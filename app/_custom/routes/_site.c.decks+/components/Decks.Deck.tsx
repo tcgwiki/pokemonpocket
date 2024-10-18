@@ -81,6 +81,8 @@ export function DecksDeck({ data }: { data: Deck }) {
                               url={type.icon?.url}
                               alt={deck.name ?? ""}
                               className="size-5 object-contain"
+                              loading="lazy"
+                              key={deck.name}
                            />
                         ))}
                      </div>
@@ -211,6 +213,7 @@ const deckCardGridView = columnHelper.accessor("name", {
                            "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                         }
                         alt={info.row.original?.name ?? "Card Image"}
+                        loading="lazy"
                      />
                   </ShinyCard>
                   <Button href={`/c/cards/${info.row.original?.slug}`}>
@@ -234,6 +237,7 @@ const deckCardGridView = columnHelper.accessor("name", {
                         "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                      }
                      alt={info.row.original?.name ?? "Card Image"}
+                     loading="lazy"
                   />
                </button>
                <Button
@@ -266,6 +270,7 @@ export const deckCardColumns = [
                      info.row.original?.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
+                  loading="lazy"
                />
                <span
                   className="space-y-1.5 font-semibold group-hover:underline
@@ -278,6 +283,7 @@ export const deckCardColumns = [
                         width={40}
                         height={40}
                         url={info.row.original?.pokemonType?.icon?.url}
+                        loading="lazy"
                      />
                   ) : undefined}
                </span>
@@ -303,6 +309,7 @@ export const deckCardColumns = [
                width={40}
                height={40}
                url={info.getValue()?.icon?.url}
+               loading="lazy"
             />
          ) : (
             <div className="text-center">-</div>
