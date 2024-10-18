@@ -53,6 +53,10 @@ export const Cards: CollectionConfig = {
          type: "relationship",
          relationTo: "rarities",
       },
+      {
+         name: "obtain",
+         type: "text",
+      },
       // Set data. Set number is the card number in the set collection.
       {
          name: "expansion",
