@@ -158,11 +158,14 @@ const CARD_QUERY = gql`
          packs {
             pack {
                name
+               slug
+               icon {
+                  url
+               }
             }
-            rates {
-               slot
-               percent
-            }
+            pool
+            slot
+            percent
          }
          movesInfo {
             damage
