@@ -54,9 +54,12 @@ export async function loader({
 }: LoaderFunctionArgs) {
    const userCards = (await gqlFetch({
       isCustomDB: true,
-      isCached: false,
+      isCached: user ? false : true,
       query: QUERY,
       request,
+      variables: {
+         userId: user?.id ?? "",
+      },
    })) as CollectionData["userCards"];
 
    const userCardMap = new Map(
@@ -542,7 +545,7 @@ const cardCollectionFilters: {
 ];
 
 const QUERY = gql`
-   query {
+   query ($userId: String!) {
       allCards: Cards(limit: 5000, sort: "-rarity") {
          docs {
             id
@@ -574,7 +577,7 @@ const QUERY = gql`
             }
          }
       }
-      cards: UserCards {
+      cards: UserCards(where: { user: { equals: $userId } }) {
          totalDocs
          docs {
             id
