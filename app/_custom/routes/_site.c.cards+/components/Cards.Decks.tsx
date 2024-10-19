@@ -19,6 +19,7 @@ export function CardsDecks({ data }: EntryCardData) {
                         to={`/c/decks/${deck.slug}`}
                         className="flex gap-3 flex-col justify-center border border-color-sub rounded-lg p-3 dark:bg-dark400 bg-zinc-50 shadow-sm shadow-1"
                         key={deck.id}
+                        prefetch="intent"
                      >
                         <div className="text-center text-sm font-bold border-b pb-1 border-color-sub">
                            {deck.name}

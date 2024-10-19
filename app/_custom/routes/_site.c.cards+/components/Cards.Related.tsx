@@ -30,6 +30,7 @@ export function CardsRelated({ data }: EntryCardData) {
                         style={{
                            viewTransitionName: card.slug ?? undefined,
                         }}
+                        prefetch="intent"
                      >
                         <div className="text-sm font-bold pb-1 sr-only">
                            {card.name}

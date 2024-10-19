@@ -215,6 +215,7 @@ export const Button = React.forwardRef(function Button(
          className={classes}
          ref={ref as React.ForwardedRef<HTMLAnchorElement>}
          viewTransition
+         prefetch="intent"
       >
          <TouchTarget>{children}</TouchTarget>
       </Link>
