@@ -69,7 +69,7 @@ export const Achievements: CollectionConfig = {
             { label: "Collection", value: "TROPHY_CATEGORY_COLLECTION" },
             { label: "Battle", value: "TROPHY_CATEGORY_BATTLE" },
          ],
-      }
+      },
       {
          name: "checksum",
          type: "text",

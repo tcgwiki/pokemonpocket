@@ -30,7 +30,7 @@ export const Items: CollectionConfig = {
       },
       {
          name: "desc",
-         type: "text";
+         type: "text",
       },
       {
          name: "icon",
