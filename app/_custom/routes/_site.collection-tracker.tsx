@@ -16,7 +16,7 @@ import { gql } from "graphql-request";
 import { CustomPageHeader } from "~/components/CustomPageHeader";
 import { Image } from "~/components/Image";
 
-import type { Card } from "payload/generated-custom-types";
+import type { Card, User } from "payload/generated-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { authRestFetcher, gqlFetch } from "~/utils/fetchers.server";
@@ -29,15 +29,65 @@ import { Icon } from "~/components/Icon";
 import { jsonWithError, jsonWithSuccess } from "remix-toast";
 import { z } from "zod";
 import { zx } from "zodix";
+import { isAdding } from "~/utils/form";
+import clsx from "clsx";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-   const deckTierList = await gqlFetch({
+type CollectionData = {
+   userCards: {
+      cards: {
+         docs: Array<{
+            id: string;
+            card: Card;
+            count: number;
+            user: string;
+            isOwned: boolean;
+         }>;
+      };
+      allCards: { docs: Array<Card> };
+   };
+   user: User;
+};
+
+export async function loader({
+   request,
+   context: { user },
+}: LoaderFunctionArgs) {
+   const userCards = (await gqlFetch({
       isCustomDB: true,
       isCached: false,
       query: QUERY,
       request,
-   });
-   return json(deckTierList);
+   })) as CollectionData["userCards"];
+
+   const userCardMap = new Map(
+      userCards.cards.docs.map((item) => [item.card.id, item]),
+   );
+
+   const cardsList = userCards.allCards.docs
+      .map((card) => {
+         const userCard = userCardMap.get(card.id);
+         return {
+            ...card,
+            id: userCard?.id ?? card.id,
+            user: userCard?.user,
+            count: userCard?.count ?? 0,
+            isOwned: !!userCard,
+         };
+      })
+      .sort((a, b) => {
+         // Sort owned cards first
+         if (a.isOwned && !b.isOwned) return -1;
+         if (!a.isOwned && b.isOwned) return 1;
+
+         // For owned cards, sort by count (descending)
+         if (a.isOwned && b.isOwned) {
+            return b.count - a.count;
+         }
+
+         // For unowned cards, maintain original order
+         return 0;
+      });
+   return json({ userCards: cardsList, user });
 }
 
 export const meta: MetaFunction = () => {
@@ -49,56 +99,37 @@ export const meta: MetaFunction = () => {
 };
 
 export default function CollectionTracker() {
-   const data = useLoaderData<typeof loader>() as {
-      cards: {
-         docs: Array<{ id: string; card: Card; count: number; user: string }>;
-         totalDocs: number;
-      };
-   };
-
-   const cardsList = data.cards.docs.flatMap((item) => ({
-      ...item.card,
-      id: item.id,
-      user: item.user,
-      count: item.count,
-   }));
+   const { userCards, user } = useLoaderData<typeof loader>();
 
    const collectionKey = useMemo(() => {
-      return JSON.stringify(cardsList);
-   }, [cardsList]);
+      return JSON.stringify(userCards);
+   }, [userCards]);
 
    return (
-      <>
-         <CustomPageHeader
-            name="My Collection"
-            iconUrl="https://static.mana.wiki/servant-tier-list-icon.png"
+      <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
+         <ListTable
+            key={collectionKey}
+            gridView={gridView}
+            columnViewability={{
+               pokemonType: false,
+               isEX: false,
+               cardType: false,
+               rarity: false,
+            }}
+            gridCellClassNames="flex items-center justify-center"
+            gridContainerClassNames="grid-cols-3 tablet:grid-cols-6 grid gap-3"
+            defaultViewType="grid"
+            data={{ listData: { docs: userCards } }}
+            columns={columns}
+            filters={cardCollectionFilters}
+            pager={userCards.length > 50 ? true : false}
          />
-         <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3">
-            <ListTable
-               key={collectionKey}
-               // @ts-ignore
-               gridView={gridView}
-               columnViewability={{
-                  pokemonType: false,
-                  isEX: false,
-                  cardType: false,
-               }}
-               gridCellClassNames="flex items-center justify-center"
-               gridContainerClassNames="grid-cols-3 tablet:grid-cols-6 grid gap-3 pb-4"
-               defaultViewType="grid"
-               defaultSort={[{ id: "updatedAt", desc: true }]}
-               data={{ listData: { docs: cardsList } }}
-               columns={columns}
-               filters={cardCollectionFilters}
-               pager={data.cards.totalDocs > 50 ? true : false}
-            />
-         </div>
-      </>
+      </div>
    );
 }
 
 const columnHelper = createColumnHelper<
-   Card & { user: string; count: number }
+   Card & { user: string; count: number; isOwned: boolean }
 >();
 
 const gridView = columnHelper.accessor("name", {
@@ -118,6 +149,11 @@ const gridView = columnHelper.accessor("name", {
             : "common";
 
       const fetcher = useFetcher();
+
+      const isCardDeleting = isAdding(fetcher, "deleteUserCard");
+      const isCardAdding = isAdding(fetcher, "addUserCard");
+      const isCardUpdating = isAdding(fetcher, "updateUserCard");
+      const isDisabled = isCardDeleting || isCardAdding || isCardUpdating;
 
       return (
          <>
@@ -154,7 +190,7 @@ const gridView = columnHelper.accessor("name", {
             </Dialog>
             <div className="relative group/card">
                <div className="sr-only">{info.row.original?.name}</div>
-               <div className="absolute bottom-0 left-0 w-full ">
+               <div className="absolute bottom-0 left-0 w-full z-10">
                   <div className="flex items-center gap-1.5 w-full">
                      <div className="flex items-center justify-between gap-1 p-1.5 pr-1 w-full">
                         <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-7 flex items-center justify-center text-sm font-mono font-bold">
@@ -162,7 +198,8 @@ const gridView = columnHelper.accessor("name", {
                         </span>
                         <div className="items-center gap-1.5 max-tablet:flex tablet:hidden group-hover/card:flex">
                            <button
-                              className="shadow shadow-1 border border-red-300 hover:bg-red-300 rounded-full size-7 bg-red-200 flex items-center justify-center group hover:border-red-400"
+                              disabled={isDisabled}
+                              className="shadow shadow-1 border border-red-700 hover:bg-red-600 rounded-full size-7 bg-red-500 flex items-center justify-center group hover:border-red-600"
                               onClick={() => {
                                  fetcher.submit(
                                     {
@@ -177,14 +214,24 @@ const gridView = columnHelper.accessor("name", {
                                  );
                               }}
                            >
-                              <Icon
-                                 className="text-red-500 group-hover:text-red-600"
-                                 name="minus"
-                                 size={14}
-                              />
+                              {isCardDeleting ? (
+                                 <Icon
+                                    name="loader-2"
+                                    size={14}
+                                    className="animate-spin text-white"
+                                 />
+                              ) : (
+                                 <Icon
+                                    title="Remove card"
+                                    className="text-white"
+                                    name="minus"
+                                    size={14}
+                                 />
+                              )}
                            </button>
                            <button
-                              className="shadow shadow-1 border border-green-400 hover:bg-green-300 rounded-full size-7 bg-green-200 flex items-center justify-center group hover:border-green-500"
+                              disabled={isDisabled}
+                              className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-7 bg-green-500 flex items-center justify-center group hover:border-green-600"
                               onClick={() => {
                                  fetcher.submit(
                                     {
@@ -199,11 +246,20 @@ const gridView = columnHelper.accessor("name", {
                                  );
                               }}
                            >
-                              <Icon
-                                 name="plus"
-                                 className="text-green-600 group-hover:text-green-700"
-                                 size={14}
-                              />
+                              {isCardUpdating ? (
+                                 <Icon
+                                    name="loader-2"
+                                    size={14}
+                                    className="animate-spin text-white"
+                                 />
+                              ) : (
+                                 <Icon
+                                    title="Update card"
+                                    name="plus"
+                                    className="text-white"
+                                    size={14}
+                                 />
+                              )}
                            </button>
                         </div>
                      </div>
@@ -214,7 +270,12 @@ const gridView = columnHelper.accessor("name", {
                   onClick={() => setIsOpen(true)}
                >
                   <Image
-                     className="object-contain"
+                     className={clsx(
+                        "object-contain",
+                        info.row.original?.isOwned
+                           ? "opacity-100"
+                           : "opacity-50",
+                     )}
                      width={367}
                      height={512}
                      url={
@@ -253,14 +314,13 @@ const columns = [
                 decoration-zinc-400 underline-offset-2 truncate"
                >
                   <div className="truncate">{info.getValue()}</div>
-                  {info.row.original.pokemonType?.icon?.url ? (
+                  <div className="flex items-center gap-1">
                      <Image
-                        className="size-4 object-contain"
-                        width={40}
+                        className="h-4"
                         height={40}
-                        url={info.row.original.pokemonType?.icon?.url}
+                        url={info.row.original.rarity?.icon?.url}
                      />
-                  ) : undefined}
+                  </div>
                </span>
             </Link>
          );
@@ -277,59 +337,10 @@ const columns = [
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.rarity?.name);
       },
-      cell: (info) => {
-         return info.getValue()?.icon?.url ? (
-            <Image
-               className="h-6"
-               height={40}
-               url={info.getValue()?.icon?.url}
-            />
-         ) : (
-            "-"
-         );
-      },
-   }),
-   columnHelper.accessor("weaknessType", {
-      header: "Weakness",
-      filterFn: (row, columnId, filterValue) => {
-         return filterValue.includes(row?.original?.weaknessType?.name);
-      },
-      cell: (info) => {
-         return info.getValue()?.icon?.url ? (
-            <Image
-               className="size-4"
-               width={40}
-               height={40}
-               url={info.getValue()?.icon?.url}
-            />
-         ) : (
-            "-"
-         );
-      },
-   }),
-   columnHelper.accessor("retreatCost", {
-      header: "Retreat",
-      filterFn: (row, columnId, filterValue) => {
-         return filterValue.includes(row?.original?.retreatCost);
-      },
-      cell: (info) => {
-         return info.getValue() ? info.getValue() : "-";
-      },
-   }),
-   columnHelper.accessor("isEX", {
-      filterFn: (row, columnId, filterValue) => {
-         return filterValue.includes(row?.original?.isEX?.toString());
-      },
    }),
    columnHelper.accessor("cardType", {
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.cardType?.toString());
-      },
-   }),
-   columnHelper.accessor("hp", {
-      header: "HP",
-      cell: (info) => {
-         return info.getValue() ? info.getValue() : "-";
       },
    }),
 ];
@@ -347,43 +358,10 @@ export const action: ActionFunction = async ({
    if (!user || !user.id) return redirect("/login", { status: 302 });
 
    const { intent } = await zx.parseForm(request, {
-      intent: z.enum(["addUserCard", "updateUserCard", "deleteUserCard"]),
+      intent: z.enum(["updateUserCard", "deleteUserCard"]),
    });
 
    switch (intent) {
-      case "addUserCard": {
-         try {
-            const { cardId, cardUserId } = await zx.parseForm(request, {
-               cardId: z.string(),
-               cardUserId: z.string(),
-            });
-
-            //Users can only mutate their own cards
-            if (user.id === cardUserId) {
-               const newUserCard = await authRestFetcher({
-                  method: "POST",
-                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards`,
-                  body: {
-                     card: cardId,
-                     count: 1,
-                     user: user.id,
-                  },
-               });
-
-               if (newUserCard) {
-                  return jsonWithSuccess(
-                     null,
-                     `${newUserCard.doc.card.name} added`,
-                  );
-               }
-            }
-         } catch (error) {
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to add entry.",
-            );
-         }
-      }
       case "updateUserCard": {
          try {
             const { cardId, cardCount, cardUserId } = await zx.parseForm(
@@ -394,6 +372,23 @@ export const action: ActionFunction = async ({
                   cardUserId: z.string(),
                },
             );
+            if (cardCount === 0) {
+               const addUserCard = await authRestFetcher({
+                  method: "POST",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards`,
+                  body: {
+                     card: cardId,
+                     count: 1,
+                     user: user.id,
+                  },
+               });
+               if (addUserCard) {
+                  return jsonWithSuccess(
+                     null,
+                     `${addUserCard.doc.card.name} added`,
+                  );
+               }
+            }
 
             //Users can only mutate their own cards
             if (user.id === cardUserId) {
@@ -487,7 +482,7 @@ const cardCollectionFilters: {
    options: { label?: string; value: string; icon?: string }[];
 }[] = [
    {
-      id: "types",
+      id: "pokemonType",
       label: "Pokémon Type",
       cols: 3,
       options: [
@@ -544,25 +539,45 @@ const cardCollectionFilters: {
          },
       ],
    },
-   {
-      id: "cost",
-      label: "Cost",
-      cols: 3,
-      options: [
-         { label: "Low", value: "Low" },
-         { label: "Medium", value: "Medium" },
-         { label: "High", value: "High" },
-      ],
-   },
 ];
 
 const QUERY = gql`
    query {
+      allCards: Cards(limit: 5000, sort: "-rarity") {
+         docs {
+            id
+            name
+            slug
+            isEX
+            hp
+            cardType
+            icon {
+               url
+            }
+            pokemonType {
+               name
+               icon {
+                  url
+               }
+            }
+            weaknessType {
+               name
+               icon {
+                  url
+               }
+            }
+            rarity {
+               name
+               icon {
+                  url
+               }
+            }
+         }
+      }
       cards: UserCards {
          totalDocs
          docs {
             id
-            updatedAt
             count
             user
             card {
@@ -570,7 +585,6 @@ const QUERY = gql`
                name
                slug
                isEX
-               retreatCost
                hp
                cardType
                icon {
