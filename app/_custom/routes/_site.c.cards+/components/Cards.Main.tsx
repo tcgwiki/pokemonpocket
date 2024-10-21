@@ -199,9 +199,12 @@ export function CardsMain({ data }: EntryCardData) {
                </div>
             ) : undefined}
             {card?.desc ? (
-               <div className="text-sm text-1 p-3 border border-color-sub rounded-lg bg-2-sub shadow-sm shadow-1 mt-3">
-                  {card.desc}
-               </div>
+               <div
+                  dangerouslySetInnerHTML={{
+                     __html: descriptionParser(card.desc ?? ""),
+                  }}
+                  className="text-sm text-1 p-3 border border-color-sub rounded-lg bg-2-sub shadow-sm shadow-1 mt-3"
+               />
             ) : undefined}
          </section>
       </div>

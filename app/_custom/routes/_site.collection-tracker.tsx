@@ -104,20 +104,17 @@ export const meta: MetaFunction = () => {
 export default function CollectionTracker() {
    const { userCards, user } = useLoaderData<typeof loader>();
 
-   const collectionKey = useMemo(() => {
-      return JSON.stringify(userCards);
-   }, [userCards]);
-
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
          <ListTable
-            key={collectionKey}
             gridView={gridView}
             columnViewability={{
                pokemonType: false,
                isEX: false,
                cardType: false,
                rarity: false,
+               isOwned: false,
+               expansion: false,
             }}
             gridCellClassNames="flex items-center justify-center"
             gridContainerClassNames="grid-cols-3 tablet:grid-cols-6 grid gap-3"
@@ -126,6 +123,7 @@ export default function CollectionTracker() {
             columns={columns}
             filters={cardCollectionFilters}
             pager={userCards.length > 50 ? true : false}
+            stickyFooter={true}
          />
       </div>
    );
@@ -200,38 +198,40 @@ const gridView = columnHelper.accessor("name", {
                            {info.row.original?.count}
                         </span>
                         <div className="items-center gap-1.5 max-tablet:flex tablet:hidden group-hover/card:flex">
-                           <button
-                              disabled={isDisabled}
-                              className="shadow shadow-1 border border-red-700 hover:bg-red-600 rounded-full size-7 bg-red-500 flex items-center justify-center group hover:border-red-600"
-                              onClick={() => {
-                                 fetcher.submit(
-                                    {
-                                       cardId: info.row.original?.id,
-                                       cardCount: info.row.original?.count,
-                                       cardUserId: info.row.original?.user,
-                                       intent: "deleteUserCard",
-                                    },
-                                    {
-                                       method: "DELETE",
-                                    },
-                                 );
-                              }}
-                           >
-                              {isCardDeleting ? (
-                                 <Icon
-                                    name="loader-2"
-                                    size={14}
-                                    className="animate-spin text-white"
-                                 />
-                              ) : (
-                                 <Icon
-                                    title="Remove card"
-                                    className="text-white"
-                                    name="minus"
-                                    size={14}
-                                 />
-                              )}
-                           </button>
+                           {info.row.original?.count !== 0 && (
+                              <button
+                                 disabled={isDisabled}
+                                 className="shadow shadow-1 hover:bg-zinc-600 rounded-full size-7 bg-zinc-500 flex items-center justify-center group"
+                                 onClick={() => {
+                                    fetcher.submit(
+                                       {
+                                          cardId: info.row.original?.id,
+                                          cardCount: info.row.original?.count,
+                                          cardUserId: info.row.original?.user,
+                                          intent: "deleteUserCard",
+                                       },
+                                       {
+                                          method: "DELETE",
+                                       },
+                                    );
+                                 }}
+                              >
+                                 {isCardDeleting ? (
+                                    <Icon
+                                       name="loader-2"
+                                       size={14}
+                                       className="animate-spin text-white"
+                                    />
+                                 ) : (
+                                    <Icon
+                                       title="Remove card"
+                                       className="text-white"
+                                       name="minus"
+                                       size={14}
+                                    />
+                                 )}
+                              </button>
+                           )}
                            <button
                               disabled={isDisabled}
                               className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-7 bg-green-500 flex items-center justify-center group hover:border-green-600"
@@ -299,33 +299,112 @@ const columns = [
       header: "Card",
       filterFn: fuzzyFilter,
       cell: (info) => {
+         const fetcher = useFetcher();
+
+         const isCardDeleting = isAdding(fetcher, "deleteUserCard");
+         const isCardAdding = isAdding(fetcher, "addUserCard");
+         const isCardUpdating = isAdding(fetcher, "updateUserCard");
+         const isDisabled = isCardDeleting || isCardAdding || isCardUpdating;
          return (
-            <Link
-               to={`/c/cards/${info.row.original.slug}`}
-               className="flex items-center gap-3 group py-0.5"
-            >
-               <Image
-                  className="w-9 object-contain"
-                  width={100}
-                  url={
-                     info.row.original.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                  }
-               />
-               <span
-                  className="space-y-1.5 font-semibold group-hover:underline
-                decoration-zinc-400 underline-offset-2 truncate"
+            <div className="flex items-center justify-between gap-1">
+               <Link
+                  to={`/c/cards/${info.row.original.slug}`}
+                  className="flex items-center gap-3 group py-0.5"
                >
-                  <div className="truncate">{info.getValue()}</div>
-                  <div className="flex items-center gap-1">
-                     <Image
-                        className="h-4"
-                        height={40}
-                        url={info.row.original.rarity?.icon?.url}
-                     />
-                  </div>
-               </span>
-            </Link>
+                  <Image
+                     className="w-9 object-contain"
+                     width={100}
+                     url={
+                        info.row.original.icon?.url ??
+                        "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                     }
+                  />
+                  <span
+                     className="space-y-1.5 font-semibold group-hover:underline
+                decoration-zinc-400 underline-offset-2 truncate"
+                  >
+                     <div className="truncate">{info.getValue()}</div>
+                     <div className="flex items-center gap-1">
+                        <Image
+                           className="h-4"
+                           height={40}
+                           url={info.row.original.rarity?.icon?.url}
+                        />
+                     </div>
+                  </span>
+               </Link>
+               <div className="items-center gap-1.5 max-tablet:flex flex">
+                  {info.row.original?.count !== 0 && (
+                     <button
+                        disabled={isDisabled}
+                        className="shadow shadow-1 border border-red-700 hover:bg-red-600 rounded-full size-7 bg-red-500 flex items-center justify-center group hover:border-red-600"
+                        onClick={() => {
+                           fetcher.submit(
+                              {
+                                 cardId: info.row.original?.id,
+                                 cardCount: info.row.original?.count,
+                                 cardUserId: info.row.original?.user,
+                                 intent: "deleteUserCard",
+                              },
+                              {
+                                 method: "DELETE",
+                              },
+                           );
+                        }}
+                     >
+                        {isCardDeleting ? (
+                           <Icon
+                              name="loader-2"
+                              size={14}
+                              className="animate-spin text-white"
+                           />
+                        ) : (
+                           <Icon
+                              title="Remove card"
+                              className="text-white"
+                              name="minus"
+                              size={14}
+                           />
+                        )}
+                     </button>
+                  )}
+                  <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-7 flex items-center justify-center text-sm font-mono font-bold">
+                     {info.row.original?.count}
+                  </span>
+                  <button
+                     disabled={isDisabled}
+                     className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-7 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                     onClick={() => {
+                        fetcher.submit(
+                           {
+                              cardId: info.row.original?.id,
+                              cardCount: info.row.original?.count,
+                              cardUserId: info.row.original?.user,
+                              intent: "updateUserCard",
+                           },
+                           {
+                              method: "PATCH",
+                           },
+                        );
+                     }}
+                  >
+                     {isCardUpdating ? (
+                        <Icon
+                           name="loader-2"
+                           size={14}
+                           className="animate-spin text-white"
+                        />
+                     ) : (
+                        <Icon
+                           title="Update card"
+                           name="plus"
+                           className="text-white"
+                           size={14}
+                        />
+                     )}
+                  </button>
+               </div>
+            </div>
          );
       },
    }),
@@ -339,6 +418,18 @@ const columns = [
       header: "Rarity",
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.rarity?.name);
+      },
+   }),
+   columnHelper.accessor("isOwned", {
+      header: "Owned",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.isOwned.toString());
+      },
+   }),
+   columnHelper.accessor("expansion", {
+      header: "Set",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.expansion?.id);
       },
    }),
    columnHelper.accessor("cardType", {
@@ -392,7 +483,6 @@ export const action: ActionFunction = async ({
                   );
                }
             }
-
             //Users can only mutate their own cards
             if (user.id === cardUserId) {
                const updatedUserCard = await authRestFetcher({
@@ -402,7 +492,6 @@ export const action: ActionFunction = async ({
                      count: cardCount + 1,
                   },
                });
-
                if (updatedUserCard) {
                   return jsonWithSuccess(
                      null,
@@ -485,6 +574,22 @@ const cardCollectionFilters: {
    options: { label?: string; value: string; icon?: string }[];
 }[] = [
    {
+      id: "expansion",
+      label: "Expansion",
+      cols: 1,
+      options: [
+         {
+            value: "A1",
+            label: "Genetic Apex",
+         },
+      ],
+   },
+   {
+      id: "isOwned",
+      label: "Owned",
+      options: [{ label: "Show owned only", value: "true" }],
+   },
+   {
       id: "pokemonType",
       label: "Pokémon Type",
       cols: 3,
@@ -553,6 +658,9 @@ const QUERY = gql`
             slug
             isEX
             hp
+            expansion {
+               id
+            }
             cardType
             icon {
                url
@@ -589,6 +697,9 @@ const QUERY = gql`
                slug
                isEX
                hp
+               expansion {
+                  id
+               }
                cardType
                icon {
                   url
