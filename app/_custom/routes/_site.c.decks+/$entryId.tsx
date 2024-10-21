@@ -38,7 +38,7 @@ const SECTIONS = {
 export default function EntryPage() {
    const { entry } = useLoaderData<typeof loader>();
 
-   const deck = (entry?.data as { deck: Deck }).deck;
+   const deck = (entry?.data as { deck: Deck })?.deck;
 
    return <Entry customComponents={SECTIONS} customData={deck} />;
 }

@@ -29,6 +29,10 @@ const columnHelper = createColumnHelper<Card & { count: number }>();
 
 export function DecksDeck({ data }: { data: Deck }) {
    const deck = data;
+
+   // early return if deck does nothing
+   if (!deck) return null;
+
    const decks =
       deck.builds?.map((build) => {
          return {

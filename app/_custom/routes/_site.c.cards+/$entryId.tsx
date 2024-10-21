@@ -33,15 +33,19 @@ export async function loader({
    const cardGroupId = (entry?.data as any)?.relatedPokemon?.docs?.[0]?.id;
 
    //@ts-ignore
-   const { decks } = await gqlFetch({
-      isCustomDB: true,
-      isCached: user ? false : true,
-      query: RELATED_DECKS_QUERY,
-      request,
-      variables: {
-         cardGroupId: cardGroupId,
-      },
-   });
+   const cardGroup = cardGroupId
+      ? await gqlFetch({
+           isCustomDB: true,
+           isCached: user ? false : true,
+           query: RELATED_DECKS_QUERY,
+           request,
+           variables: {
+              cardGroupId: cardGroupId,
+           },
+        })
+      : null;
+
+   const decks = cardGroup?.decks;
 
    return json({
       entry,
