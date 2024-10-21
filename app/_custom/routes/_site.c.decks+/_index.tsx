@@ -2,16 +2,16 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
+import clsx from "clsx";
 import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import { Deck } from "~/db/payload-custom-types";
+import type { Deck } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { List } from "~/routes/_site+/c_+/_components/List";
-import clsx from "clsx";
 export { listMeta as meta };
 
 export async function loader({
@@ -56,31 +56,34 @@ const gridView = columnHelper.accessor("name", {
          key={info.row.original.id}
       >
          <div className="inline-flex mx-auto -space-x-8">
-            {info.row.original?.highlightCards?.map((card) => (
-               <Tooltip placement="right-start">
-                  <TooltipTrigger
-                     className="shadow-sm shadow-1 z-10"
-                     key={card.id}
-                  >
-                     <Image
-                        url={card.icon?.url}
-                        alt={card.name ?? ""}
-                        className="w-12 object-contain"
-                        width={200}
-                        height={280}
-                     />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                     <Image
-                        url={card.icon?.url}
-                        alt={card.name ?? ""}
-                        width={367}
-                        height={512}
-                        className="w-full object-contain"
-                     />
-                  </TooltipContent>
-               </Tooltip>
-            ))}
+            {info.row.original?.highlightCards?.map(
+               (card) =>
+                  card.icon?.url && (
+                     <Tooltip placement="right-start" key={card.id}>
+                        <TooltipTrigger
+                           className="shadow-sm shadow-1 z-10"
+                           key={card.id}
+                        >
+                           <Image
+                              url={card.icon?.url}
+                              alt={card.name ?? ""}
+                              className="w-12 object-contain"
+                              width={200}
+                              height={280}
+                           />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           <Image
+                              url={card.icon?.url}
+                              alt={card.name ?? ""}
+                              width={367}
+                              height={512}
+                              className="w-full object-contain"
+                           />
+                        </TooltipContent>
+                     </Tooltip>
+                  ),
+            )}
          </div>
          <div className="text-center text-sm font-bold border-t pt-1 dark:border-zinc-600 space-y-1">
             {info.row.original.deckTypes && (
@@ -92,6 +95,7 @@ const gridView = columnHelper.accessor("name", {
                >
                   {info.row.original.deckTypes?.map((type) => (
                      <Image
+                        key={type.id}
                         width={32}
                         height={32}
                         url={type.icon?.url}

@@ -1,37 +1,31 @@
-import { Link } from "@remix-run/react";
-
-import { Card, Deck } from "~/db/payload-custom-types";
-
-import { Image } from "~/components/Image";
-import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
-
-import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
-
-import { createColumnHelper } from "@tanstack/react-table";
-import { Badge } from "~/components/Badge";
-
-import { ShinyCard } from "../../_site.c.cards+/components/ShinyCard";
-import { cardRarityEnum } from "../../_site.c.cards+/components/Cards.Main";
-import { Dialog } from "~/components/Dialog";
-
 import { useState } from "react";
-import { Button } from "~/components/Button";
-import { Icon } from "~/components/Icon";
+
 import {
    Disclosure,
    DisclosureButton,
    DisclosurePanel,
 } from "@headlessui/react";
+import { Link } from "@remix-run/react";
+import { createColumnHelper } from "@tanstack/react-table";
 import clsx from "clsx";
+
+import { Badge } from "~/components/Badge";
+import { Button } from "~/components/Button";
+import { Dialog } from "~/components/Dialog";
+import { Icon } from "~/components/Icon";
+import { Image } from "~/components/Image";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
+import type { Card, Deck } from "~/db/payload-custom-types";
+import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
+import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
+
+import { cardRarityEnum } from "../../_site.c.cards+/components/Cards.Main";
+import { ShinyCard } from "../../_site.c.cards+/components/ShinyCard";
 
 const columnHelper = createColumnHelper<Card & { count: number }>();
 
 export function DecksDeck({ data }: { data: Deck }) {
    const deck = data;
-
-   // early return if deck does nothing
-   if (!deck) return null;
 
    const decks =
       deck.builds?.map((build) => {
@@ -59,16 +53,19 @@ export function DecksDeck({ data }: { data: Deck }) {
                   Highlight Cards
                </Badge>
                <div className="flex mx-auto space-x-2">
-                  {deck.highlightCards?.map((card) => (
-                     <Image
-                        key={card.id}
-                        url={card.icon?.url}
-                        alt={card.name ?? ""}
-                        className="w-36 object-contain"
-                        width={200}
-                        height={280}
-                     />
-                  ))}
+                  {deck.highlightCards?.map(
+                     (card) =>
+                        card.icon?.url && (
+                           <Image
+                              key={card.id}
+                              url={card.icon?.url}
+                              alt={card.name ?? ""}
+                              className="w-36 object-contain"
+                              width={200}
+                              height={280}
+                           />
+                        ),
+                  )}
                </div>
             </div>
             <div className="w-full flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1 mb-3">
@@ -110,7 +107,7 @@ export function DecksDeck({ data }: { data: Deck }) {
             </div>
          </div>
          {decks.map((deckRow, _deckRowIndex) => (
-            <Disclosure defaultOpen={true}>
+            <Disclosure defaultOpen={true} key={deckRowIndex}>
                {({ open }) => (
                   <>
                      <DisclosureButton
