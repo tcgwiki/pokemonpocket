@@ -11,7 +11,7 @@ export const Achievements: CollectionConfig = {
    },
    access: {
       create: isStaff,
-      read: () => true,
+      read: isStaff,
       update: isStaff,
       delete: isStaff,
    },
@@ -48,16 +48,16 @@ export const Achievements: CollectionConfig = {
                type: "array",
                fields: [
                   {
-                     "name": "item",
-                     "type": "relationship",
-                     "relationTo": "items",
+                     name: "item",
+                     type: "relationship",
+                     relationTo: "items",
                   },
                   {
-                     "name": "amount",
-                     "type": "number",
-                  }
-               ]
-            }
+                     name: "amount",
+                     type: "number",
+                  },
+               ],
+            },
          ],
       },
       {

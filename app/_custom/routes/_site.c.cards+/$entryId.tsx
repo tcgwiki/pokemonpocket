@@ -21,6 +21,7 @@ export async function loader({
    request,
 }: LoaderFunctionArgs) {
    const { entry } = await fetchEntry({
+      isAuthOverride: true,
       payload,
       params,
       request,
@@ -32,9 +33,9 @@ export async function loader({
 
    const cardGroupId = (entry?.data as any)?.relatedPokemon?.docs?.[0]?.id;
 
-   //@ts-ignore
    const cardGroup = cardGroupId
       ? await gqlFetch({
+           isAuthOverride: true,
            isCustomDB: true,
            isCached: user ? false : true,
            query: RELATED_DECKS_QUERY,
@@ -45,7 +46,7 @@ export async function loader({
         })
       : null;
 
-   const decks = cardGroup?.decks;
+   const decks = (cardGroup as { decks: Deck[] })?.decks;
 
    return json({
       entry,

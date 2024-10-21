@@ -24,6 +24,7 @@ export async function loader({
    request,
 }: LoaderFunctionArgs) {
    const { entry } = await fetchEntry({
+      isAuthOverride: true,
       payload,
       params,
       request,

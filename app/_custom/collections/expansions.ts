@@ -11,7 +11,7 @@ export const Expansions: CollectionConfig = {
    },
    access: {
       create: isStaff,
-      read: () => true,
+      read: isStaff,
       update: isStaff,
       delete: isStaff,
    },

@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 
 export async function loader({ request }: LoaderFunctionArgs) {
    const deckTierList = await gqlFetch({
+      isAuthOverride: true,
       isCustomDB: true,
       isCached: true,
       query: QUERY,

@@ -13,14 +13,13 @@ import {
 import { createColumnHelper } from "@tanstack/react-table";
 import { gql } from "graphql-request";
 
-import { CustomPageHeader } from "~/components/CustomPageHeader";
 import { Image } from "~/components/Image";
 
 import type { Card, User } from "payload/generated-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { authRestFetcher, gqlFetch } from "~/utils/fetchers.server";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
 import { Dialog } from "~/components/Dialog";
 import { Button } from "~/components/Button";
@@ -53,6 +52,7 @@ export async function loader({
    context: { user },
 }: LoaderFunctionArgs) {
    const userCards = (await gqlFetch({
+      isAuthOverride: true,
       isCustomDB: true,
       isCached: user ? false : true,
       query: QUERY,
@@ -193,48 +193,50 @@ const gridView = columnHelper.accessor("name", {
                <div className="sr-only">{info.row.original?.name}</div>
                <div className="absolute bottom-0 left-0 w-full z-10">
                   <div className="flex items-center gap-1.5 w-full">
-                     <div className="flex items-center justify-between gap-1 p-1.5 pr-1 w-full">
-                        <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-7 flex items-center justify-center text-sm font-mono font-bold">
-                           {info.row.original?.count}
-                        </span>
-                        <div className="items-center gap-1.5 max-tablet:flex tablet:hidden group-hover/card:flex">
-                           {info.row.original?.count !== 0 && (
-                              <button
-                                 disabled={isDisabled}
-                                 className="shadow shadow-1 hover:bg-zinc-600 rounded-full size-7 bg-zinc-500 flex items-center justify-center group"
-                                 onClick={() => {
-                                    fetcher.submit(
-                                       {
-                                          cardId: info.row.original?.id,
-                                          cardCount: info.row.original?.count,
-                                          cardUserId: info.row.original?.user,
-                                          intent: "deleteUserCard",
-                                       },
-                                       {
-                                          method: "DELETE",
-                                       },
-                                    );
-                                 }}
-                              >
-                                 {isCardDeleting ? (
-                                    <Icon
-                                       name="loader-2"
-                                       size={14}
-                                       className="animate-spin text-white"
-                                    />
-                                 ) : (
-                                    <Icon
-                                       title="Remove card"
-                                       className="text-white"
-                                       name="minus"
-                                       size={14}
-                                    />
-                                 )}
-                              </button>
-                           )}
+                     <div className="flex items-center justify-center gap-1 p-1.5 pr-1 w-full">
+                        <div className="items-center justify-center gap-1.5 flex">
                            <button
                               disabled={isDisabled}
-                              className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-7 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                              className={clsx(
+                                 info.row.original?.count === 0 ? "" : "",
+                                 "shadow shadow-1 border border-red-700 hover:bg-red-600 rounded-full size-10 bg-red-500 flex items-center justify-center group hover:border-red-600",
+                                 isDisabled && "opacity-50",
+                              )}
+                              onClick={() => {
+                                 fetcher.submit(
+                                    {
+                                       cardId: info.row.original?.id,
+                                       cardCount: info.row.original?.count,
+                                       cardUserId: info.row.original?.user,
+                                       intent: "deleteUserCard",
+                                    },
+                                    {
+                                       method: "DELETE",
+                                    },
+                                 );
+                              }}
+                           >
+                              {isCardDeleting ? (
+                                 <Icon
+                                    name="loader-2"
+                                    size={20}
+                                    className="animate-spin text-white"
+                                 />
+                              ) : (
+                                 <Icon
+                                    title="Remove card"
+                                    className="text-white"
+                                    name="minus"
+                                    size={20}
+                                 />
+                              )}
+                           </button>
+                           <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-9 flex items-center justify-center text-sm font-mono font-bold">
+                              {info.row.original?.count}
+                           </span>
+                           <button
+                              disabled={isDisabled}
+                              className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
                               onClick={() => {
                                  fetcher.submit(
                                     {
@@ -252,7 +254,7 @@ const gridView = columnHelper.accessor("name", {
                               {isCardUpdating ? (
                                  <Icon
                                     name="loader-2"
-                                    size={14}
+                                    size={20}
                                     className="animate-spin text-white"
                                  />
                               ) : (
@@ -260,7 +262,7 @@ const gridView = columnHelper.accessor("name", {
                                     title="Update card"
                                     name="plus"
                                     className="text-white"
-                                    size={14}
+                                    size={20}
                                  />
                               )}
                            </button>
@@ -468,6 +470,7 @@ export const action: ActionFunction = async ({
             );
             if (cardCount === 0) {
                const addUserCard = await authRestFetcher({
+                  isAuthOverride: true,
                   method: "POST",
                   path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards`,
                   body: {
@@ -486,6 +489,7 @@ export const action: ActionFunction = async ({
             //Users can only mutate their own cards
             if (user.id === cardUserId) {
                const updatedUserCard = await authRestFetcher({
+                  isAuthOverride: true,
                   method: "PATCH",
                   path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
                   body: {
@@ -526,6 +530,7 @@ export const action: ActionFunction = async ({
             if (user.id === cardUserId) {
                if (cardCount === 1) {
                   const deletedUserCard = await authRestFetcher({
+                     isAuthOverride: true,
                      method: "DELETE",
                      path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
                   });
@@ -538,6 +543,7 @@ export const action: ActionFunction = async ({
                }
                if (cardCount > 1) {
                   const updatedUserCard = await authRestFetcher({
+                     isAuthOverride: true,
                      method: "PATCH",
                      path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
                      body: {

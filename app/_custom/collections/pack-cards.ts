@@ -11,7 +11,7 @@ export const PackCards: CollectionConfig = {
    },
    access: {
       create: isStaff,
-      read: () => true,
+      read: isStaff,
       update: isStaff,
       delete: isStaff,
    },
@@ -36,7 +36,7 @@ export const PackCards: CollectionConfig = {
          options: [
             { label: "Normal", value: "normal" },
             { label: "Rare", value: "rare" },
-         ]
+         ],
       },
       {
          name: "slot",

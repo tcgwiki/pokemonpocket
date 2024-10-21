@@ -21,6 +21,7 @@ export async function loader({
    request,
 }: LoaderFunctionArgs) {
    const list = await fetchList({
+      isAuthOverride: true,
       params,
       request,
       payload,
