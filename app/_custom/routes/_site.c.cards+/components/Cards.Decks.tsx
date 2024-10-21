@@ -25,30 +25,36 @@ export function CardsDecks({ data }: EntryCardData) {
                            {deck.name}
                         </div>
                         <div className="inline-flex mx-auto -space-x-8">
-                           {deck?.highlightCards?.map((card) => (
-                              <Tooltip placement="right-start" key={card.id}>
-                                 <TooltipTrigger className="shadow-sm shadow-1 z-10">
-                                    <Image
-                                       url={card.icon?.url}
-                                       alt={card.name ?? ""}
-                                       className="w-20 object-contain"
-                                       width={200}
-                                       height={280}
-                                       loading="lazy"
-                                    />
-                                 </TooltipTrigger>
-                                 <TooltipContent>
-                                    <Image
-                                       url={card.icon?.url}
-                                       alt={card.name ?? ""}
-                                       width={367}
-                                       height={512}
-                                       className="w-full object-contain"
-                                       loading="lazy"
-                                    />
-                                 </TooltipContent>
-                              </Tooltip>
-                           ))}
+                           {deck?.highlightCards?.map(
+                              (card) =>
+                                 card.icon?.url && (
+                                    <Tooltip
+                                       placement="right-start"
+                                       key={card.id}
+                                    >
+                                       <TooltipTrigger className="shadow-sm shadow-1 z-10">
+                                          <Image
+                                             url={card.icon?.url}
+                                             alt={card.name ?? ""}
+                                             className="w-20 object-contain"
+                                             width={200}
+                                             height={280}
+                                             loading="lazy"
+                                          />
+                                       </TooltipTrigger>
+                                       <TooltipContent>
+                                          <Image
+                                             url={card.icon?.url}
+                                             alt={card.name ?? ""}
+                                             width={367}
+                                             height={512}
+                                             className="w-full object-contain"
+                                             loading="lazy"
+                                          />
+                                       </TooltipContent>
+                                    </Tooltip>
+                                 ),
+                           )}
                         </div>
                         {}
                      </Link>
