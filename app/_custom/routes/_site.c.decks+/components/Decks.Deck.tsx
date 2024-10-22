@@ -107,7 +107,7 @@ export function DecksDeck({ data }: { data: Deck }) {
             </div>
          </div>
          {decks.map((deckRow, _deckRowIndex) => (
-            <Disclosure defaultOpen={true} key={deckRowIndex}>
+            <Disclosure defaultOpen={true} key={_deckRowIndex}>
                {({ open }) => (
                   <>
                      <DisclosureButton
@@ -129,6 +129,17 @@ export function DecksDeck({ data }: { data: Deck }) {
                         <div className="flex-grow text-left text-lg font-bold font-header">
                            {deckRow.name}
                         </div>
+                        <Tooltip placement="left">
+                           <TooltipTrigger>
+                              <Button
+                                 className="!size-8 !p-0"
+                                 color="dark/white"
+                              >
+                                 <Icon name="download" size={14} />
+                              </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>Download Deck Image</TooltipContent>
+                        </Tooltip>
                      </DisclosureButton>
                      <DisclosurePanel
                         contentEditable={false}
@@ -241,13 +252,6 @@ const deckCardGridView = columnHelper.accessor("name", {
                      loading="lazy"
                   />
                </button>
-               <Button
-                  className="!absolute bottom-1 right-1 !size-8 !p-0"
-                  color="zinc"
-                  href={`/c/cards/${info.row.original?.slug}`}
-               >
-                  <Icon name="chevron-right" size={16} />
-               </Button>
             </>
          </>
       );
