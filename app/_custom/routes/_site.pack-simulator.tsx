@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { fetchWithCache } from "~/utils/cache.server";
+import { gqlFetch } from "~/utils/fetchers.server";
 import { z } from "zod";
 import { zx } from "zodix";
 import { json } from "@remix-run/node";
@@ -29,30 +29,6 @@ import { ShinyCard } from "./_site.c.cards+/components/ShinyCard";
 import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
 import { Dialog } from "~/components/Dialog";
 
-async function fetchGQL(query: string, variables?: Record<string, any>) {
-   const { data, errors } = await fetchWithCache(
-      `http://localhost:4000/api/graphql`,
-      {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-         },
-         body: JSON.stringify({
-            query,
-            variables,
-         }),
-      },
-      60000,
-   );
-
-   if (errors) {
-      console.error(JSON.stringify(errors)); // eslint-disable-line no-console
-      // throw new Error();
-   }
-
-   return data;
-}
-
 export async function loader({ params, request }: LoaderFunctionArgs) {
    const { expansion } = zx.parseQuery(request, {
       expansion: z.string().optional(),
@@ -60,7 +36,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
    const { pack } = zx.parseQuery(request, { pack: z.string().optional() });
 
    // Get list of Expansions for initial selector
-   const expansionList = await fetchGQL(expansionListQuery);
+   const expansionList = (await gqlFetch({
+      isAuthOverride: true,
+      isCustomDB: true,
+      isCached: true,
+      query: expansionListQuery,
+      request,
+      variables: null,
+   })) as any;
 
    if (!pack) {
       return json(
@@ -74,7 +57,16 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       );
    }
 
-   const packList = await fetchGQL(packListQuery, { packid: pack });
+   const packList = (await gqlFetch({
+      isAuthOverride: true,
+      isCustomDB: true,
+      isCached: true,
+      query: packListQuery,
+      request,
+      variables: {
+         packid: pack,
+      },
+   })) as any;
 
    return json(
       {
@@ -180,7 +172,7 @@ const PackSimulator = (data: any) => {
    }
 
    function pullFromPool(slot: any) {
-      // Rolling: Generate a cumulative sum object of all cards in pool (to the nth significant digit), with ratelower = max_range of prior object+1, and rateupper = min_range + total rate of current digit, and roll a random integer of value up to cumulative sum of final object. If rand is between the ratelower and rateupper of a specific card, that card is pulled.
+      // Rolling: Generate a cumulative sum object of all cards in pool (to the nth significant digit), with ratelower = rateupper of prior object+1, and rateupper = ratelower + total rate of current object, and roll a random integer of value up to cumulative sum of final object. If rand is between the ratelower and rateupper of a specific card, that card is pulled.
       const card_list = currPackData?.cards
          ?.filter((a) => a.slot == slot)
          .sort(
