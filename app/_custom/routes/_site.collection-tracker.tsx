@@ -30,6 +30,7 @@ import { z } from "zod";
 import { zx } from "zodix";
 import { isAdding } from "~/utils/form";
 import clsx from "clsx";
+import { DialogTitle } from "@headlessui/react";
 
 type CollectionData = {
    userCards: {
@@ -82,11 +83,6 @@ export async function loader({
          if (a.isOwned && !b.isOwned) return -1;
          if (!a.isOwned && b.isOwned) return 1;
 
-         // For owned cards, sort by count (descending)
-         if (a.isOwned && b.isOwned) {
-            return b.count - a.count;
-         }
-
          // For unowned cards, maintain original order
          return 0;
       });
@@ -117,7 +113,7 @@ export default function CollectionTracker() {
                expansion: false,
             }}
             gridCellClassNames="flex items-center justify-center"
-            gridContainerClassNames="grid-cols-3 tablet:grid-cols-6 grid gap-3"
+            gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
             defaultViewType="grid"
             data={{ listData: { docs: userCards } }}
             columns={columns}
@@ -157,13 +153,16 @@ const gridView = columnHelper.accessor("name", {
       const isDisabled = isCardDeleting || isCardAdding || isCardUpdating;
 
       return (
-         <>
+         <div key={info.row.original?.id}>
             <Dialog
                className="relative flex items-center justify-center"
                size="tablet"
                onClose={setIsOpen}
                open={isOpen}
             >
+               <DialogTitle className="sr-only">
+                  {info.row.original?.name}
+               </DialogTitle>
                <div
                   className="flex items-center flex-col gap-5 justify-center"
                   style={{
@@ -198,11 +197,13 @@ const gridView = columnHelper.accessor("name", {
                            <button
                               disabled={isDisabled}
                               className={clsx(
-                                 info.row.original?.count === 0 ? "" : "",
-                                 "shadow shadow-1 border border-red-700 hover:bg-red-600 rounded-full size-10 bg-red-500 flex items-center justify-center group hover:border-red-600",
-                                 isDisabled && "opacity-50",
+                                 info.row.original?.count === 0
+                                    ? "bg-zinc-500 border-transparent"
+                                    : "border-red-700 hover:bg-red-600 hover:border-red-600 bg-red-500",
+                                 "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-10  flex items-center justify-center group ",
                               )}
                               onClick={() => {
+                                 if (info.row.original?.count === 0) return;
                                  fetcher.submit(
                                     {
                                        cardId: info.row.original?.id,
@@ -236,7 +237,7 @@ const gridView = columnHelper.accessor("name", {
                            </span>
                            <button
                               disabled={isDisabled}
-                              className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                              className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
                               onClick={() => {
                                  fetcher.submit(
                                     {
@@ -291,7 +292,7 @@ const gridView = columnHelper.accessor("name", {
                   />
                </button>
             </div>
-         </>
+         </div>
       );
    },
 });
