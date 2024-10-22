@@ -66,6 +66,12 @@ const QUERY = gql`
             icon {
                url
             }
+            cards {
+               slug
+               icon {
+                  url
+               }
+            }
          }
          builds {
             name

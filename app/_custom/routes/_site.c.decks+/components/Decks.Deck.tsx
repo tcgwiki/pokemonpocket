@@ -21,6 +21,7 @@ import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 
 import { cardRarityEnum } from "../../_site.c.cards+/components/Cards.Main";
 import { ShinyCard } from "../../_site.c.cards+/components/ShinyCard";
+import { TextLink } from "~/components/Text";
 
 const columnHelper = createColumnHelper<Card & { count: number }>();
 
@@ -48,61 +49,82 @@ export function DecksDeck({ data }: { data: Deck }) {
    return (
       <>
          <div className="flex max-tablet:flex-col w-full items-start gap-3 pb-5">
-            <div className="flex flex-col justify-center gap-2 flex-none">
+            <div className="flex flex-col max-tablet:w-full justify-center gap-2 flex-none">
                <Badge color="zinc" className="!justify-center">
                   Highlight Cards
                </Badge>
-               <div className="flex mx-auto space-x-2">
+               <div className="flex mx-auto space-x-2 rounded-xl">
                   {deck.highlightCards?.map(
                      (card) =>
                         card.icon?.url && (
-                           <Image
+                           <Link
                               key={card.id}
-                              url={card.icon?.url}
-                              alt={card.name ?? ""}
-                              className="w-36 object-contain"
-                              width={200}
-                              height={280}
-                           />
+                              to={`/c/cards/${card?.cards?.[0]?.slug}`}
+                           >
+                              <Image
+                                 key={card.id}
+                                 url={card.icon?.url}
+                                 alt={card.name ?? ""}
+                                 className="w-36 object-contain"
+                                 width={200}
+                                 height={280}
+                              />
+                           </Link>
                         ),
                   )}
                </div>
             </div>
-            <div className="w-full flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1 mb-3">
-               <div className="flex items-center justify-between gap-2 w-full p-3">
-                  <div className="flex items-center gap-2">
-                     <div className="text-sm font-bold">Energy</div>
-                  </div>
-                  {deck.deckTypes && (
-                     <div className="flex gap-1 justify-center">
-                        {deck.deckTypes?.map((type) => (
-                           <Image
-                              width={32}
-                              height={32}
-                              url={type.icon?.url}
-                              alt={deck.name ?? ""}
-                              className="size-5 object-contain"
-                              loading="lazy"
-                              key={deck.name}
-                           />
-                        ))}
+            <div className="flex-grow max-tablet:w-full">
+               <div className="w-full flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1">
+                  <div className="flex items-center justify-between gap-2 w-full p-3">
+                     <div className="flex items-center gap-2">
+                        <div className="text-sm font-bold">Energy</div>
                      </div>
-                  )}
-               </div>
-               <div className="flex items-center justify-between gap-2 w-full p-3">
-                  <div className="text-sm font-bold">Tier Rating</div>
-                  <Badge color="purple">
-                     {deck.tier
-                        ? tierEnum[deck.tier as keyof typeof tierEnum]
-                        : ""}{" "}
-                     Tier
-                  </Badge>
-               </div>
-               <div className="flex items-center justify-between gap-2 w-full p-3">
-                  <div className="flex items-center gap-2">
-                     <div className="text-sm font-bold">Cost</div>
+                     {deck.deckTypes && (
+                        <div className="flex gap-1 justify-center">
+                           {deck.deckTypes?.map((type) => (
+                              <Image
+                                 width={32}
+                                 height={32}
+                                 url={type.icon?.url}
+                                 alt={deck.name ?? ""}
+                                 className="size-5 object-contain"
+                                 loading="lazy"
+                                 key={deck.name}
+                              />
+                           ))}
+                        </div>
+                     )}
                   </div>
-                  <div className="text-1 text-sm">{deck.cost}</div>
+                  <div className="flex items-center justify-between gap-2 w-full p-3">
+                     <div className="text-sm font-bold">Tier Rating</div>
+                     <Badge color="purple">
+                        {deck.tier
+                           ? tierEnum[deck.tier as keyof typeof tierEnum]
+                           : ""}{" "}
+                        Tier
+                     </Badge>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 w-full p-3">
+                     <div className="flex items-center gap-2">
+                        <div className="text-sm font-bold">Cost</div>
+                     </div>
+                     <div className="text-1 text-sm">{deck.cost}</div>
+                  </div>
+               </div>
+               <div className="flex shadow shadow-1 justify-between items-center gap-2 w-full mt-3 bg-2-sub p-3 border rounded-lg border-color-sub">
+                  <div className="text-sm text-1">
+                     Determine the optimal pack to pull by adding cards to your{" "}
+                     <TextLink href="/collection-tracker">collection</TextLink>.
+                  </div>
+                  <Button
+                     href="/pack-simulator"
+                     color="fuchsia"
+                     className="!px-2 !gap-1.5 !text-sm flex-none"
+                  >
+                     Pack Simulator
+                     <Icon name="chevron-right" size={16} />
+                  </Button>
                </div>
             </div>
          </div>
@@ -116,7 +138,7 @@ export function DecksDeck({ data }: { data: Deck }) {
                            "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2 py-3",
                         )}
                      >
-                        <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full border bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600/30 dark:bg-dark450 dark:shadow-zinc-800">
+                        <div className="flex size-7 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800">
                            <Icon
                               name="chevron-right"
                               className={clsx(
@@ -129,17 +151,6 @@ export function DecksDeck({ data }: { data: Deck }) {
                         <div className="flex-grow text-left text-lg font-bold font-header">
                            {deckRow.name}
                         </div>
-                        <Tooltip placement="left">
-                           <TooltipTrigger>
-                              <Button
-                                 className="!size-8 !p-0"
-                                 color="dark/white"
-                              >
-                                 <Icon name="download" size={14} />
-                              </Button>
-                           </TooltipTrigger>
-                           <TooltipContent>Download Deck Image</TooltipContent>
-                        </Tooltip>
                      </DisclosureButton>
                      <DisclosurePanel
                         contentEditable={false}
@@ -170,16 +181,6 @@ export function DecksDeck({ data }: { data: Deck }) {
                )}
             </Disclosure>
          ))}
-         <div className="border-y-2 border-color-sub border-dashed py-4 mt-4">
-            <Button
-               href="/c//pack-simulator"
-               color="purple"
-               className="!px-2 !gap-1.5 !text-sm"
-            >
-               Pack Simulator
-               <Icon name="chevron-right" size={16} />
-            </Button>
-         </div>
       </>
    );
 }
