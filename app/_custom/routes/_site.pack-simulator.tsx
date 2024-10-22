@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { gqlFetch } from "~/utils/fetchers.server";
+import { gql } from "graphql-request";
 import { z } from "zod";
 import { zx } from "zodix";
 import { json } from "@remix-run/node";
@@ -28,6 +29,9 @@ import clsx from "clsx";
 import { ShinyCard } from "./_site.c.cards+/components/ShinyCard";
 import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
 import { Dialog } from "~/components/Dialog";
+
+import { CustomPageHeader } from "~/components/CustomPageHeader";
+import { Text } from "~/components/Text";
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
    const { expansion } = zx.parseQuery(request, {
@@ -93,7 +97,7 @@ export const meta: MetaFunction = () => {
    ];
 };
 
-const PackSimulator = (data: any) => {
+export default function PackSimulator() {
    const loaderdata = useLoaderData<typeof loader>();
    let navigate = useNavigate();
 
@@ -531,17 +535,13 @@ const PackSimulator = (data: any) => {
             <div className="block relative text-center laptop:h-[294px] h-[147px]">
                {pullResults
                   ?.filter((c, ci) => ci < 3)
-                  ?.map((card: any) => (
-                     <PullResultsFeaturedCard card={card} />
-                  ))}
+                  ?.map((card: any) => <PullResultsFeaturedCard card={card} />)}
             </div>
 
             <div className="block relative text-center laptop:h-[294px] h-[147px]">
                {pullResults
                   ?.filter((c, ci) => ci >= 3)
-                  ?.map((card: any) => (
-                     <PullResultsFeaturedCard card={card} />
-                  ))}
+                  ?.map((card: any) => <PullResultsFeaturedCard card={card} />)}
             </div>
          </>
       );
@@ -812,59 +812,84 @@ const PackSimulator = (data: any) => {
 
    return (
       <>
-         <H2>Pack Simulator</H2>
-         <div className="mb-4 px-3 whitespace-pre-wrap">
-            {/* NOTE: This is a placeholder intro section for any information about the simulator that might be useful, can delete if not needed later */}
-            {
-               "Simulate opening booster packs, wallet pain-free!\nSelect an expansion and a booster pack to begin.\nPack opening can be simulated as normal (rare packs appear at their usual rate), or users can also choose to simulate opening only rare packs.\n\n- Packs can be opened for free every 12-hours by default.\n- Packs can either come as regular (99.95%) or rare (0.05%).\n- Normal packs always have Common (C) cards for their first three cards, while higher rarities can appear in card numbers 4 and 5.\n- Rare packs only contain star rarity or higher cards (AR, SR, SAR, IM, UR) for all five cards."
-            }
+         <CustomPageHeader
+            name="Pack Simulator"
+            iconUrl="https://static.mana.wiki/tcgwiki-pokemonpocket/pack-simulator-pokemon-pocket.png"
+         />
+         <div className="relative mx-auto max-w-[728px] max-tablet:px-3 py-3">
+            <div className="text-sm text-1">
+               <p>
+                  Simulate opening booster packs, wallet pain-free! Select an
+                  expansion and a booster pack to begin.
+               </p>
+               <p>
+                  Pack opening can be simulated as normal (rare packs appear at
+                  their usual rate), or users can also choose to simulate
+                  opening only rare packs.
+               </p>
+               <ul className="editor-ul mt-3">
+                  <li>
+                     Packs can be opened for free every 12-hours by default.
+                  </li>
+                  <li>
+                     Packs can either come as regular (99.95%) or rare (0.05%).
+                  </li>
+                  <li>
+                     Normal packs always have Common (C) cards for their first
+                     three cards, while higher rarities can appear in card
+                     numbers 4 and 5.
+                  </li>
+                  <li>
+                     Rare packs only contain star rarity or higher cards (AR,
+                     SR, SAR, IM, UR) for all five cards.
+                  </li>
+               </ul>
+            </div>
+
+            {/* Expansion Selector Combobox */}
+            <ExpansionSelectCombobox />
+
+            {/* Pack Selector Grid - Show smaller version if a pack is already selected */}
+            {expansion && !pack ? <PackSelectorGrid /> : null}
+            {expansion && pack ? <PackSelectorGridSmall /> : null}
+            {/* NOTE: If a user collection is loaded, SHOW BUTTON to display, for each pack, number of unowned cards, and %age to obtain at least one unowned card when opening a pack. */}
+
+            {/* Once a Pack is selected, enable all simulator button dialogs */}
+            {pack ? (
+               <>
+                  {/* Pack Rates drop down - shows all rates for all card positions in both Regular and Rare pack types */}
+                  <PackRatesDropdown />
+                  <SimulatorStartButtons />
+               </>
+            ) : null}
+
+            {/* Show little message if rare pack is rolled */}
+            {isRarePack ? <RarePackIndicator /> : null}
+            {/* Display pull results if applicable */}
+            {pullResults?.length > 0 ? (
+               <>
+                  <PullResultsDisplay />
+               </>
+            ) : null}
+
+            {/* Always show statistics table */}
+            <StatisticsTable />
+
+            {/* All Results section shown only if results are present */}
+            {allResults?.length > 0 ? (
+               <>
+                  <H3>All Cards Pulled</H3>
+                  <AllResultsDisplay />
+               </>
+            ) : null}
+
+            {/* Reset Button */}
+            <SimulatorResetButton />
+            <div className="mb-10"></div>
          </div>
-
-         {/* Expansion Selector Combobox */}
-         <ExpansionSelectCombobox />
-
-         {/* Pack Selector Grid - Show smaller version if a pack is already selected */}
-         {expansion && !pack ? <PackSelectorGrid /> : null}
-         {expansion && pack ? <PackSelectorGridSmall /> : null}
-         {/* NOTE: If a user collection is loaded, SHOW BUTTON to display, for each pack, number of unowned cards, and %age to obtain at least one unowned card when opening a pack. */}
-
-         {/* Once a Pack is selected, enable all simulator button dialogs */}
-         {pack ? (
-            <>
-               {/* Pack Rates drop down - shows all rates for all card positions in both Regular and Rare pack types */}
-               <PackRatesDropdown />
-               <SimulatorStartButtons />
-            </>
-         ) : null}
-
-         {/* Show little message if rare pack is rolled */}
-         {isRarePack ? <RarePackIndicator /> : null}
-         {/* Display pull results if applicable */}
-         {pullResults?.length > 0 ? (
-            <>
-               <PullResultsDisplay />
-            </>
-         ) : null}
-
-         {/* Always show statistics table */}
-         <StatisticsTable />
-
-         {/* All Results section shown only if results are present */}
-         {allResults?.length > 0 ? (
-            <>
-               <H3>All Cards Pulled</H3>
-               <AllResultsDisplay />
-            </>
-         ) : null}
-
-         {/* Reset Button */}
-         <SimulatorResetButton />
-         <div className="mb-10"></div>
       </>
    );
-};
-
-export default PackSimulator;
+}
 
 const SelectBoxArrowsIcon = () => {
    return (
@@ -894,51 +919,63 @@ const SelectBoxArrowsIcon = () => {
    );
 };
 
-const expansionListQuery = `
-query {
-  Expansions(limit:1000,where:{isPromo:{equals:false}}) {
-    docs {
-      id
-      name
-      slug
-      icon { url }
-      logo { url }
-      packs {
-        id
-        name
-        slug
-        icon { url }
+const expansionListQuery = gql`
+   query {
+      Expansions(limit: 1000, where: { isPromo: { equals: false } }) {
+         docs {
+            id
+            name
+            slug
+            icon {
+               url
+            }
+            logo {
+               url
+            }
+            packs {
+               id
+               name
+               slug
+               icon {
+                  url
+               }
+            }
+         }
       }
-    }
-  }
-}
+   }
 `;
 
-const packListQuery = `
-query($packid:String!) {
-  Pack(id:$packid) {
-    id
-    name
-    slug
-    icon { url }
-    cards {
-      id
-      pool
-      slot
-      percent
-      card {
-        id
-        slug
-        name
-        cardType
-        icon{ url }
-        rarity {
-          id
-          name
-          icon { url }
-        }
+const packListQuery = gql`
+   query ($packid: String!) {
+      Pack(id: $packid) {
+         id
+         name
+         slug
+         icon {
+            url
+         }
+         cards {
+            id
+            pool
+            slot
+            percent
+            card {
+               id
+               slug
+               name
+               cardType
+               icon {
+                  url
+               }
+               rarity {
+                  id
+                  name
+                  icon {
+                     url
+                  }
+               }
+            }
+         }
       }
-    }
-  }
-}
+   }
 `;
