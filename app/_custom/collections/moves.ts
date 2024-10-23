@@ -11,7 +11,7 @@ export const Moves: CollectionConfig = {
    },
    access: {
       create: isStaff,
-      read: isStaff,
+      read: () => true,
       update: isStaff,
       delete: isStaff,
    },
