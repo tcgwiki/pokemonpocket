@@ -131,7 +131,7 @@ export default function PackSimulator() {
       // Decide whether a Regular or Rare pack is rolled
       const rare_rate = 5; // 0.05%, or 0.0005, 5 out of 10000
 
-      const rand = Math.floor(Math.random() * 100000); // Random number from 0 - 99999
+      const rand = Math.floor(Math.random() * 10000); // Random number from 0 - 9999
 
       if (rand < rare_rate || type == "rare") {
          setRarePacksOpened((rarePacksOpened) => rarePacksOpened + 1);
@@ -535,13 +535,17 @@ export default function PackSimulator() {
             <div className="block relative text-center laptop:h-[294px] h-[147px]">
                {pullResults
                   ?.filter((c, ci) => ci < 3)
-                  ?.map((card: any) => <PullResultsFeaturedCard card={card} />)}
+                  ?.map((card: any) => (
+                     <PullResultsFeaturedCard card={card} />
+                  ))}
             </div>
 
             <div className="block relative text-center laptop:h-[294px] h-[147px]">
                {pullResults
                   ?.filter((c, ci) => ci >= 3)
-                  ?.map((card: any) => <PullResultsFeaturedCard card={card} />)}
+                  ?.map((card: any) => (
+                     <PullResultsFeaturedCard card={card} />
+                  ))}
             </div>
          </>
       );
