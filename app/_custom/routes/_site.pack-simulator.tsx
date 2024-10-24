@@ -31,7 +31,17 @@ import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
 import { Dialog } from "~/components/Dialog";
 
 import { CustomPageHeader } from "~/components/CustomPageHeader";
-import { Text } from "~/components/Text";
+import type { Card, Expansion } from "~/db/payload-custom-types";
+
+import {
+   Combobox,
+   ComboboxButton,
+   ComboboxInput,
+   ComboboxOption,
+   ComboboxOptions,
+} from "@headlessui/react";
+
+import { Badge } from "~/components/Badge";
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
    const { expansion } = zx.parseQuery(request, {
@@ -54,7 +64,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
          {
             expansion: expansion,
             pack: pack,
-            expansionList: expansionList?.Expansions?.docs,
+            expansionList: expansionList?.Expansions?.docs as Expansion[],
             errorMessage: null,
          },
          { headers: { "Cache-Control": "public, s-maxage=60" } },
@@ -84,10 +94,20 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
    );
 }
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ data, params }) => {
+   const expansion = data?.expansionList?.find(
+      (a: any) => a.id == data?.expansion,
+   );
+
+   const packName = data?.packList?.name;
+
    return [
       {
-         title: "Pack Simulator | Pokémon TCG Pocket - TCG Wiki",
+         title: packName
+            ? `${packName} - Pack Simulator | Pokémon TCG Pocket - TCG Wiki`
+            : expansion?.name
+              ? `${expansion?.name} - Pack Simulator | Pokémon TCG Pocket - TCG Wiki`
+              : "Pack Simulator | Pokémon TCG Pocket - TCG Wiki",
       },
       {
          name: "description",
@@ -115,13 +135,6 @@ export default function PackSimulator() {
 
    const currExpansionData = expansionList?.find((a: any) => a.id == expansion);
    const currPackData = loaderdata?.packList;
-
-   // ========
-   // Helper Functions
-   function expansionSelected(selectbox: any) {
-      if (selectbox != "") navigate(`/pack-simulator?expansion=${selectbox}`);
-      else navigate("/pack-simulator");
-   }
 
    function packSelected(selectbox: any) {
       navigate(`/pack-simulator?expansion=${expansion}&pack=${selectbox}`);
@@ -211,103 +224,116 @@ export default function PackSimulator() {
       setRarePacksOpened(0);
    }
 
-   // =======
-   // Components
-   const ExpansionSelectOption = ({ exp, hover = false }: any) => {
-      return (
-         <div
-            className={`flex ${
-               hover
-                  ? "bg-zinc-50 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-800"
-                  : ""
-            } px-2 py-1 items-center cursor-default`}
-            onClick={() => {
-               if (hover) {
-                  expansionSelected(exp?.id);
-                  setExpansionSelectShow(false);
-               }
-            }}
-         >
-            <div className="mr-2">
-               <Image
-                  width={50}
-                  className="object-contain"
-                  id="expansion"
-                  url={exp?.icon?.url}
-               />
-            </div>
-            <div className="mr-2">
-               <Image
-                  width={60}
-                  className="object-contain"
-                  id="expansion"
-                  url={exp?.logo?.url}
-               />
-            </div>
-            {exp?.id} - {exp?.name}
-         </div>
-      );
-   };
-
    const ExpansionSelectCombobox = () => {
+      const [query, setQuery] = useState("");
+      const [selected, setSelected] = useState(
+         expansionList?.find((a) => a.id == expansion),
+      );
       return (
-         <>
-            <H3>Expansions</H3>
-            <div
-               className="relative block w-full appearance-none rounded-lg border border-zinc-950/10 hover:border-zinc-950/20 dark:border-white/10 dark:hover:border-white/20 bg-transparent dark:bg-white/5 px-3 py-1"
-               onClick={() => setExpansionSelectShow(!expansionSelectShow)}
-            >
-               {currExpansionData ? (
-                  <ExpansionSelectOption
-                     exp={currExpansionData}
-                     key={"expansion_combobox_selected"}
-                  />
-               ) : (
-                  <div className="text-zinc-500 cursor-default">
-                     Select an expansion...
+         <Combobox
+            value={selected}
+            onChange={(value) => {
+               setSelected(value);
+               if (value?.id) navigate(`/pack-simulator?expansion=${value.id}`);
+            }}
+            onClose={() => setQuery("")}
+         >
+            <div className="flex-grow relative">
+               <ComboboxInput
+                  className={clsx(
+                     "w-full rounded-lg border dark:bg-zinc-700 border-zinc-200 bg-zinc-50 py-2 pr-8 pl-3 dark:border-zinc-600 shadow-sm shadow-1",
+                     "focus:outline-none font-bold data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25",
+                  )}
+                  placeholder="Select an Expansion..."
+                  //@ts-ignore
+                  displayValue={(expansion: Expansion) => expansion?.name}
+                  onChange={(event) => setQuery(event.target.value)}
+               />
+               <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
+                  <div className="size-6 flex items-center justify-center rounded-md bg-zinc-200 dark:bg-zinc-600 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-500">
+                     <Icon
+                        name="chevron-down"
+                        size={16}
+                        className="dark:text-zinc-200"
+                     />
                   </div>
-               )}
-               <SelectBoxArrowsIcon />
+               </ComboboxButton>
             </div>
-            {expansionSelectShow ? (
-               <>
-                  <div className="relative block w-full appearance-none rounded-lg border border-zinc-500 bg-transparent dark:bg-white/5 px-3 py-1 mb-1 max-h-80 overflow-y-auto">
-                     {expansionList?.map((exp: any) => (
-                        <ExpansionSelectOption
-                           exp={exp}
-                           hover={true}
-                           key={exp.id}
+            <ComboboxOptions
+               anchor="bottom"
+               transition
+               className={clsx(
+                  "w-[var(--input-width)] rounded-xl border border-color-sub bg-zinc-50 dark:bg-zinc-700 p-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
+                  "transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 z-50 mt-1 shadow-lg shadow-1",
+               )}
+            >
+               {expansionList.map((expansion: Expansion) => (
+                  <ComboboxOption
+                     key={expansion.id}
+                     value={expansion}
+                     className="group flex cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none
+                      dark:data-[focus]:bg-zinc-600 data-[focus]:bg-white"
+                  >
+                     <Icon
+                        name="check"
+                        size={16}
+                        className="invisible size-4 group-data-[selected]:visible"
+                     />
+                     <div className="flex items-center gap-2 flex-grow">
+                        <Image
+                           width={50}
+                           className="object-contain"
+                           id="expansion"
+                           url={expansion?.icon?.url}
                         />
-                     ))}
-                  </div>
-               </>
-            ) : null}
-         </>
+                        <span className="text-sm text-white">
+                           {expansion.name}
+                        </span>
+                     </div>
+                     <Image
+                        width={60}
+                        className="object-contain"
+                        id="expansion"
+                        url={expansion?.logo?.url}
+                     />
+                  </ComboboxOption>
+               ))}
+            </ComboboxOptions>
+         </Combobox>
       );
    };
 
    const PackSelectorGrid = () => {
       return (
          <>
-            <H3>Packs</H3>
+            <div className="flex items-center justify-center gap-4 pt-4">
+               <div className="flex-grow border-t border-color-sub" />
+               <div className="text-sm text-1 font-mono text-center font-bold">
+                  Select a Pack
+               </div>
+               <div className="flex-grow border-t border-color-sub" />
+            </div>
             <div
-               className="grid grid-cols-3 justify-items-center"
+               className="grid grid-cols-3 gap-3 justify-items-center pt-3"
                key="pack_selector_grid"
             >
                {currExpansionData?.packs?.map((pack, packindex) => {
                   return (
                      <div
-                        className="w-full hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:font-bold text-center hover:drop-shadow-lg cursor-pointer rounded-md"
+                        className="w-full flex flex-col items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-600 bg-zinc-50  shadow-sm shadow-1
+                        cursor-pointer rounded-xl border dark:border-zinc-600 dark:bg-dark450 hover:border-zinc-300 p-3 dark:hover:border-zinc-500"
                         onClick={() => packSelected(pack.id)}
                         key={pack?.id}
                      >
                         <Image
-                           width={200}
-                           className="inline-block object-contain "
+                           height={200}
+                           className="object-contain h-40"
                            id="pack"
                            url={pack?.icon?.url}
                         />
-                        <div className="text-lg">{pack?.name}</div>
+                        <div className="text-sm font-bold text-center">
+                           {pack?.name}
+                        </div>
                      </div>
                   );
                })}
@@ -318,43 +344,40 @@ export default function PackSimulator() {
 
    const PackSelectorGridSmall = () => {
       return (
-         <>
-            <H3>Packs</H3>
-            <div
-               className="grid grid-cols-3 justify-items-center"
-               key="pack_selector_grid"
-            >
-               {currExpansionData?.packs?.map((pack, packindex) => {
-                  return (
-                     <div
-                        className={`w-full hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:font-bold text-center hover:drop-shadow-lg cursor-pointer rounded-md ${
-                           pack?.id == currPackData?.id
-                              ? "border border-blue-200 dark:border-blue-800 bg-blue-500 bg-opacity-10"
-                              : ""
-                        }`}
-                        onClick={() => packSelected(pack.id)}
-                        key={pack?.id}
-                     >
-                        <Image
-                           width={40}
-                           className="inline-block object-contain "
-                           id="pack"
-                           url={pack?.icon?.url}
-                        />
-                        <div className="inline-block text-lg">{pack?.name}</div>
-                     </div>
-                  );
-               })}
-            </div>
-         </>
+         <div
+            className="grid tablet:grid-cols-3 grid-cols-1 gap-3 py-3"
+            key="pack_selector_grid"
+         >
+            {currExpansionData?.packs?.map((pack, packindex) => {
+               return (
+                  <div
+                     className={clsx(
+                        pack?.id == currPackData?.id
+                           ? " border-blue-200 dark:border-blue-800 bg-blue-500 dark:bg-blue-950 bg-opacity-10"
+                           : "bg-zinc-50 dark:bg-dark450 border-zinc-200 dark:border-zinc-600",
+                        "flex items-center border hover:bg-blue-100 hover:border-blue-200 dark:hover:border-blue-800 dark:hover:bg-blue-950 cursor-pointer rounded-lg p-1",
+                     )}
+                     onClick={() => packSelected(pack.id)}
+                     key={pack?.id}
+                  >
+                     <Image
+                        height={160}
+                        className="object-contain h-20"
+                        id="pack"
+                        url={pack?.icon?.url}
+                     />
+                     <span className="text-sm font-bold">{pack?.name}</span>
+                  </div>
+               );
+            })}
+         </div>
       );
    };
 
    const PackRatesDropdown = () => {
-      const pack_header_class =
-         "border border-color-sub px-3 py-1 bg-color-sub rounded-lg my-2 text-lg font-bold text-center";
+      const pack_header_class = "font-header text-lg";
       const card_header_class =
-         "w-full text-center my-1 py-0.5 bg-zinc-200 dark:bg-zinc-700";
+         "bg-zinc-100 dark:bg-dark400 my-2 py-1 px-2 font-bold rounded";
 
       const card_count = currPackData?.cards?.length;
       return (
@@ -365,7 +388,7 @@ export default function PackSimulator() {
                      <DisclosureButton
                         className={clsx(
                            open ? "rounded-b-none " : "shadow-sm",
-                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2 py-3 my-2",
+                           "mt-3 shadow-1 border-color-sub bg-3-sub flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2 py-3",
                         )}
                      >
                         <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full border bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600/30 dark:bg-dark450 dark:shadow-zinc-800">
@@ -378,8 +401,14 @@ export default function PackSimulator() {
                               size={16}
                            />
                         </div>
-                        <div className="flex-grow text-left text-lg font-bold font-header">
-                           Card Pool Rates (Total Cards: {card_count})
+                        <div className="flex-grow text-left flex items-center justify-between">
+                           <span className="font-bold text-sm">
+                              Card Pool Rates
+                           </span>
+                           <span className="flex items-center gap-1.5">
+                              <span className="text-xs">Total Cards</span>
+                              <Badge color="zinc">{card_count}</Badge>
+                           </span>
                         </div>
                      </DisclosureButton>
                      <DisclosurePanel
@@ -387,7 +416,7 @@ export default function PackSimulator() {
                         unmount={false}
                         className={clsx(
                            open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 pt-0 text-sm shadow-sm",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 text-sm shadow-sm",
                         )}
                      >
                         <div className={pack_header_class}>Regular Pack</div>
@@ -426,7 +455,7 @@ export default function PackSimulator() {
 
       return (
          <>
-            <div className="laptop:grid laptop:grid-cols-2 laptop:gap-x-2">
+            <div className="grid laptop:grid-cols-2 gap-1 pb-3">
                {card_list?.map((card) => {
                   const [isOpen, setIsOpen] = useState(false);
                   const cardType =
@@ -476,23 +505,27 @@ export default function PackSimulator() {
                            </div>
                         </Dialog>
 
-                        <div className="flex justify-between bg-zinc-100 dark:bg-zinc-800 rounded-full px-2 py-0.5 my-0.5">
+                        <div
+                           className="flex justify-between border border-color-sub 
+                           bg-zinc-50 dark:bg-dark400 rounded-md pl-1 pr-2 py-1"
+                        >
                            <div
-                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs"
+                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs flex items-center gap-2"
                               onClick={() => setIsOpen(true)}
                            >
-                              <div className="inline-block w-12 align-top">
+                              <div className="w-10">
                                  <Image
-                                    className="object-contain"
-                                    height={20}
+                                    className="object-contain h-4 mx-auto"
+                                    height={40}
                                     url={card.card?.rarity?.icon?.url}
                                     alt={card.card?.rarity?.name}
                                     loading="lazy"
                                  />
                               </div>
-                              {card.card?.name}
+                              <span className="line-clamp-1">
+                                 {card.card?.name}
+                              </span>
                            </div>
-
                            <div className="text-xs">
                               {Math.round(card.percent * 100) / 100}%
                            </div>
@@ -507,47 +540,73 @@ export default function PackSimulator() {
 
    const SimulatorStartButtons = () => {
       return (
-         <div className="flex gap-x-2">
-            <Button className="w-full" onClick={() => simulateOpenPack()}>
+         <div className="flex max-tablet:flex-col items-center gap-2">
+            <Button
+               color="blue"
+               className="w-full !py-2"
+               onClick={() => simulateOpenPack()}
+            >
                Open Pack
             </Button>
-            <Button className="w-full" onClick={() => simulateOpenPack("rare")}>
-               Simulate Rare Pack
+            <Button
+               color="violet"
+               className="max-tablet:w-full tablet:flex-none !py-2"
+               onClick={() => simulateOpenPack("rare")}
+            >
+               Open Rare Pack
             </Button>
          </div>
       );
    };
 
-   const RarePackIndicator = () => {
-      return (
-         <>
-            <div className="block text-red-500 bg-red-500 bg-opacity-10 border-8 border-red-500 border-opacity-30 p-3 my-2 w-full text-center rounded-full cursor-default font-bold text-lg">
-               Rare Pack Rolled!
-            </div>
-         </>
-      );
-   };
+   // const RarePackIndicator = () => {
+   //    return (
+   //       <>
+   //          <div className="block text-red-500 bg-red-500 bg-opacity-10 border-8 border-red-500 border-opacity-30 p-3 my-2 w-full text-center rounded-full cursor-default font-bold text-lg">
+   //             Rare Pack Rolled!
+   //          </div>
+   //       </>
+   //    );
+   // };
 
    const PullResultsDisplay = () => {
       return (
-         <>
+         <div
+            className={clsx(
+               isRarePack
+                  ? "bg-violet-50 border-violet-300 dark:bg-violet-950/40 dark:border-violet-900"
+                  : "bg-zinc-50 dark:bg-dark450 border-zinc-200 dark:border-zinc-600",
+               "flex flex-col shadow-sm shadow-1 gap-2 border rounded-lg p-3 mt-2 relative",
+            )}
+         >
+            {isRarePack && (
+               <div className="text-violet-500 pb-1.5  font-header text-center font-bold">
+                  Rare Pack
+               </div>
+            )}
             {/* Display three results on top and two on bottom, center justified. */}
-            <div className="block relative text-center laptop:h-[294px] h-[147px]">
-               {pullResults
-                  ?.filter((c, ci) => ci < 3)
-                  ?.map((card: any) => (
-                     <PullResultsFeaturedCard card={card} />
-                  ))}
+            <div className="flex items-center justify-center gap-2">
+               <PullResultsFeaturedCard card={pullResults[0]} />
+               <PullResultsFeaturedCard card={pullResults[1]} />
+               <PullResultsFeaturedCard card={pullResults[2]} />
             </div>
-
-            <div className="block relative text-center laptop:h-[294px] h-[147px]">
-               {pullResults
-                  ?.filter((c, ci) => ci >= 3)
-                  ?.map((card: any) => (
-                     <PullResultsFeaturedCard card={card} />
-                  ))}
+            <div className="relative text-center grid grid-cols-2 gap-2">
+               <div className="flex justify-end">
+                  <PullResultsFeaturedCard card={pullResults[3]} />
+               </div>
+               <div className="flex justify-start">
+                  <PullResultsFeaturedCard card={pullResults[4]} />
+               </div>
             </div>
-         </>
+            <Button
+               color="light/zinc"
+               className="!absolute right-3 bottom-3"
+               onClick={() => resetSimulator()}
+            >
+               <Icon name="refresh-ccw" size={12} className="text-1" />
+               Reset
+            </Button>
+         </div>
       );
    };
    const PullResultsFeaturedCard = ({ card }: any) => {
@@ -592,13 +651,14 @@ export default function PackSimulator() {
                </div>
             </Dialog>
             <div
-               className={`cursor-pointer text-center inline-block m-1`}
+               className="cursor-pointer"
                onClick={() => setDOpen(true)}
                key={card?.id}
             >
                <Image
-                  width={200}
-                  className="inline-block object-contain laptop:w-[200px] w-[100px]"
+                  width={367}
+                  height={512}
+                  className="object-contain w-40"
                   id="pack"
                   url={card?.icon?.url}
                />
@@ -633,7 +693,7 @@ export default function PackSimulator() {
 
       return (
          <>
-            <div className="laptop:grid laptop:grid-cols-2 laptop:gap-x-2">
+            <div className="grid laptop:grid-cols-2 gap-1">
                {display_list?.map((card: any) => {
                   const [isOpen, setIsOpen] = useState(false);
                   const cardType =
@@ -682,22 +742,26 @@ export default function PackSimulator() {
                               </Button>
                            </div>
                         </Dialog>
-
-                        <div className="flex justify-between bg-zinc-100 dark:bg-zinc-800 rounded-full px-2 py-0.5 my-0.5">
+                        <div
+                           className="flex justify-between border border-color-sub 
+                           bg-zinc-50 dark:bg-dark400 rounded-md pl-1 pr-2 py-1"
+                        >
                            <div
-                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs"
+                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs flex items-center gap-2"
                               onClick={() => setIsOpen(true)}
                            >
-                              <div className="inline-block w-12 align-top">
+                              <div className="w-10">
                                  <Image
-                                    className="object-contain"
-                                    height={20}
+                                    className="object-contain h-4 mx-auto"
+                                    height={40}
                                     url={card.card?.rarity?.icon?.url}
                                     alt={card.card?.rarity?.name}
                                     loading="lazy"
                                  />
                               </div>
-                              {card.card?.name}
+                              <span className="line-clamp-1">
+                                 {card.card?.name}
+                              </span>
                            </div>
 
                            <div className="text-xs">x{card.qty}</div>
@@ -754,63 +818,59 @@ export default function PackSimulator() {
             <Table grid framed dense className="my-2.5">
                <TableBody>
                   <TableRow>
-                     <TableHeader className="!py-1">
+                     <TableHeader className="!py-1.5 text-sm">
                         Regular Packs Opened
                      </TableHeader>
-                     <TableCell className="!py-1">
+                     <TableCell className="!py-1.5" center>
                         {regularPacksOpened}
                      </TableCell>
                   </TableRow>
                   <TableRow>
-                     <TableHeader className="!py-1">
+                     <TableHeader className="!py-1.5">
                         Rare Packs Opened
                      </TableHeader>
-                     <TableCell className="!py-1">{rarePacksOpened}</TableCell>
+                     <TableCell className="!py-1.5" center>
+                        {rarePacksOpened}
+                     </TableCell>
                   </TableRow>
                   <TableRow>
-                     <TableHeader className="!py-1">
+                     <TableHeader className="!py-1.5">
                         Total Packs Opened
                      </TableHeader>
-                     <TableCell className="!py-1">
+                     <TableCell className="!py-1.5" center>
                         {regularPacksOpened + rarePacksOpened}
                      </TableCell>
                   </TableRow>
                   <TableRow>
-                     <TableHeader className="!py-1">Poke Gold Used</TableHeader>
-                     <TableCell className="!py-1">
+                     <TableHeader className="!py-1.5">
+                        Poke Gold Used
+                     </TableHeader>
+                     <TableCell className="!py-1" center>
                         {(regularPacksOpened + rarePacksOpened) * 6}
                      </TableCell>
                   </TableRow>
                   <TableRow>
-                     <TableHeader className="!py-1">
+                     <TableHeader className="!py-1.5">
                         $ Spent ($0.99 pack = 5x Poke Gold)
                      </TableHeader>
-                     <TableCell className="!py-1">
-                        $
+                     <TableCell className="!py-1.5" center>
+                        <span className="text-1">$</span>
                         {Math.round(
                            (regularPacksOpened + rarePacksOpened) * 6 * 19.8,
                         ) / 100}
                      </TableCell>
                   </TableRow>
                   <TableRow>
-                     <TableHeader className="!py-1">Pack Points</TableHeader>
-                     <TableCell className="!py-1">
+                     <TableHeader className="!py-1.5 !border-0">
+                        Pack Points
+                     </TableHeader>
+                     <TableCell className="!py-1.5" center>
                         {(regularPacksOpened + rarePacksOpened) * 5}
                      </TableCell>
                   </TableRow>
                </TableBody>
             </Table>
          </>
-      );
-   };
-
-   const SimulatorResetButton = () => {
-      return (
-         <div className="flex my-2">
-            <Button className="w-full" onClick={() => resetSimulator()}>
-               Reset
-            </Button>
-         </div>
       );
    };
 
@@ -849,36 +909,30 @@ export default function PackSimulator() {
                   </li>
                </ul>
             </div>
-
             {/* Expansion Selector Combobox */}
-            <ExpansionSelectCombobox />
-
+            <div className="border-t mt-5 block pt-3 dark:border-zinc-600 border-dashed">
+               <ExpansionSelectCombobox />
+            </div>
             {/* Pack Selector Grid - Show smaller version if a pack is already selected */}
             {expansion && !pack ? <PackSelectorGrid /> : null}
             {expansion && pack ? <PackSelectorGridSmall /> : null}
             {/* NOTE: If a user collection is loaded, SHOW BUTTON to display, for each pack, number of unowned cards, and %age to obtain at least one unowned card when opening a pack. */}
-
             {/* Once a Pack is selected, enable all simulator button dialogs */}
             {pack ? (
                <>
                   {/* Pack Rates drop down - shows all rates for all card positions in both Regular and Rare pack types */}
-                  <PackRatesDropdown />
                   <SimulatorStartButtons />
                </>
             ) : null}
-
-            {/* Show little message if rare pack is rolled */}
-            {isRarePack ? <RarePackIndicator /> : null}
             {/* Display pull results if applicable */}
             {pullResults?.length > 0 ? (
                <>
                   <PullResultsDisplay />
                </>
             ) : null}
-
+            {pack ? <PackRatesDropdown /> : null}
             {/* Always show statistics table */}
             <StatisticsTable />
-
             {/* All Results section shown only if results are present */}
             {allResults?.length > 0 ? (
                <>
@@ -886,42 +940,11 @@ export default function PackSimulator() {
                   <AllResultsDisplay />
                </>
             ) : null}
-
-            {/* Reset Button */}
-            <SimulatorResetButton />
             <div className="mb-10"></div>
          </div>
       </>
    );
 }
-
-const SelectBoxArrowsIcon = () => {
-   return (
-      <>
-         <span className="pointer-events-none absolute bg-transparent inset-y-0 right-0 flex items-center pr-2">
-            <svg
-               className="size-5 stroke-zinc-500 tablet:size-4 dark:stroke-zinc-400"
-               viewBox="0 0 16 16"
-               aria-hidden="true"
-               fill="none"
-            >
-               <path
-                  d="M5.75 10.75L8 13L10.25 10.75"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-               />
-               <path
-                  d="M10.25 5.25L8 3L5.75 5.25"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-               />
-            </svg>
-         </span>
-      </>
-   );
-};
 
 const expansionListQuery = gql`
    query {
