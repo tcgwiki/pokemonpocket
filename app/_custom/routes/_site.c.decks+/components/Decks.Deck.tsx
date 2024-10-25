@@ -14,7 +14,6 @@ import { Button } from "~/components/Button";
 import { Dialog } from "~/components/Dialog";
 import { Icon } from "~/components/Icon";
 import { Image } from "~/components/Image";
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 import type { Card, Deck } from "~/db/payload-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
@@ -23,15 +22,27 @@ import { cardRarityEnum } from "../../_site.c.cards+/components/Cards.Main";
 import { ShinyCard } from "../../_site.c.cards+/components/ShinyCard";
 import { TextLink } from "~/components/Text";
 
+import { CustomEditorEmbed } from "~/routes/_editor+/core/components/CustomEditorEmbed";
+import { ContentEmbed } from "~/db/payload-types";
+
 const columnHelper = createColumnHelper<Card & { count: number }>();
 
-export function DecksDeck({ data }: { data: Deck }) {
-   const deck = data;
+export function DecksDeck({
+   data,
+}: {
+   data: { deck: Deck & { deckBuildContent: ContentEmbed[] } };
+}) {
+   //@ts-ignore
+   const { deck, deckBuildContent } = data;
 
    const decks =
       deck.builds?.map((build) => {
          return {
+            id: build.id,
             name: build.name,
+            buildContent: deckBuildContent.find(
+               (content: ContentEmbed) => content.relationId === build.id,
+            ),
             cards: build.cards?.flatMap((card) => ({
                ...card.card,
                count: card.count,
@@ -39,95 +50,8 @@ export function DecksDeck({ data }: { data: Deck }) {
          };
       }) || [];
 
-   const tierEnum = {
-      s: "S",
-      a: "A",
-      b: "B",
-      c: "C",
-   };
-
    return (
       <>
-         <div className="flex max-tablet:flex-col w-full items-start gap-3 pb-5">
-            <div className="flex flex-col max-tablet:w-full justify-center gap-2 flex-none">
-               <Badge color="zinc" className="!justify-center">
-                  Highlight Cards
-               </Badge>
-               <div className="flex mx-auto space-x-2 rounded-xl">
-                  {deck.highlightCards?.map(
-                     (card) =>
-                        card.icon?.url && (
-                           <Link
-                              key={card.id}
-                              to={`/c/cards/${card?.cards?.[0]?.slug}`}
-                           >
-                              <Image
-                                 key={card.id}
-                                 url={card.icon?.url}
-                                 alt={card.name ?? ""}
-                                 className="w-36 object-contain"
-                                 width={200}
-                                 height={280}
-                              />
-                           </Link>
-                        ),
-                  )}
-               </div>
-            </div>
-            <div className="flex-grow max-tablet:w-full">
-               <div className="w-full flex flex-col justify-between divide-y divide-color-sub flex-grow items-center border border-color-sub bg-2-sub rounded-xl shadow-sm shadow-1">
-                  <div className="flex items-center justify-between gap-2 w-full p-3">
-                     <div className="flex items-center gap-2">
-                        <div className="text-sm font-bold">Energy</div>
-                     </div>
-                     {deck.deckTypes && (
-                        <div className="flex gap-1 justify-center">
-                           {deck.deckTypes?.map((type) => (
-                              <Image
-                                 width={32}
-                                 height={32}
-                                 url={type.icon?.url}
-                                 alt={deck.name ?? ""}
-                                 className="size-5 object-contain"
-                                 loading="lazy"
-                                 key={deck.name}
-                              />
-                           ))}
-                        </div>
-                     )}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 w-full p-3">
-                     <div className="text-sm font-bold">Tier Rating</div>
-                     <Badge color="purple">
-                        {deck.tier
-                           ? tierEnum[deck.tier as keyof typeof tierEnum]
-                           : ""}{" "}
-                        Tier
-                     </Badge>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 w-full p-3">
-                     <div className="flex items-center gap-2">
-                        <div className="text-sm font-bold">Cost</div>
-                     </div>
-                     <div className="text-1 text-sm">{deck.cost}</div>
-                  </div>
-               </div>
-               <div className="flex shadow shadow-1 justify-between items-center gap-2 w-full mt-3 bg-2-sub p-3 border rounded-lg border-color-sub">
-                  <div className="text-sm text-1">
-                     Determine the optimal pack to pull by adding cards to your{" "}
-                     <TextLink href="/collection-tracker">collection</TextLink>.
-                  </div>
-                  <Button
-                     href="/pack-simulator"
-                     color="fuchsia"
-                     className="!px-2 !gap-1.5 !text-sm flex-none"
-                  >
-                     Pack Simulator
-                     <Icon name="chevron-right" size={16} />
-                  </Button>
-               </div>
-            </div>
-         </div>
          {decks.map((deckRow, _deckRowIndex) => (
             <Disclosure defaultOpen={true} key={_deckRowIndex}>
                {({ open }) => (
@@ -157,9 +81,15 @@ export function DecksDeck({ data }: { data: Deck }) {
                         unmount={false}
                         className={clsx(
                            open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 pt-0 text-sm shadow-sm",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 text-sm shadow-sm",
                         )}
                      >
+                        <CustomEditorEmbed
+                           data={deckRow.buildContent?.content}
+                           siteId="66fb8ddbc707d9f8d3f8a435-k3a3m64els5y"
+                           relationId={deckRow.id}
+                           pageId={deckRow?.buildContent?.id ?? ""}
+                        />
                         <ListTable
                            columnViewability={{
                               pokemonType: false,
@@ -170,7 +100,6 @@ export function DecksDeck({ data }: { data: Deck }) {
                            gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
                            gridCellClassNames="relative flex items-center justify-center"
                            defaultViewType="grid"
-                           defaultSort={[{ id: "rarity", desc: true }]}
                            data={{ listData: { docs: deckRow.cards } }}
                            columns={deckCardColumns}
                            filters={deckCardFilters}

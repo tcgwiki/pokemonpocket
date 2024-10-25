@@ -9,6 +9,7 @@ import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/ent
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
 import { DecksDeck } from "./components/Decks.Deck";
+import { DecksMain } from "./components/Decks.Main";
 
 export { entryMeta as meta };
 
@@ -27,21 +28,44 @@ export async function loader({
          query: QUERY,
       },
    });
+
+   const deck = (entry?.data as { deck: Deck })?.deck;
+
+   const deckBuildIds = deck?.builds?.map((build) => build.id);
+
+   const deckBuildContent = await payload.find({
+      collection: "contentEmbeds",
+      where: {
+         relationId: { in: deckBuildIds },
+      },
+      depth: 0,
+      overrideAccess: false,
+      user,
+   });
+
    return json({
       entry,
+      deckBuildContent: deckBuildContent.docs,
    });
 }
 
 const SECTIONS = {
+   main: DecksMain,
    deck: DecksDeck,
 };
 
 export default function EntryPage() {
-   const { entry } = useLoaderData<typeof loader>();
+   const { entry, deckBuildContent } = useLoaderData<typeof loader>();
 
-   const deck = (entry?.data as { deck: Deck })?.deck;
-
-   return <Entry customComponents={SECTIONS} customData={deck} />;
+   return (
+      <Entry
+         customComponents={SECTIONS}
+         customData={{
+            deck: (entry as { data: { deck: any } })?.data.deck,
+            deckBuildContent,
+         }}
+      />
+   );
 }
 
 const QUERY = gql`
@@ -74,6 +98,7 @@ const QUERY = gql`
             }
          }
          builds {
+            id
             name
             cards {
                count
