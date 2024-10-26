@@ -81,7 +81,7 @@ export function DecksDeck({
                         unmount={false}
                         className={clsx(
                            open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 text-sm shadow-sm",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 shadow-sm",
                         )}
                      >
                         <CustomEditorEmbed

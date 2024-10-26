@@ -37,7 +37,8 @@ export const meta: MetaFunction = () => {
 export default function TierList() {
    const data = useLoaderData<typeof loader>();
 
-   const gridContainerClassNames = "grid grid-cols-4 gap-3 p-3 w-full";
+   const gridContainerClassNames =
+      "grid tablet:grid-cols-4 grid-cols-3 gap-3 p-3 w-full";
 
    return (
       <>
