@@ -31,6 +31,13 @@ import { zx } from "zodix";
 import { isAdding } from "~/utils/form";
 import clsx from "clsx";
 import { DialogTitle } from "@headlessui/react";
+import {
+   Disclosure,
+   DisclosureButton,
+   DisclosurePanel,
+} from "@headlessui/react";
+import { Badge } from "~/components/Badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 
 type CollectionData = {
    userCards: {
@@ -73,6 +80,7 @@ export async function loader({
          return {
             ...card,
             id: userCard?.id ?? card.id,
+            packName: card.packs?.[0]?.pack?.name,
             user: userCard?.user,
             count: userCard?.count ?? 0,
             isOwned: !!userCard,
@@ -86,7 +94,115 @@ export async function loader({
          // For unowned cards, maintain original order
          return 0;
       });
-   return json({ userCards: cardsList, user });
+
+   const groupedCards = cardsList.reduce(
+      (groups, card) => {
+         const packName = card.packName || "Unknown Pack";
+         if (!groups[packName]) {
+            groups[packName] = {
+               cards: [],
+               totalCards: 0,
+               ownedCards: 0,
+               packIcon: card.packs?.[0]?.pack?.icon?.url ?? undefined,
+            };
+         }
+         groups[packName]!.cards.push(card);
+         groups[packName]!.totalCards++;
+         if (card.isOwned) {
+            groups[packName]!.ownedCards++;
+         }
+         return groups;
+      },
+      {} as Record<
+         string,
+         {
+            cards: typeof cardsList;
+            totalCards: number;
+            ownedCards: number;
+            packIcon?: string;
+         }
+      >,
+   );
+
+   const totalOwnedCards = Object.values(groupedCards).reduce(
+      (total, packData) => total + packData.ownedCards,
+      0,
+   );
+
+   // Calculate both owned and total cards by type
+   const cardsByType = cardsList.reduce(
+      (acc, card) => {
+         if (card.pokemonType?.name) {
+            const typeName = card.pokemonType.name;
+            if (!acc[typeName]) {
+               acc[typeName] = {
+                  owned: 0,
+                  total: 0,
+                  icon: card.pokemonType.icon?.url ?? undefined,
+               };
+            }
+
+            // Only increment total once per unique card
+            acc[typeName]!.total++;
+
+            // If owned, only count it once (not by count)
+            if (card.isOwned) {
+               acc[typeName]!.owned++;
+            }
+         }
+         return acc;
+      },
+      {} as Record<
+         string,
+         {
+            owned: number;
+            total: number;
+            icon?: string;
+         }
+      >,
+   );
+
+   // Calculate both owned and total cards by rarity
+   const cardsByRarity = cardsList.reduce(
+      (acc, card) => {
+         if (card.rarity?.name) {
+            const rarityName = card.rarity.name;
+            if (!acc[rarityName]) {
+               acc[rarityName] = {
+                  owned: 0,
+                  total: 0,
+                  icon: card.rarity.icon?.url ?? undefined,
+               };
+            }
+
+            // Increment total count for this rarity (unique cards only)
+            acc[rarityName]!.total++;
+
+            // If owned, increment owned count by 1 (not by card.count)
+            if (card.isOwned) {
+               acc[rarityName]!.owned++;
+            }
+         }
+         return acc;
+      },
+      {} as Record<
+         string,
+         {
+            owned: number;
+            total: number;
+            icon?: string;
+         }
+      >,
+   );
+
+   return json({
+      userCards: cardsList,
+      user,
+      groupedCards,
+      totalOwnedCards,
+      cardsByType,
+      cardsByRarity,
+   });
 }
 
 export const meta: MetaFunction = () => {
@@ -98,29 +214,190 @@ export const meta: MetaFunction = () => {
 };
 
 export default function CollectionTracker() {
-   const { userCards, user } = useLoaderData<typeof loader>();
+   const {
+      userCards,
+      user,
+      groupedCards,
+      totalOwnedCards,
+      cardsByType,
+      cardsByRarity,
+   } = useLoaderData<typeof loader>();
 
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
-         <ListTable
-            gridView={gridView}
-            columnViewability={{
-               pokemonType: false,
-               isEX: false,
-               cardType: false,
-               rarity: false,
-               isOwned: false,
-               expansion: false,
-            }}
-            gridCellClassNames="flex items-center justify-center"
-            gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
-            defaultViewType="grid"
-            data={{ listData: { docs: userCards } }}
-            columns={columns}
-            filters={cardCollectionFilters}
-            pager={userCards.length > 50 ? true : false}
-            stickyFooter={true}
-         />
+         <div
+            className="border border-color-sub rounded-b-xl border-t-0 mb-4 p-3 pt-4 
+            bg-2-sub shadow-sm shadow-1 tablet:mx-32"
+         >
+            {/* <div>
+               <div className="!text-xs flex items-center gap-2 pb-2">
+                  <span>Owned</span>
+                  <div className="flex items-center gap-0.5">
+                     <span className="font-bold">{totalOwnedCards}</span>
+                     <span className="text-zinc-500">/</span>
+                     <span className="font-bold text-1">
+                        {userCards.length}
+                     </span>
+                  </div>
+               </div>
+               <div className="!text-xs flex items-center gap-2 pb-2">
+                  <span>Pokémon</span>
+                  <div className="flex items-center gap-0.5">
+                     <span className="font-bold">{totalOwnedCards}</span>
+                     <span className="text-zinc-500">/</span>
+                     <span className="font-bold text-1">
+                        {userCards.length}
+                     </span>
+                  </div>
+               </div>
+            </div> */}
+            <div className="flex items-start max-tablet:flex-col gap-2">
+               <div className="font-mono font-bold text-xs tablet:min-w-14">
+                  Type
+               </div>
+               <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full">
+                  {Object.entries(cardsByType).map(([typeName, typeData]) => (
+                     <div key={typeName} className="flex items-center gap-1">
+                        <div
+                           className="!text-xs flex items-center gap-0.5 rounded-md p-1 pr-1.5 bg-white border border-zinc-200 
+                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 min-w-12 w-full justify-between"
+                        >
+                           <Image
+                              className="size-4"
+                              height={40}
+                              width={40}
+                              alt={typeName}
+                              url={typeData.icon}
+                           />
+                           <div className="flex items-center flex-none gap-0.5">
+                              <span className="font-bold">
+                                 {typeData.owned}
+                              </span>
+                              <span className="text-zinc-500">/</span>
+                              <span className="text-1">{typeData.total}</span>
+                           </div>
+                        </div>
+                        <span className="sr-only">{typeName}</span>
+                     </div>
+                  ))}
+               </div>
+            </div>
+            <div className="flex items-start max-tablet:flex-col gap-2 pt-4">
+               <div className="font-mono font-bold text-xs tablet:min-w-14">
+                  Rarity
+               </div>
+               <div className="grid grid-cols-2 tablet:grid-cols-6 gap-2 flex-grow w-full">
+                  {Object.entries(cardsByRarity).map(
+                     ([rarityName, rarityData]) => (
+                        <Tooltip key={rarityName}>
+                           <TooltipTrigger className="flex items-center w-full gap-1">
+                              <div
+                                 className="!text-xs flex items-center gap-0.5 rounded-md py-0.5 bg-white border border-zinc-200 
+                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 px-1.5 min-w-12 w-full justify-between"
+                              >
+                                 <Image
+                                    className="h-5 flex-none object-contain"
+                                    height={40}
+                                    alt={rarityName}
+                                    url={rarityData.icon}
+                                 />
+                                 <div className="flex items-center flex-none gap-0.5">
+                                    <span className="font-bold">
+                                       {rarityData.owned}
+                                    </span>
+                                    <span className="text-zinc-500">/</span>
+                                    <span className="text-1">
+                                       {rarityData.total}
+                                    </span>
+                                 </div>
+                              </div>
+                           </TooltipTrigger>
+                           <TooltipContent>{rarityName}</TooltipContent>
+                        </Tooltip>
+                     ),
+                  )}
+               </div>
+            </div>
+         </div>
+         {Object.entries(groupedCards).map(([packName, packData]) => (
+            <Disclosure defaultOpen={true} key={packName}>
+               {({ open }) => (
+                  <>
+                     <DisclosureButton
+                        className={clsx(
+                           open ? "rounded-b-none " : "mb-2.5 shadow-sm",
+                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border p-1.5 px-3 relative",
+                        )}
+                     >
+                        {packData.packIcon && (
+                           <Image
+                              className="h-14"
+                              height={160}
+                              url={packData.packIcon}
+                           />
+                        )}
+                        <div className="flex-grow text-left">
+                           <div className="font-bold text-base font-header">
+                              {packName}
+                           </div>
+                           <Badge className="!text-xs flex items-center gap-0.5">
+                              <span className="font-bold">
+                                 {packData.ownedCards}
+                              </span>
+                              <span className="text-zinc-500">/</span>
+                              <span className="font-bold text-1">
+                                 {packData.totalCards}
+                              </span>
+                           </Badge>
+                        </div>
+
+                        <div
+                           className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                           shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                        >
+                           <Icon
+                              name="chevron-right"
+                              className={clsx(
+                                 open ? "rotate-90" : "",
+                                 "transform pl-0.5 transition duration-300 ease-in-out",
+                              )}
+                              size={20}
+                           />
+                        </div>
+                     </DisclosureButton>
+                     <DisclosurePanel
+                        contentEditable={false}
+                        unmount={false}
+                        className={clsx(
+                           packData.cards.length < 50 ? "pb-3" : "",
+                           open ? "mb-3 border-t" : "",
+                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 px-3 shadow-sm",
+                        )}
+                     >
+                        <ListTable
+                           gridView={gridView}
+                           columnViewability={{
+                              pokemonType: false,
+                              isEX: false,
+                              cardType: false,
+                              rarity: false,
+                              isOwned: false,
+                              expansion: false,
+                           }}
+                           gridCellClassNames="flex items-center justify-center"
+                           gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
+                           defaultViewType="grid"
+                           data={{ listData: { docs: packData.cards } }}
+                           columns={columns}
+                           filters={cardCollectionFilters}
+                           pager={packData.cards.length > 50 ? true : false}
+                           stickyFooter={true}
+                        />
+                     </DisclosurePanel>
+                  </>
+               )}
+            </Disclosure>
+         ))}
       </div>
    );
 }
@@ -232,7 +509,15 @@ const gridView = columnHelper.accessor("name", {
                                  />
                               )}
                            </button>
-                           <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-9 flex items-center justify-center text-sm font-mono font-bold">
+
+                           <span
+                              className={clsx(
+                                 info.row.original?.count === 0
+                                    ? "opacity-0"
+                                    : "opacity-100",
+                                 "shadow shadow-1 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-9 flex items-center justify-center text-sm font-mono font-bold",
+                              )}
+                           >
                               {info.row.original?.count}
                            </span>
                            <button
@@ -581,17 +866,6 @@ const cardCollectionFilters: {
    options: { label?: string; value: string; icon?: string }[];
 }[] = [
    {
-      id: "expansion",
-      label: "Expansion",
-      cols: 1,
-      options: [
-         {
-            value: "A1",
-            label: "Genetic Apex",
-         },
-      ],
-   },
-   {
       id: "isOwned",
       label: "Owned",
       options: [{ label: "Show owned only", value: "true" }],
@@ -665,8 +939,14 @@ const QUERY = gql`
             slug
             isEX
             hp
-            expansion {
-               id
+            packs {
+               pack {
+                  id
+                  name
+                  icon {
+                     url
+                  }
+               }
             }
             cardType
             icon {
@@ -704,8 +984,14 @@ const QUERY = gql`
                slug
                isEX
                hp
-               expansion {
-                  id
+               packs {
+                  pack {
+                     id
+                     name
+                     icon {
+                        url
+                     }
+                  }
                }
                cardType
                icon {
