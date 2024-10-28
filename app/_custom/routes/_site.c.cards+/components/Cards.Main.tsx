@@ -1,10 +1,10 @@
+import { descriptionParser } from "~/_custom/utils/descriptionParser";
 import { Badge } from "~/components/Badge";
 import { Image } from "~/components/Image";
 import { TextLink } from "~/components/Text";
 
 import { ShinyCard } from "./ShinyCard";
 import type { EntryCardData } from "../$entryId";
-import { descriptionParser } from "~/_custom/utils/descriptionParser";
 
 export const cardRarityEnum = {
    C: "common",
@@ -165,6 +165,7 @@ export function CardsMain({ data }: EntryCardData) {
                                                      }
                                                      className="size-4"
                                                      url={cost.type?.icon?.url}
+                                                     key={index}
                                                   />
                                                ))
                                              : undefined}
