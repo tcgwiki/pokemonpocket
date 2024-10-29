@@ -38,6 +38,7 @@ import {
 } from "@headlessui/react";
 import { Badge } from "~/components/Badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
+import ListTableContainer from "~/routes/_site+/c_+/_components/ListTableContainer";
 
 type CollectionData = {
    userCards: {
@@ -125,7 +126,8 @@ export async function loader({
    );
 
    const totalOwnedCards = Object.values(groupedCards).reduce(
-      (total, packData) => total + packData.ownedCards,
+      (total, packData) =>
+         total + packData.cards.filter((card) => card.isOwned).length,
       0,
    );
 
@@ -162,37 +164,87 @@ export async function loader({
       >,
    );
 
-   // Calculate both owned and total cards by rarity
-   const cardsByRarity = cardsList.reduce(
-      (acc, card) => {
-         if (card.rarity?.name) {
-            const rarityName = card.rarity.name;
-            if (!acc[rarityName]) {
-               acc[rarityName] = {
-                  owned: 0,
-                  total: 0,
-                  icon: card.rarity.icon?.url ?? undefined,
-               };
+   // Updated rarity order mapping (reversed)
+   const rarityOrder = {
+      UR: 0, // Ultra Rare (highest)
+      IM: 1, // Illustration Rare
+      SAR: 2, // Special Art Rare
+      SR: 3, // Secret Rare
+      AR: 4, // Amazing Rare
+      RR: 5, // Rare Rare
+      R: 6, // Rare
+      U: 7, // Uncommon
+      C: 8, // Common (lowest)
+   };
+
+   const cardsByRarity = Object.entries(
+      cardsList.reduce(
+         (acc, card) => {
+            if (card.rarity?.name) {
+               const rarityName = card.rarity.name;
+               if (!acc[rarityName]) {
+                  acc[rarityName] = {
+                     owned: 0,
+                     total: 0,
+                     icon: card.rarity.icon?.url ?? undefined,
+                     order:
+                        rarityOrder[rarityName as keyof typeof rarityOrder] ??
+                        999,
+                  };
+               }
+
+               acc[rarityName]!.total++;
+               if (card.isOwned) {
+                  acc[rarityName]!.owned++;
+               }
             }
+            return acc;
+         },
+         {} as Record<
+            string,
+            {
+               owned: number;
+               total: number;
+               icon?: string;
+               order: number;
+            }
+         >,
+      ),
+   )
+      .sort(([, a], [, b]) => a.order - b.order) // Keeping this the same since we reversed the order values
+      .reduce(
+         (obj, [key, value]) => {
+            const { order, ...rest } = value;
+            obj[key] = rest;
+            return obj;
+         },
+         {} as Record<string, { owned: number; total: number; icon?: string }>,
+      );
 
-            // Increment total count for this rarity (unique cards only)
-            acc[rarityName]!.total++;
+   // Calculate total owned and available Pokemon/Trainer cards
+   const cardTypeStats = cardsList.reduce(
+      (acc, card) => {
+         const isTrainer = card.cardType === "trainer";
 
-            // If owned, increment owned count by 1 (not by card.count)
-            if (card.isOwned) {
-               acc[rarityName]!.owned++;
+         // Increment total counts
+         if (isTrainer) {
+            acc.trainerTotal++;
+         } else {
+            acc.pokemonTotal++;
+         }
+
+         // Increment owned counts
+         if (card.isOwned) {
+            if (isTrainer) {
+               acc.trainerOwned++;
+            } else {
+               acc.pokemonOwned++;
             }
          }
+
          return acc;
       },
-      {} as Record<
-         string,
-         {
-            owned: number;
-            total: number;
-            icon?: string;
-         }
-      >,
+      { pokemonOwned: 0, pokemonTotal: 0, trainerOwned: 0, trainerTotal: 0 },
    );
 
    return json({
@@ -202,6 +254,7 @@ export async function loader({
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
+      cardTypeStats,
    });
 }
 
@@ -221,17 +274,21 @@ export default function CollectionTracker() {
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
+      cardTypeStats,
    } = useLoaderData<typeof loader>();
 
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
          <div
             className="border border-color-sub rounded-b-xl border-t-0 mb-4 p-3 pt-4 
-            bg-2-sub shadow-sm shadow-1 tablet:mx-32"
+            bg-2-sub shadow-sm shadow-1 tablet:mx-24  tablet:flex items-start gap-4"
          >
-            {/* <div>
-               <div className="!text-xs flex items-center gap-2 pb-2">
-                  <span>Owned</span>
+            <div
+               className="border border-zinc-200 shadow-sm bg-white divide-y divide-color-sub tablet:min-w-40 tablet:max-w-40
+                  shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg flex-none max-tablet:mb-4"
+            >
+               <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                  <span className="font-bold">Unique Owned</span>
                   <div className="flex items-center gap-0.5">
                      <span className="font-bold">{totalOwnedCards}</span>
                      <span className="text-zinc-500">/</span>
@@ -240,27 +297,38 @@ export default function CollectionTracker() {
                      </span>
                   </div>
                </div>
-               <div className="!text-xs flex items-center gap-2 pb-2">
-                  <span>Pokémon</span>
+               <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                  <span className="font-bold">Pokémon</span>
                   <div className="flex items-center gap-0.5">
-                     <span className="font-bold">{totalOwnedCards}</span>
+                     <span className="font-bold">
+                        {cardTypeStats.pokemonOwned}
+                     </span>
                      <span className="text-zinc-500">/</span>
                      <span className="font-bold text-1">
-                        {userCards.length}
+                        {cardTypeStats.pokemonTotal}
                      </span>
                   </div>
                </div>
-            </div> */}
-            <div className="flex items-start max-tablet:flex-col gap-2">
-               <div className="font-mono font-bold text-xs tablet:min-w-14">
-                  Type
+               <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                  <span className="font-bold">Trainer</span>
+                  <div className="flex items-center gap-0.5">
+                     <span className="font-bold">
+                        {cardTypeStats.trainerOwned}
+                     </span>
+                     <span className="text-zinc-500">/</span>
+                     <span className="font-bold text-1">
+                        {cardTypeStats.trainerTotal}
+                     </span>
+                  </div>
                </div>
-               <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full">
+            </div>
+            <div className="flex-grow">
+               <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full pb-2">
                   {Object.entries(cardsByType).map(([typeName, typeData]) => (
                      <div key={typeName} className="flex items-center gap-1">
                         <div
-                           className="!text-xs flex items-center gap-0.5 rounded-md p-1 pr-1.5 bg-white border border-zinc-200 
-                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 min-w-12 w-full justify-between"
+                           className="!text-xs flex items-center gap-1 rounded-md p-1 pr-1.5 bg-white border border-zinc-200 
+                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800  w-full justify-between"
                         >
                            <Image
                               className="size-4"
@@ -281,12 +349,7 @@ export default function CollectionTracker() {
                      </div>
                   ))}
                </div>
-            </div>
-            <div className="flex items-start max-tablet:flex-col gap-2 pt-4">
-               <div className="font-mono font-bold text-xs tablet:min-w-14">
-                  Rarity
-               </div>
-               <div className="grid grid-cols-2 tablet:grid-cols-6 gap-2 flex-grow w-full">
+               <div className="grid grid-cols-2 tablet:grid-cols-5 gap-2 flex-grow w-full">
                   {Object.entries(cardsByRarity).map(
                      ([rarityName, rarityData]) => (
                         <Tooltip key={rarityName}>
@@ -319,85 +382,87 @@ export default function CollectionTracker() {
                </div>
             </div>
          </div>
-         {Object.entries(groupedCards).map(([packName, packData]) => (
-            <Disclosure defaultOpen={true} key={packName}>
-               {({ open }) => (
-                  <>
-                     <DisclosureButton
-                        className={clsx(
-                           open ? "rounded-b-none " : "mb-2.5 shadow-sm",
-                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border p-1.5 px-3 relative",
-                        )}
-                     >
-                        {packData.packIcon && (
-                           <Image
-                              className="h-14"
-                              height={160}
-                              url={packData.packIcon}
-                           />
-                        )}
-                        <div className="flex-grow text-left">
-                           <div className="font-bold text-base font-header">
-                              {packName}
-                           </div>
-                           <Badge className="!text-xs flex items-center gap-0.5">
-                              <span className="font-bold">
-                                 {packData.ownedCards}
-                              </span>
-                              <span className="text-zinc-500">/</span>
-                              <span className="font-bold text-1">
-                                 {packData.totalCards}
-                              </span>
-                           </Badge>
-                        </div>
-
-                        <div
-                           className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                           shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+         {/* @ts-ignore */}
+         <ListTableContainer filters={cardCollectionFilters}>
+            {Object.entries(groupedCards).map(([packName, packData]) => (
+               <Disclosure defaultOpen={true} key={packName}>
+                  {({ open }) => (
+                     <>
+                        <DisclosureButton
+                           className={clsx(
+                              open ? "rounded-b-none " : "mb-2.5 shadow-sm",
+                              "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border p-1.5 pl-2 pr-3 relative",
+                           )}
                         >
-                           <Icon
-                              name="chevron-right"
-                              className={clsx(
-                                 open ? "rotate-90" : "",
-                                 "transform pl-0.5 transition duration-300 ease-in-out",
-                              )}
-                              size={20}
+                           {packData.packIcon && (
+                              <Image
+                                 className="h-14"
+                                 height={160}
+                                 url={packData.packIcon}
+                              />
+                           )}
+                           <div className="flex-grow text-left">
+                              <div className="font-bold text-base font-header">
+                                 {packName}
+                              </div>
+                              <Badge className="!text-xs flex items-center !gap-0.5">
+                                 <span className="font-bold">
+                                    {packData.ownedCards}
+                                 </span>
+                                 <span className="text-zinc-500">/</span>
+                                 <span className="font-bold text-1">
+                                    {packData.totalCards}
+                                 </span>
+                              </Badge>
+                           </div>
+                           <div
+                              className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                           shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                           >
+                              <Icon
+                                 name="chevron-right"
+                                 className={clsx(
+                                    open ? "rotate-90" : "",
+                                    "transform pl-0.5 transition duration-300 ease-in-out",
+                                 )}
+                                 size={20}
+                              />
+                           </div>
+                        </DisclosureButton>
+                        <DisclosurePanel
+                           contentEditable={false}
+                           unmount={false}
+                           className={clsx(
+                              packData.cards.length < 50 ? "pb-3" : "",
+                              open ? "mb-3 border-t" : "",
+                              "border-color-sub shadow-1 bg-3 rounded-b-lg border px-3 pt-3 border-t-0 shadow-sm",
+                           )}
+                        >
+                           <ListTable
+                              gridView={gridView}
+                              columnViewability={{
+                                 pokemonType: false,
+                                 isEX: false,
+                                 cardType: false,
+                                 rarity: false,
+                                 isOwned: false,
+                                 expansion: false,
+                              }}
+                              gridCellClassNames="flex items-center justify-center"
+                              gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
+                              defaultViewType="grid"
+                              data={{ listData: { docs: packData.cards } }}
+                              columns={columns}
+                              filters={cardCollectionFilters}
+                              pager={packData.cards.length > 50 ? true : false}
+                              stickyFooter={true}
                            />
-                        </div>
-                     </DisclosureButton>
-                     <DisclosurePanel
-                        contentEditable={false}
-                        unmount={false}
-                        className={clsx(
-                           packData.cards.length < 50 ? "pb-3" : "",
-                           open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 px-3 shadow-sm",
-                        )}
-                     >
-                        <ListTable
-                           gridView={gridView}
-                           columnViewability={{
-                              pokemonType: false,
-                              isEX: false,
-                              cardType: false,
-                              rarity: false,
-                              isOwned: false,
-                              expansion: false,
-                           }}
-                           gridCellClassNames="flex items-center justify-center"
-                           gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
-                           defaultViewType="grid"
-                           data={{ listData: { docs: packData.cards } }}
-                           columns={columns}
-                           filters={cardCollectionFilters}
-                           pager={packData.cards.length > 50 ? true : false}
-                           stickyFooter={true}
-                        />
-                     </DisclosurePanel>
-                  </>
-               )}
-            </Disclosure>
-         ))}
+                        </DisclosurePanel>
+                     </>
+                  )}
+               </Disclosure>
+            ))}
+         </ListTableContainer>
       </div>
    );
 }
@@ -509,12 +574,11 @@ const gridView = columnHelper.accessor("name", {
                                  />
                               )}
                            </button>
-
                            <span
                               className={clsx(
                                  info.row.original?.count === 0
-                                    ? "opacity-0"
-                                    : "opacity-100",
+                                    ? "tablet:opacity-0"
+                                    : "tablet:opacity-100",
                                  "shadow shadow-1 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-9 flex items-center justify-center text-sm font-mono font-bold",
                               )}
                            >
@@ -720,6 +784,11 @@ const columns = [
          return filterValue.includes(row?.original?.expansion?.id);
       },
    }),
+   columnHelper.accessor("isEX", {
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.isEX?.toString());
+      },
+   }),
    columnHelper.accessor("cardType", {
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.cardType?.toString());
@@ -871,6 +940,31 @@ const cardCollectionFilters: {
       options: [{ label: "Show owned only", value: "true" }],
    },
    {
+      id: "cardType",
+      label: "Card Type",
+      cols: 2,
+      options: [
+         {
+            label: "Pokémon",
+            value: "pokemon",
+         },
+         {
+            label: "Trainer",
+            value: "trainer",
+         },
+      ],
+   },
+   {
+      id: "isEX",
+      label: "Is EX Pokémon?",
+      options: [
+         {
+            label: "EX Pokémon",
+            value: "true",
+         },
+      ],
+   },
+   {
       id: "pokemonType",
       label: "Pokémon Type",
       cols: 3,
@@ -925,6 +1019,49 @@ const cardCollectionFilters: {
             label: "Water",
             value: "Water",
             icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Water.png",
+         },
+      ],
+   },
+   {
+      id: "rarity",
+      label: "Rarity",
+      cols: 3,
+      options: [
+         {
+            value: "UR",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
+         },
+         {
+            value: "IM",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
+         },
+         {
+            value: "SAR",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SAR.png",
+         },
+         {
+            value: "SR",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SR.png",
+         },
+         {
+            value: "AR",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
+         },
+         {
+            value: "RR",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
+         },
+         {
+            value: "R",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
+         },
+         {
+            value: "U",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
+         },
+         {
+            value: "C",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_C.png",
          },
       ],
    },
