@@ -39,6 +39,7 @@ import {
 import { Badge } from "~/components/Badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 import ListTableContainer from "~/routes/_site+/c_+/_components/ListTableContainer";
+import qs from "qs";
 
 type CollectionData = {
    userCards: {
@@ -967,6 +968,47 @@ export const action: ActionFunction = async ({
                },
             );
             if (cardCount === 0) {
+               const userCardQuery = qs.stringify(
+                  {
+                     where: {
+                        card: {
+                           equals: cardId,
+                        },
+                        user: {
+                           equals: user.id,
+                        },
+                     },
+                     depth: 0,
+                  },
+                  { addQueryPrefix: true },
+               );
+
+               // Check if user card already exists
+               const existingUserCard = await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "GET",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards${userCardQuery}`,
+               });
+
+               if (existingUserCard?.docs?.length > 0) {
+                  // Update existing card instead of creating new one
+                  const updatedUserCard = await authRestFetcher({
+                     isAuthOverride: true,
+                     method: "PATCH",
+                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
+                     body: {
+                        count: existingUserCard.docs[0].count + 1,
+                     },
+                  });
+                  if (updatedUserCard) {
+                     return jsonWithSuccess(
+                        null,
+                        `${updatedUserCard.doc.card.name} updated`,
+                     );
+                  }
+               }
+
+               // Create new user card if none exists
                const addUserCard = await authRestFetcher({
                   isAuthOverride: true,
                   method: "POST",
