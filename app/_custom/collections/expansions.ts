@@ -1,4 +1,8 @@
 import type { CollectionConfig } from "payload/types";
+import {
+   afterDeleteSearchSyncHook,
+   afterChangeSearchSyncHook,
+} from "../hooks/search-hooks";
 
 import { isStaff } from "../../db/collections/users/users.access";
 
@@ -8,6 +12,10 @@ export const Expansions: CollectionConfig = {
    admin: {
       group: "Custom",
       useAsTitle: "name",
+   },
+   hooks: {
+      afterDelete: [afterDeleteSearchSyncHook],
+      afterChange: [afterChangeSearchSyncHook],
    },
    access: {
       create: isStaff,

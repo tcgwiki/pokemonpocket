@@ -1,6 +1,10 @@
 import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
+import {
+   afterDeleteSearchSyncHook,
+   afterChangeSearchSyncHook,
+} from "../hooks/search-hooks";
 
 export const Cards: CollectionConfig = {
    slug: "cards",
@@ -14,6 +18,10 @@ export const Cards: CollectionConfig = {
       read: () => true,
       update: isStaff,
       delete: isStaff,
+   },
+   hooks: {
+      afterDelete: [afterDeleteSearchSyncHook],
+      afterChange: [afterChangeSearchSyncHook],
    },
    fields: [
       {
