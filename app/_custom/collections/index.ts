@@ -2,6 +2,7 @@ import { Abilities } from "./abilities";
 import { Achievements } from "./achievements";
 import { CardGroups } from "./card-groups";
 import { Cards } from "./cards";
+import { Customizations } from "./customizations";
 import { Decks } from "./decks";
 import { Expansions } from "./expansions";
 import { Illustrators } from "./illustrators";
@@ -21,6 +22,7 @@ export const CustomCollections = [
    Achievements,
    CardGroups,
    Cards,
+   Customizations,
    Decks,
    Expansions,
    Illustrators,
