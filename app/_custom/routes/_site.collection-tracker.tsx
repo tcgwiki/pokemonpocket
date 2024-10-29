@@ -81,7 +81,6 @@ export async function loader({
          return {
             ...card,
             id: userCard?.id ?? card.id,
-            packName: card.packs?.[0]?.pack?.name,
             user: userCard?.user,
             count: userCard?.count ?? 0,
             isOwned: !!userCard,
@@ -91,15 +90,13 @@ export async function loader({
          // Sort owned cards first
          if (a.isOwned && !b.isOwned) return -1;
          if (!a.isOwned && b.isOwned) return 1;
-
-         // For unowned cards, maintain original order
          return 0;
       });
 
    const groupedCards = cardsList.reduce(
       (groups, card) => {
-         const packName = card.packName || "";
          const expansionName = card.expansion?.slug || "Unknown Expansion";
+         const cardId = card.id;
 
          // Initialize expansion group if it doesn't exist
          if (!groups[expansionName]) {
@@ -110,27 +107,59 @@ export async function loader({
                packs: {},
                totalCards: 0,
                ownedCards: 0,
+               processedCardIds: new Set<string>(),
             };
          }
 
-         // Initialize pack within expansion if it doesn't exist
-         if (!groups[expansionName]!.packs[packName]) {
-            groups[expansionName]!.packs[packName] = {
-               cards: [],
-               totalCards: 0,
-               ownedCards: 0,
-               packIcon: card.packs?.[0]?.pack?.icon?.url ?? undefined,
-            };
+         // Only increment expansion totals if this is the first time we've seen this card
+         if (!groups[expansionName]!.processedCardIds.has(cardId)) {
+            groups[expansionName]!.processedCardIds.add(cardId);
+            groups[expansionName]!.totalCards++;
+            if (card.isOwned) {
+               groups[expansionName]!.ownedCards++;
+            }
          }
 
-         // Add card to pack
-         groups[expansionName]!.packs[packName]!.cards.push(card);
-         groups[expansionName]!.packs[packName]!.totalCards++;
-         groups[expansionName]!.totalCards++;
+         // If card has no packs or empty packs array, add to "No Pack"
+         if (!card.packs || card.packs.length === 0) {
+            const noPack = "No Pack";
+            if (!groups[expansionName]!.packs[noPack]) {
+               groups[expansionName]!.packs[noPack] = {
+                  id: "no-pack",
+                  name: noPack,
+                  icon: undefined,
+                  cards: [],
+                  totalCards: 0,
+                  ownedCards: 0,
+               };
+            }
+            groups[expansionName]!.packs[noPack]!.cards.push(card);
+            groups[expansionName]!.packs[noPack]!.totalCards++;
+            if (card.isOwned) {
+               groups[expansionName]!.packs[noPack]!.ownedCards++;
+            }
+         } else {
+            // Handle cards with packs
+            card.packs.forEach((packData) => {
+               const packName = packData.name ?? "Unknown Pack";
 
-         if (card.isOwned) {
-            groups[expansionName]!.packs[packName]!.ownedCards++;
-            groups[expansionName]!.ownedCards++;
+               if (!groups[expansionName]!.packs[packName]) {
+                  groups[expansionName]!.packs[packName] = {
+                     id: packData.id,
+                     name: packData.name ?? "",
+                     icon: packData.icon?.url ?? undefined,
+                     cards: [],
+                     totalCards: 0,
+                     ownedCards: 0,
+                  };
+               }
+
+               groups[expansionName]!.packs[packName]!.cards.push(card);
+               groups[expansionName]!.packs[packName]!.totalCards++;
+               if (card.isOwned) {
+                  groups[expansionName]!.packs[packName]!.ownedCards++;
+               }
+            });
          }
 
          return groups;
@@ -144,19 +173,31 @@ export async function loader({
             packs: Record<
                string,
                {
+                  id: string;
+                  name: string;
+                  icon?: string;
                   cards: typeof cardsList;
                   totalCards: number;
                   ownedCards: number;
-                  packIcon?: string;
                }
             >;
             totalCards: number;
             ownedCards: number;
+            processedCardIds: Set<string>;
          }
       >,
    );
 
-   const totalOwnedCards = Object.values(groupedCards).reduce(
+   // Clean up by removing the processedCardIds set before using the data
+   const cleanedGroupedCards = Object.entries(groupedCards).reduce(
+      (acc, [key, value]) => {
+         acc[key] = value;
+         return acc;
+      },
+      {} as typeof groupedCards,
+   );
+
+   const totalOwnedCards = Object.values(cleanedGroupedCards).reduce(
       (total, packData) => total + packData.ownedCards,
       0,
    );
@@ -280,7 +321,7 @@ export async function loader({
    return json({
       userCards: cardsList,
       user,
-      groupedCards,
+      groupedCards: cleanedGroupedCards,
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
@@ -473,13 +514,11 @@ export default function CollectionTracker() {
                                                       className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
                                                       flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
                                                    >
-                                                      {packData.packIcon && (
+                                                      {packData.icon && (
                                                          <Image
                                                             className="h-12"
                                                             height={160}
-                                                            url={
-                                                               packData.packIcon
-                                                            }
+                                                            url={packData.icon}
                                                          />
                                                       )}
                                                       <div className="flex-grow text-left">
@@ -1181,12 +1220,10 @@ const QUERY = gql`
             isEX
             hp
             packs {
-               pack {
-                  id
-                  name
-                  icon {
-                     url
-                  }
+               id
+               name
+               icon {
+                  url
                }
             }
             expansion {
@@ -1236,12 +1273,10 @@ const QUERY = gql`
                isEX
                hp
                packs {
-                  pack {
-                     id
-                     name
-                     icon {
-                        url
-                     }
+                  id
+                  name
+                  icon {
+                     url
                   }
                }
                expansion {
