@@ -21,6 +21,7 @@ export const UserCards: CollectionConfig = {
          name: "card",
          type: "relationship",
          relationTo: "cards",
+         index: true,
          hasMany: false,
          required: true,
       },
@@ -32,6 +33,7 @@ export const UserCards: CollectionConfig = {
       {
          name: "user",
          type: "text",
+         index: true,
          required: true,
       },
    ],

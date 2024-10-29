@@ -58,6 +58,7 @@ export const Cards: CollectionConfig = {
       },
       {
          name: "rarity",
+         index: true,
          type: "relationship",
          relationTo: "rarities",
       },
