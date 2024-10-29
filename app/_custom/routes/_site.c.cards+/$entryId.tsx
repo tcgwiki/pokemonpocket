@@ -160,18 +160,6 @@ const CARD_QUERY = gql`
          illustrators {
             name
          }
-         packs {
-            pack {
-               name
-               slug
-               icon {
-                  url
-               }
-            }
-            pool
-            slot
-            percent
-         }
          movesInfo {
             damage
             move {
