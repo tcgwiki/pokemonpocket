@@ -84,8 +84,16 @@ export const Cards: CollectionConfig = {
             { label: "Trainer", value: "trainer" },
          ],
       },
+      // Packs the card can be found on
       {
          name: "packs",
+         type: "relationship",
+         relationTo: "packs",
+         hasMany: true,
+      },
+      // Drop rates for packs
+      {
+         name: "packRates",
          type: "relationship",
          relationTo: "pack-cards",
          hasMany: true,
