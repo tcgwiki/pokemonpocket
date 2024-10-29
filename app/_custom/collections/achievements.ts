@@ -34,7 +34,7 @@ export const Achievements: CollectionConfig = {
                options: [
                   { label: "Unspecified", value: "TROPHY_RANK_UNSPECIFIED" },
                   { label: "Bronze", value: "TROPHY_RANK_BRONZE" },
-                  { label: "Silver", value: "TROPHY_RANK_SLIVER" },
+                  { label: "Silver", value: "TROPHY_RANK_SILVER" },
                   { label: "Gold", value: "TROPHY_RANK_GOLD" },
                   { label: "Platinum", value: "TROPHY_RANK_RAINBOW" },
                ],
