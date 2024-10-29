@@ -29,7 +29,7 @@ export const Achievements: CollectionConfig = {
          type: "array",
          fields: [
             {
-               name: "name",
+               name: "rank",
                type: "select",
                options: [
                   { label: "Unspecified", value: "TROPHY_RANK_UNSPECIFIED" },
