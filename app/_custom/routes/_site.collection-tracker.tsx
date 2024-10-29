@@ -98,36 +98,66 @@ export async function loader({
 
    const groupedCards = cardsList.reduce(
       (groups, card) => {
-         const packName = card.packName || "Unknown Pack";
-         if (!groups[packName]) {
-            groups[packName] = {
+         const packName = card.packName || "";
+         const expansionName = card.expansion?.slug || "Unknown Expansion";
+
+         // Initialize expansion group if it doesn't exist
+         if (!groups[expansionName]) {
+            groups[expansionName] = {
+               expansionName: expansionName,
+               expansionIcon: card.expansion?.icon?.url ?? undefined,
+               expansionLogo: card.expansion?.logo?.url ?? undefined,
+               packs: {},
+               totalCards: 0,
+               ownedCards: 0,
+            };
+         }
+
+         // Initialize pack within expansion if it doesn't exist
+         if (!groups[expansionName]!.packs[packName]) {
+            groups[expansionName]!.packs[packName] = {
                cards: [],
                totalCards: 0,
                ownedCards: 0,
                packIcon: card.packs?.[0]?.pack?.icon?.url ?? undefined,
             };
          }
-         groups[packName]!.cards.push(card);
-         groups[packName]!.totalCards++;
+
+         // Add card to pack
+         groups[expansionName]!.packs[packName]!.cards.push(card);
+         groups[expansionName]!.packs[packName]!.totalCards++;
+         groups[expansionName]!.totalCards++;
+
          if (card.isOwned) {
-            groups[packName]!.ownedCards++;
+            groups[expansionName]!.packs[packName]!.ownedCards++;
+            groups[expansionName]!.ownedCards++;
          }
+
          return groups;
       },
       {} as Record<
          string,
          {
-            cards: typeof cardsList;
+            expansionName: string;
+            expansionIcon?: string;
+            expansionLogo?: string;
+            packs: Record<
+               string,
+               {
+                  cards: typeof cardsList;
+                  totalCards: number;
+                  ownedCards: number;
+                  packIcon?: string;
+               }
+            >;
             totalCards: number;
             ownedCards: number;
-            packIcon?: string;
          }
       >,
    );
 
    const totalOwnedCards = Object.values(groupedCards).reduce(
-      (total, packData) =>
-         total + packData.cards.filter((card) => card.isOwned).length,
+      (total, packData) => total + packData.ownedCards,
       0,
    );
 
@@ -279,13 +309,10 @@ export default function CollectionTracker() {
 
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
-         <div
-            className="border border-color-sub rounded-b-xl border-t-0 mb-4 p-3 pt-4 
-            bg-2-sub shadow-sm shadow-1 tablet:mx-24  tablet:flex items-start gap-4"
-         >
+         <div className="pt-4 desktop:flex items-center gap-3 border-b pb-3 border-color-sub">
             <div
-               className="border border-zinc-200 shadow-sm bg-white divide-y divide-color-sub tablet:min-w-40 tablet:max-w-40
-                  shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg flex-none max-tablet:mb-4"
+               className="border border-zinc-200 shadow-sm bg-zinc-50 divide-y divide-color-sub tablet:min-w-48 desktop:max-w-48å
+                  shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg flex-none max-desktop:mb-3"
             >
                <div className="!text-xs flex items-center justify-between gap-2 p-2">
                   <span className="font-bold">Unique Owned</span>
@@ -327,7 +354,7 @@ export default function CollectionTracker() {
                   {Object.entries(cardsByType).map(([typeName, typeData]) => (
                      <div key={typeName} className="flex items-center gap-1">
                         <div
-                           className="!text-xs flex items-center gap-1 rounded-md p-1 pr-1.5 bg-white border border-zinc-200 
+                           className="!text-xs flex items-center gap-1 rounded-md p-1 pr-1.5 bg-zinc-50 border border-zinc-200 
                            shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800  w-full justify-between"
                         >
                            <Image
@@ -355,7 +382,7 @@ export default function CollectionTracker() {
                         <Tooltip key={rarityName}>
                            <TooltipTrigger className="flex items-center w-full gap-1">
                               <div
-                                 className="!text-xs flex items-center gap-0.5 rounded-md py-0.5 bg-white border border-zinc-200 
+                                 className="!text-xs flex items-center gap-0.5 rounded-md py-0.5 bg-zinc-50 border border-zinc-200 
                            shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 px-1.5 min-w-12 w-full justify-between"
                               >
                                  <Image
@@ -384,84 +411,161 @@ export default function CollectionTracker() {
          </div>
          {/* @ts-ignore */}
          <ListTableContainer filters={cardCollectionFilters}>
-            {Object.entries(groupedCards).map(([packName, packData]) => (
-               <Disclosure defaultOpen={true} key={packName}>
-                  {({ open }) => (
-                     <>
-                        <DisclosureButton
-                           className={clsx(
-                              open ? "rounded-b-none " : "mb-2.5 shadow-sm",
-                              "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border p-1.5 pl-2 pr-3 relative",
-                           )}
-                        >
-                           {packData.packIcon && (
-                              <Image
-                                 className="h-14"
-                                 height={160}
-                                 url={packData.packIcon}
-                              />
-                           )}
-                           <div className="flex-grow text-left">
-                              <div className="font-bold text-base font-header">
-                                 {packName}
-                              </div>
-                              <Badge className="!text-xs flex items-center !gap-0.5">
-                                 <span className="font-bold">
-                                    {packData.ownedCards}
-                                 </span>
-                                 <span className="text-zinc-500">/</span>
-                                 <span className="font-bold text-1">
-                                    {packData.totalCards}
-                                 </span>
-                              </Badge>
-                           </div>
-                           <div
-                              className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                           shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
-                           >
-                              <Icon
-                                 name="chevron-right"
-                                 className={clsx(
-                                    open ? "rotate-90" : "",
-                                    "transform pl-0.5 transition duration-300 ease-in-out",
+            {Object.entries(groupedCards).map(
+               ([expansionName, expansionData]) => (
+                  <div className="mb-2.5">
+                     <Disclosure defaultOpen={true} key={expansionName}>
+                        {({ open: expansionOpen }) => (
+                           <>
+                              <DisclosureButton
+                                 className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
+                                 items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
+                              >
+                                 {expansionData.expansionLogo && (
+                                    <Image
+                                       className="w-16"
+                                       width={160}
+                                       url={expansionData.expansionLogo}
+                                    />
                                  )}
-                                 size={20}
-                              />
-                           </div>
-                        </DisclosureButton>
-                        <DisclosurePanel
-                           contentEditable={false}
-                           unmount={false}
-                           className={clsx(
-                              packData.cards.length < 50 ? "pb-3" : "",
-                              open ? "mb-3 border-t" : "",
-                              "border-color-sub shadow-1 bg-3 rounded-b-lg border px-3 pt-3 border-t-0 shadow-sm",
-                           )}
-                        >
-                           <ListTable
-                              gridView={gridView}
-                              columnViewability={{
-                                 pokemonType: false,
-                                 isEX: false,
-                                 cardType: false,
-                                 rarity: false,
-                                 isOwned: false,
-                                 expansion: false,
-                              }}
-                              gridCellClassNames="flex items-center justify-center"
-                              gridContainerClassNames="grid-cols-2  tablet:grid-cols-6 grid gap-3"
-                              defaultViewType="grid"
-                              data={{ listData: { docs: packData.cards } }}
-                              columns={columns}
-                              filters={cardCollectionFilters}
-                              pager={packData.cards.length > 50 ? true : false}
-                              stickyFooter={true}
-                           />
-                        </DisclosurePanel>
-                     </>
-                  )}
-               </Disclosure>
-            ))}
+                                 <div className="flex-grow text-left">
+                                    <div className="font-bold text-base font-header capitalize">
+                                       {expansionData.expansionName.replace(
+                                          /-/g,
+                                          " ",
+                                       )}
+                                    </div>
+                                    <Badge className="!text-xs flex items-center !gap-0.5">
+                                       <span className="font-bold">
+                                          {expansionData.ownedCards}
+                                       </span>
+                                       <span className="text-zinc-500">/</span>
+                                       <span className="font-bold text-1">
+                                          {expansionData.totalCards}
+                                       </span>
+                                    </Badge>
+                                 </div>
+                                 <div
+                                    className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                              shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                                 >
+                                    <Icon
+                                       name="chevron-down"
+                                       className={clsx(
+                                          expansionOpen ? "rotate-180" : "",
+                                          "transform transition duration-300 ease-in-out",
+                                       )}
+                                       size={20}
+                                    />
+                                 </div>
+                              </DisclosureButton>
+                              <DisclosurePanel>
+                                 {Object.entries(expansionData.packs).map(
+                                    ([packName, packData]) => (
+                                       <div className="mb-3 pl-3 border-l-2 border-dotted border-zinc-300 dark:border-zinc-600">
+                                          <Disclosure
+                                             defaultOpen={true}
+                                             key={packName}
+                                          >
+                                             {({ open: packOpen }) => (
+                                                <>
+                                                   <DisclosureButton
+                                                      className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
+                                                      flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
+                                                   >
+                                                      {packData.packIcon && (
+                                                         <Image
+                                                            className="h-12"
+                                                            height={160}
+                                                            url={
+                                                               packData.packIcon
+                                                            }
+                                                         />
+                                                      )}
+                                                      <div className="flex-grow text-left">
+                                                         <div className="font-bold text-sm font-header">
+                                                            {packName}
+                                                         </div>
+                                                         <Badge className="!text-xs flex items-center !gap-0.5">
+                                                            <span className="font-bold">
+                                                               {
+                                                                  packData.ownedCards
+                                                               }
+                                                            </span>
+                                                            <span className="text-zinc-500">
+                                                               /
+                                                            </span>
+                                                            <span className="font-bold text-1">
+                                                               {
+                                                                  packData.totalCards
+                                                               }
+                                                            </span>
+                                                         </Badge>
+                                                      </div>
+                                                      <div
+                                                         className="flex size-8 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                                                         shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                                                      >
+                                                         <Icon
+                                                            name="chevron-down"
+                                                            className={clsx(
+                                                               packOpen
+                                                                  ? "rotate-180"
+                                                                  : "",
+                                                               "transform transition duration-300 ease-in-out",
+                                                            )}
+                                                            size={16}
+                                                         />
+                                                      </div>
+                                                   </DisclosureButton>
+                                                   <DisclosurePanel
+                                                      contentEditable={false}
+                                                      unmount={false}
+                                                   >
+                                                      <ListTable
+                                                         gridView={gridView}
+                                                         columnViewability={{
+                                                            pokemonType: false,
+                                                            isEX: false,
+                                                            cardType: false,
+                                                            rarity: false,
+                                                            isOwned: false,
+                                                            expansion: false,
+                                                         }}
+                                                         gridCellClassNames="flex items-center justify-center"
+                                                         gridContainerClassNames="grid-cols-2 tablet:grid-cols-6 grid gap-3"
+                                                         defaultViewType="grid"
+                                                         data={{
+                                                            listData: {
+                                                               docs: packData.cards,
+                                                            },
+                                                         }}
+                                                         columns={columns}
+                                                         filters={
+                                                            cardCollectionFilters
+                                                         }
+                                                         pager={
+                                                            packData.cards
+                                                               .length > 50
+                                                               ? true
+                                                               : false
+                                                         }
+                                                         stickyFooter={true}
+                                                      />
+                                                   </DisclosurePanel>
+                                                </>
+                                             )}
+                                          </Disclosure>
+                                       </div>
+                                    ),
+                                 )}
+                              </DisclosurePanel>
+                           </>
+                        )}
+                     </Disclosure>
+                  </div>
+               ),
+            )}
          </ListTableContainer>
       </div>
    );
@@ -532,7 +636,7 @@ const gridView = columnHelper.accessor("name", {
             </Dialog>
             <div className="relative group/card">
                <div className="sr-only">{info.row.original?.name}</div>
-               <div className="absolute bottom-0 left-0 w-full z-10">
+               <div className="absolute bottom-0 left-0 w-full z-[5]">
                   <div className="flex items-center gap-1.5 w-full">
                      <div className="flex items-center justify-center gap-1 p-1.5 pr-1 w-full">
                         <div className="items-center justify-center gap-1.5 flex">
@@ -1085,6 +1189,16 @@ const QUERY = gql`
                   }
                }
             }
+            expansion {
+               id
+               slug
+               icon {
+                  url
+               }
+               logo {
+                  url
+               }
+            }
             cardType
             icon {
                url
@@ -1128,6 +1242,16 @@ const QUERY = gql`
                      icon {
                         url
                      }
+                  }
+               }
+               expansion {
+                  id
+                  slug
+                  icon {
+                     url
+                  }
+                  logo {
+                     url
                   }
                }
                cardType
