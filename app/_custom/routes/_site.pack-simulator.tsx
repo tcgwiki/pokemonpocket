@@ -106,8 +106,8 @@ export const meta: MetaFunction = ({ data, params }) => {
          title: packName
             ? `${packName} - Pack Simulator | Pokémon TCG Pocket - TCG Wiki`
             : expansion?.name
-              ? `${expansion?.name} - Pack Simulator | Pokémon TCG Pocket - TCG Wiki`
-              : "Pack Simulator | Pokémon TCG Pocket - TCG Wiki",
+            ? `${expansion?.name} - Pack Simulator | Pokémon TCG Pocket - TCG Wiki`
+            : "Pack Simulator | Pokémon TCG Pocket - TCG Wiki",
       },
       {
          name: "description",
@@ -286,7 +286,7 @@ export default function PackSimulator() {
                            id="expansion"
                            url={expansion?.icon?.url}
                         />
-                        <span className="text-sm text-white">
+                        <span className="text-sm dark:text-white">
                            {expansion.name}
                         </span>
                      </div>
@@ -510,7 +510,7 @@ export default function PackSimulator() {
                            bg-zinc-50 dark:bg-dark400 rounded-md pl-1 pr-2 py-1"
                         >
                            <div
-                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-xs flex items-center gap-2"
+                              className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline text-[9pt] flex items-center gap-2"
                               onClick={() => setIsOpen(true)}
                            >
                               <div className="w-10">
@@ -526,8 +526,8 @@ export default function PackSimulator() {
                                  {card.card?.name}
                               </span>
                            </div>
-                           <div className="text-xs">
-                              {Math.round(card.percent * 100) / 100}%
+                           <div className="text-[9pt]">
+                              {Math.round(card.percent * 1000) / 1000}%
                            </div>
                         </div>
                      </>
