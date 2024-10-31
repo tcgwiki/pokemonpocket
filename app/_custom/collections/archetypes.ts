@@ -6,9 +6,9 @@ import {
 
 import { isStaff } from "../../db/collections/users/users.access";
 
-export const Decks: CollectionConfig = {
-   slug: "decks",
-   labels: { singular: "Deck", plural: "Decks" },
+export const Archetypes: CollectionConfig = {
+   slug: "archetypes",
+   labels: { singular: "Archetype", plural: "Archetypes" },
    admin: {
       group: "Custom",
       useAsTitle: "name",
@@ -38,38 +38,26 @@ export const Decks: CollectionConfig = {
          relationTo: "images",
       },
       {
+         name: "tier",
+         type: "select",
+         options: [
+            { label: "C Tier", value: "c" },
+            { label: "B Tier", value: "b" },
+            { label: "A Tier", value: "a" },
+            { label: "S Tier", value: "s" },
+         ],
+      },
+      {
          name: "highlightCards",
          type: "relationship",
          relationTo: "card-groups",
          hasMany: true,
       },
       {
-         name: "archetype",
-         type: "relationship",
-         relationTo: "archetypes",
-      },
-      {
          name: "types",
          type: "relationship",
          relationTo: "types",
          hasMany: true,
-      },
-      {
-         name: "cards",
-         type: "array",
-         maxRows: 20,
-         fields: [
-            {
-               name: "card",
-               type: "relationship",
-               relationTo: "cards",
-            },
-            {
-               name: "count",
-               type: "number",
-               max: 2,
-            },
-         ],
       },
    ],
 };

@@ -1,5 +1,6 @@
 import { Abilities } from "./abilities";
 import { Achievements } from "./achievements";
+import { Archetypes } from "./archetypes";
 import { CardGroups } from "./card-groups";
 import { Cards } from "./cards";
 import { Customizations } from "./customizations";
@@ -18,6 +19,7 @@ import { UserCards } from "./user-cards";
 import { UserDecks } from "./user-decks";
 
 export const CustomCollections = [
+   Archetypes,
    UserDecks,
    UserCards,
    Abilities,

@@ -30,87 +30,26 @@ const columnHelper = createColumnHelper<Card & { count: number }>();
 export function DecksDeck({
    data,
 }: {
-   data: { deck: Deck & { deckBuildContent: ContentEmbed[] } };
+   data: { deck: Deck & { cards: Card[] } };
 }) {
-   //@ts-ignore
-   const { deck, deckBuildContent } = data;
-
-   const decks =
-      deck.builds?.map((build) => {
-         return {
-            id: build.id,
-            name: build.name,
-            buildContent: deckBuildContent.find(
-               (content: ContentEmbed) => content.relationId === build.id,
-            ),
-            cards: build.cards?.flatMap((card) => ({
-               ...card.card,
-               count: card.count,
-            })),
-         };
-      }) || [];
+   const { deck } = data;
 
    return (
-      <>
-         {decks.map((deckRow, _deckRowIndex) => (
-            <Disclosure defaultOpen={true} key={_deckRowIndex}>
-               {({ open }) => (
-                  <>
-                     <DisclosureButton
-                        className={clsx(
-                           open ? "rounded-b-none " : "mb-2.5 shadow-sm",
-                           "shadow-1 border-color-sub bg-zinc-50 dark:bg-dark350 flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2 py-3",
-                        )}
-                     >
-                        <div className="flex size-7 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm shadow-zinc-200  dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800">
-                           <Icon
-                              name="chevron-right"
-                              className={clsx(
-                                 open ? "rotate-90" : "",
-                                 "transform pl-0.5 transition duration-300 ease-in-out",
-                              )}
-                              size={16}
-                           />
-                        </div>
-                        <div className="flex-grow text-left text-lg font-bold font-header">
-                           {deckRow.name}
-                        </div>
-                     </DisclosureButton>
-                     <DisclosurePanel
-                        contentEditable={false}
-                        unmount={false}
-                        className={clsx(
-                           open ? "mb-3 border-t" : "",
-                           "border-color-sub shadow-1 bg-3 rounded-b-lg border border-t-0 p-3 shadow-sm",
-                        )}
-                     >
-                        <CustomEditorEmbed
-                           data={deckRow.buildContent?.content}
-                           siteId="66fb8ddbc707d9f8d3f8a435-k3a3m64els5y"
-                           relationId={deckRow.id}
-                           pageId={deckRow?.buildContent?.id ?? ""}
-                        />
-                        <ListTable
-                           columnViewability={{
-                              pokemonType: false,
-                              cardType: false,
-                              isEX: false,
-                           }}
-                           gridView={deckCardGridView}
-                           gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
-                           gridCellClassNames="relative flex items-center justify-center"
-                           defaultViewType="grid"
-                           data={{ listData: { docs: deckRow.cards } }}
-                           columns={deckCardColumns}
-                           filters={deckCardFilters}
-                           pager={false}
-                        />
-                     </DisclosurePanel>
-                  </>
-               )}
-            </Disclosure>
-         ))}
-      </>
+      <ListTable
+         columnViewability={{
+            pokemonType: false,
+            cardType: false,
+            isEX: false,
+         }}
+         gridView={deckCardGridView}
+         gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
+         gridCellClassNames="relative flex items-center justify-center"
+         defaultViewType="grid"
+         data={{ listData: { docs: deck.cards } }}
+         columns={deckCardColumns}
+         filters={deckCardFilters}
+         pager={false}
+      />
    );
 }
 

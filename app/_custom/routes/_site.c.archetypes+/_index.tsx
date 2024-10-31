@@ -7,7 +7,7 @@ import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 import { Tooltip, TooltipTrigger, TooltipContent } from "~/components/Tooltip";
-import type { Deck } from "~/db/payload-custom-types";
+import type { Archetype } from "~/db/payload-custom-types";
 import { fetchList } from "~/routes/_site+/c_+/$collectionId/utils/fetchList.server";
 import { listMeta } from "~/routes/_site+/c_+/$collectionId/utils/listMeta";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
@@ -26,7 +26,7 @@ export async function loader({
       payload,
       user,
       gql: {
-         query: DECKS,
+         query: ARCHETYPES,
       },
    });
    return json({ list });
@@ -45,13 +45,13 @@ export default function ListPage() {
    );
 }
 
-const columnHelper = createColumnHelper<Deck>();
+const columnHelper = createColumnHelper<Archetype>();
 
 const gridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
-         to={`/c/decks/${info.row.original.slug}`}
+         to={`/c/archetypes/${info.row.original.slug}`}
          className="flex gap-3 flex-col justify-center"
          key={info.row.original.id}
       >
@@ -113,13 +113,13 @@ const gridView = columnHelper.accessor("name", {
 
 const columns = [
    columnHelper.accessor("name", {
-      header: "Deck",
+      header: "Archetype",
       filterFn: fuzzyFilter,
       cell: (info) => {
          return (
             <Link
                prefetch="intent"
-               to={`/c/decks/${info.row.original.slug}`}
+               to={`/c/archetypes/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
                {info.getValue()}
@@ -129,9 +129,9 @@ const columns = [
    }),
 ];
 
-const DECKS = gql`
+const ARCHETYPES = gql`
    query {
-      listData: Decks(limit: 5000) {
+      listData: Archetypes(limit: 5000) {
          totalDocs
          docs {
             id

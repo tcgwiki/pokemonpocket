@@ -8,7 +8,7 @@ import { Entry } from "~/routes/_site+/c_+/$collectionId_.$entryId/components/En
 import { entryMeta } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/entryMeta";
 import { fetchEntry } from "~/routes/_site+/c_+/$collectionId_.$entryId/utils/fetchEntry.server";
 
-import { DecksDeck } from "./components/Decks.Deck";
+import { ArchetypesMain } from "./components/Archetypes.Main";
 
 export { entryMeta as meta };
 
@@ -34,7 +34,7 @@ export async function loader({
 }
 
 const SECTIONS = {
-   deck: DecksDeck,
+   main: ArchetypesMain,
 };
 
 export default function EntryPage() {
@@ -44,7 +44,7 @@ export default function EntryPage() {
       <Entry
          customComponents={SECTIONS}
          customData={{
-            deck: (entry as { data: { deck: any } })?.data.deck,
+            archetype: (entry as { data: { archetype: any } })?.data.archetype,
          }}
       />
    );
@@ -52,7 +52,7 @@ export default function EntryPage() {
 
 const QUERY = gql`
    query ($entryId: String!) {
-      deck: Deck(id: $entryId) {
+      archetype: Archetype(id: $entryId) {
          id
          slug
          name
@@ -69,43 +69,6 @@ const QUERY = gql`
             slug
             icon {
                url
-            }
-            cards {
-               slug
-               icon {
-                  url
-               }
-            }
-         }
-         cards {
-            count
-            card {
-               name
-               slug
-               hp
-               isEX
-               cardType
-               retreatCost
-               rarity {
-                  name
-               }
-               weaknessType {
-                  id
-                  name
-                  icon {
-                     url
-                  }
-               }
-               icon {
-                  url
-               }
-               pokemonType {
-                  id
-                  name
-                  icon {
-                     url
-                  }
-               }
             }
          }
       }
