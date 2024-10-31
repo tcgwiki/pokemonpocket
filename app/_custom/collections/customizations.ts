@@ -53,6 +53,9 @@ export const Customizations: CollectionConfig = {
             { label: "Display", value: "COLLECTION_BOARD" },
             // Custom.
             { label: "Card Skin", value: "CARD_SKIN" },
+            // Lettuce.Muscle.ProfileDecorationType
+            { label: "Icon", value: "ICON" },
+            { label: "Emblem", value: "EMBLEM" },
          ],
       },
       {
