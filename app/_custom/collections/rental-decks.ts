@@ -29,6 +29,21 @@ export const RentalDecks: CollectionConfig = {
          type: "text",
       },
       {
+         name: "desc",
+         type: "text",
+      },
+      {
+         name: "energyType",
+         type: "relationship",
+         relationTo: "types",
+      },
+      {
+         name: "cards",
+         type: "relationship",
+         relationTo: "cards",
+         hasMany: true,
+      },
+      {
          name: "checksum",
          type: "text",
          required: true,
