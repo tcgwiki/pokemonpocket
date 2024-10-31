@@ -32,7 +32,7 @@ export const Missions: CollectionConfig = {
             { label: "Deck", value: "deck" },
             { label: "Event", value: "event" },
             { label: "Premium", value: "premium" },
-            { label: "Themed Collection", value: "themed_collection" },
+            { label: "Themed Collection", value: "theme_collection" },
             { label: "Tutorial", value: "tutorial" },
          ],
       },
