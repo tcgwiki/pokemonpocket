@@ -25,7 +25,7 @@ import { TextLink } from "~/components/Text";
 import { CustomEditorEmbed } from "~/routes/_editor+/core/components/CustomEditorEmbed";
 import { ContentEmbed } from "~/db/payload-types";
 
-const columnHelper = createColumnHelper<Card & { count: number }>();
+const columnHelper = createColumnHelper<{ card: Card; count: number }>();
 
 export function DecksDeck({
    data,
@@ -59,13 +59,16 @@ const deckCardGridView = columnHelper.accessor("name", {
       const [isOpen, setIsOpen] = useState(false);
 
       const cardType =
-         info.row.original?.cardType === "pokemon" ? "pokémon" : "trainer";
+         info.row.original?.card?.cardType === "pokemon"
+            ? "pokémon"
+            : "trainer";
 
       const rarity =
-         info.row.original?.rarity?.name &&
-         info.row.original?.rarity.name in cardRarityEnum
+         info.row.original?.card?.rarity?.name &&
+         info.row.original?.card?.rarity.name in cardRarityEnum
             ? cardRarityEnum[
-                 info.row.original?.rarity.name as keyof typeof cardRarityEnum
+                 info.row.original?.card?.rarity
+                    .name as keyof typeof cardRarityEnum
               ]
             : "common";
 
@@ -80,7 +83,8 @@ const deckCardGridView = columnHelper.accessor("name", {
                <div
                   className="flex items-center flex-col gap-5 justify-center"
                   style={{
-                     viewTransitionName: info.row.original?.slug ?? undefined,
+                     viewTransitionName:
+                        info.row.original?.card?.slug ?? undefined,
                   }}
                >
                   {/* @ts-ignore */}
@@ -90,23 +94,23 @@ const deckCardGridView = columnHelper.accessor("name", {
                         width={367}
                         height={512}
                         url={
-                           info.row.original?.icon?.url ??
+                           info.row.original?.card?.icon?.url ??
                            "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                         }
-                        alt={info.row.original?.name ?? "Card Image"}
+                        alt={info.row.original?.card?.name ?? "Card Image"}
                         loading="lazy"
                      />
                   </ShinyCard>
-                  <Button href={`/c/cards/${info.row.original?.slug}`}>
+                  <Button href={`/c/cards/${info.row.original?.card?.slug}`}>
                      Go to card
                      <Icon name="chevron-right" size={16} />
                   </Button>
                </div>
             </Dialog>
             <>
-               <div className="sr-only">{info.row.original?.name}</div>
+               <div className="sr-only">{info.row.original?.card?.name}</div>
                <span className="absolute top-0 right-0 rounded-tr rounded-bl bg-red-500 text-white p-1.5 text-xs font-bold">
-                  x{info.row.original?.count}
+                  x{info.row.original?.card?.count}
                </span>
                <button onClick={() => setIsOpen(true)}>
                   <Image
@@ -114,10 +118,10 @@ const deckCardGridView = columnHelper.accessor("name", {
                      width={367}
                      height={512}
                      url={
-                        info.row.original?.icon?.url ??
+                        info.row.original?.card?.icon?.url ??
                         "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                      }
-                     alt={info.row.original?.name ?? "Card Image"}
+                     alt={info.row.original?.card?.name ?? "Card Image"}
                      loading="lazy"
                   />
                </button>
@@ -134,14 +138,14 @@ export const deckCardColumns = [
       cell: (info) => {
          return (
             <Link
-               to={`/c/cards/${info.row.original?.slug}`}
+               to={`/c/cards/${info.row.original?.card?.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
                <Image
                   className="w-9 object-contain"
                   width={100}
                   url={
-                     info.row.original?.icon?.url ??
+                     info.row.original?.card?.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
                   loading="lazy"
@@ -151,12 +155,12 @@ export const deckCardColumns = [
                 decoration-zinc-400 underline-offset-2 truncate"
                >
                   <div className="truncate">{info.getValue()}</div>
-                  {info.row.original?.pokemonType?.icon?.url ? (
+                  {info.row.original?.card?.pokemonType?.icon?.url ? (
                      <Image
                         className="size-4 object-contain"
                         width={40}
                         height={40}
-                        url={info.row.original?.pokemonType?.icon?.url}
+                        url={info.row.original?.card?.pokemonType?.icon?.url}
                         loading="lazy"
                      />
                   ) : undefined}
