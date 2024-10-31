@@ -1302,7 +1302,7 @@ const QUERY = gql`
             }
          }
       }
-      cards: UserCards(where: { user: { equals: $userId } }) {
+      cards: UserCards(where: { user: { equals: $userId } }, limit: 1000) {
          totalDocs
          docs {
             id
