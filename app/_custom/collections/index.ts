@@ -12,6 +12,7 @@ import { Moves } from "./moves";
 import { PackCards } from "./pack-cards";
 import { Packs } from "./packs";
 import { Rarities } from "./rarities";
+import { RentalDecks } from "./rental-decks";
 import { Types } from "./types";
 import { UserCards } from "./user-cards";
 import { UserDecks } from "./user-decks";
@@ -33,5 +34,6 @@ export const CustomCollections = [
    PackCards,
    Packs,
    Rarities,
+   RentalDecks,
    Types,
 ];
