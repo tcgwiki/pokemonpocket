@@ -7,6 +7,7 @@ import { Decks } from "./decks";
 import { Expansions } from "./expansions";
 import { Illustrators } from "./illustrators";
 import { Items } from "./items";
+import { Missions } from "./missions";
 import { Moves } from "./moves";
 import { PackCards } from "./pack-cards";
 import { Packs } from "./packs";
@@ -27,6 +28,7 @@ export const CustomCollections = [
    Expansions,
    Illustrators,
    Items,
+   Missions,
    Moves,
    PackCards,
    Packs,
