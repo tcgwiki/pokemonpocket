@@ -70,7 +70,7 @@ export const Missions: CollectionConfig = {
             {
                name: "item",
                type: "relationship",
-               relationTo: ["cards", "items", "rental-decks",],
+               relationTo: ["cards", "customizations", "items", "rental-decks",],
             },
             {
                name: "amount",
@@ -101,7 +101,7 @@ export const Missions: CollectionConfig = {
                   {
                      name: "item",
                      type: "relationship",
-                     relationTo: ["cards", "items", "rental-decks",],
+                     relationTo: ["cards", "customizations", "items", "rental-decks",],
                   },
                   {
                      name: "amount",
