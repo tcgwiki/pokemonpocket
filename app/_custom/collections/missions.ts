@@ -91,6 +91,10 @@ export const Missions: CollectionConfig = {
                type: "text",
             },
             {
+               name: "needed",
+               type: "number",
+            },
+            {
                name: "rewards",
                type: "array",
                fields: [
@@ -104,7 +108,12 @@ export const Missions: CollectionConfig = {
                      type: "number",
                   },
                ],
-            }
+            },
+            {
+               name: "targets",
+               type: "relationship",
+               relationTo: "cards"
+            },
          ],
       },
       {
