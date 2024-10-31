@@ -112,7 +112,8 @@ export const Missions: CollectionConfig = {
             {
                name: "targets",
                type: "relationship",
-               relationTo: "cards"
+               relationTo: "cards",
+               hasMany: true,
             },
          ],
       },
