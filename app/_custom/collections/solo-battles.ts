@@ -78,7 +78,7 @@ export const SoloBattles: CollectionConfig = {
             {
                name: "item",
                type: "relationship",
-               relationTo: "items",
+               relationTo: ["cards", "customizations", "items", "rental-decks",],
             },
             {
                name: "amount",
@@ -93,7 +93,7 @@ export const SoloBattles: CollectionConfig = {
             {
                name: "item",
                type: "relationship",
-               relationTo: "items",
+               relationTo: ["cards", "customizations", "items", "rental-decks",],
             },
             {
                name: "amount",
@@ -104,7 +104,7 @@ export const SoloBattles: CollectionConfig = {
                type: "number",
             },
          ],
-      }
+      },
       {
          name: "tasks",
          type: "array",
@@ -128,7 +128,7 @@ export const SoloBattles: CollectionConfig = {
                   {
                      name: "item",
                      type: "relationship",
-                     relationTo: "items",
+                     relationTo: ["cards", "customizations", "items", "rental-decks",],
                   },
                   {
                      name: "amount",
