@@ -184,7 +184,7 @@ const gridView = columnHelper.accessor("name", {
    cell: (info) => {
       return (
          <Link
-            to={`/c/decks/${info.row.original.slug}`}
+            to={`/c/archetypes/${info.row.original.slug}`}
             className="flex gap-3 flex-col justify-center"
             key={info.row.original.id}
          >
@@ -216,14 +216,14 @@ const gridView = columnHelper.accessor("name", {
                ))}
             </div>
             <div className="text-center text-sm font-bold border-t pt-1 dark:border-zinc-600 space-y-1">
-               {info.row.original.deckTypes && (
+               {info.row.original.types && (
                   <div
                      className={clsx(
                         "flex gap-1 justify-center",
-                        info.row.original.deckTypes.length > 0 && "-mt-3",
+                        info.row.original.types.length > 0 && "-mt-3",
                      )}
                   >
-                     {info.row.original.deckTypes?.map((type) => (
+                     {info.row.original.types?.map((type) => (
                         <Image
                            width={32}
                            height={32}
@@ -246,7 +246,7 @@ const columns = [
       header: "Name",
       cell: (info) => (
          <Link
-            to={`/c/decks/${info.row.original.slug}`}
+            to={`/c/archetypes/${info.row.original.slug}`}
             className="flex items-center gap-2 group py-0.5"
          >
             <Image
@@ -262,12 +262,12 @@ const columns = [
          </Link>
       ),
    }),
-   columnHelper.accessor("deckTypes", {
+   columnHelper.accessor("types", {
       header: "Type",
       filterFn: (row, columnId, filterValue) => {
          const existingFilter =
             filterValue && filterValue.length > 0
-               ? row?.original?.deckTypes?.some((type: any) =>
+               ? row?.original?.types?.some((type: any) =>
                     filterValue.includes(type.name),
                  )
                : true;
@@ -283,9 +283,9 @@ const columns = [
                      ?.map((type: any) => type.name)
                      .join(", ")}
                </span>
-               {info.row.original?.deckTypes &&
-                  info.row.original?.deckTypes.length > 0 &&
-                  info.row.original?.deckTypes.map((type: any) => (
+               {info.row.original?.types &&
+                  info.row.original?.types.length > 0 &&
+                  info.row.original?.types.map((type: any) => (
                      <Image
                         width={13}
                         height={13}
@@ -297,13 +297,6 @@ const columns = [
             </div>
          );
       },
-   }),
-   columnHelper.accessor("cost", {
-      header: "Cost",
-      filterFn: (row, columnId, filterValue) => {
-         return filterValue.includes(row?.original?.cost?.toString());
-      },
-      cell: (info) => <span>{info.getValue()}</span>,
    }),
 ];
 
@@ -371,28 +364,22 @@ const tierListFilters: {
          },
       ],
    },
-   {
-      id: "cost",
-      label: "Cost",
-      cols: 3,
-      options: [
-         { label: "Low", value: "Low" },
-         { label: "Medium", value: "Medium" },
-         { label: "High", value: "High" },
-      ],
-   },
 ];
 
 const QUERY = gql`
    query {
-      sTier: Decks(where: { tier: { equals: s } }, limit: 100, sort: "name") {
+      sTier: Archetypes(
+         where: { tier: { equals: s } }
+         limit: 100
+         sort: "name"
+      ) {
          totalDocs
          docs {
             id
             slug
             name
             tier
-            cost
+
             icon {
                id
                url
@@ -404,7 +391,7 @@ const QUERY = gql`
                   url
                }
             }
-            deckTypes {
+            types {
                id
                name
                icon {
@@ -413,7 +400,11 @@ const QUERY = gql`
             }
          }
       }
-      aTier: Decks(where: { tier: { equals: a } }, limit: 100, sort: "name") {
+      aTier: Archetypes(
+         where: { tier: { equals: a } }
+         limit: 100
+         sort: "name"
+      ) {
          totalDocs
          docs {
             id
@@ -431,7 +422,7 @@ const QUERY = gql`
                   url
                }
             }
-            deckTypes {
+            types {
                id
                name
                icon {
@@ -440,7 +431,11 @@ const QUERY = gql`
             }
          }
       }
-      bTier: Decks(where: { tier: { equals: b } }, limit: 100, sort: "name") {
+      bTier: Archetypes(
+         where: { tier: { equals: b } }
+         limit: 100
+         sort: "name"
+      ) {
          totalDocs
          docs {
             id
@@ -458,7 +453,7 @@ const QUERY = gql`
                   url
                }
             }
-            deckTypes {
+            types {
                id
                name
                icon {
@@ -467,7 +462,11 @@ const QUERY = gql`
             }
          }
       }
-      cTier: Decks(where: { tier: { equals: c } }, limit: 100, sort: "name") {
+      cTier: Archetypes(
+         where: { tier: { equals: c } }
+         limit: 100
+         sort: "name"
+      ) {
          totalDocs
          docs {
             id
@@ -485,7 +484,7 @@ const QUERY = gql`
                   url
                }
             }
-            deckTypes {
+            types {
                id
                name
                icon {
