@@ -5,6 +5,7 @@ import {
 } from "../hooks/search-hooks";
 
 import { isStaff } from "../../db/collections/users/users.access";
+import { User } from "payload/dist/auth";
 
 export const Decks: CollectionConfig = {
    slug: "decks",
@@ -31,6 +32,11 @@ export const Decks: CollectionConfig = {
       {
          name: "slug",
          type: "text",
+      },
+      {
+         name: "user",
+         type: "text",
+         defaultValue: ({ user }: { user: User }) => user?.id,
       },
       {
          name: "icon",
@@ -62,7 +68,7 @@ export const Decks: CollectionConfig = {
             {
                name: "card",
                type: "relationship",
-               relationTo: "cards",
+               relationTo: "card-groups",
             },
             {
                name: "count",
