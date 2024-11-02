@@ -23,6 +23,7 @@ import { authRestFetcher } from "~/utils/fetchers.server";
 import { manaSlug } from "~/utils/url-slug";
 import { nanoid } from "nanoid";
 import { useRootLoaderData } from "~/utils/useSiteLoaderData";
+import { isAdding } from "~/utils/form";
 export async function loader({
    context: { payload, user },
    params,
@@ -44,7 +45,7 @@ export async function loader({
 export default function ListPage() {
    const fetcher = useFetcher();
    const { user } = useRootLoaderData();
-
+   const isDeckAdding = isAdding(fetcher, "newDeck");
    return (
       <>
          <List
@@ -57,8 +58,8 @@ export default function ListPage() {
             beforeListComponent={
                user && (
                   <Form
-                     className="p-4 max-w-sm mx-auto shadow-sm shadow-1 flex flex-col 
-                  gap-3 bg-3-sub border border-color-sub rounded-lg mt-4"
+                     className="p-3 max-w-[728px] mx-auto shadow-sm shadow-1 flex items-center justify-center
+                     gap-3 bg-zinc-50 dark:bg-dark350 border border-zinc-200 dark:border-zinc-700 rounded-lg mt-4 -mb-2.5"
                      method="POST"
                      onSubmit={(e) => {
                         e.preventDefault();
@@ -79,7 +80,9 @@ export default function ListPage() {
                         className="w-full"
                         name="deckName"
                      />
-                     <Button type="submit">New Deck</Button>
+                     <Button color="blue" className="flex-none" type="submit">
+                        {isDeckAdding ? "Adding..." : "New Deck"}
+                     </Button>
                   </Form>
                )
             }
@@ -216,7 +219,7 @@ const columns = [
 
 const DECKS = gql`
    query {
-      listData: Decks(limit: 5000) {
+      listData: Decks(where: { isPublic: { equals: true } }, limit: 5000) {
          totalDocs
          docs {
             id

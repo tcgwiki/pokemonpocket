@@ -30,6 +30,11 @@ export const Decks: CollectionConfig = {
          type: "text",
       },
       {
+         name: "isPublic",
+         type: "checkbox",
+         defaultValue: false,
+      },
+      {
          name: "slug",
          type: "text",
       },

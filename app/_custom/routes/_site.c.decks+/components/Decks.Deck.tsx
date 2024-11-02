@@ -26,6 +26,8 @@ import {
    DropdownItem,
    DropdownMenu,
 } from "~/components/Dropdown";
+import { SwitchField, Switch } from "~/components/Switch";
+import { Description, Label } from "~/components/Fieldset";
 
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
@@ -146,7 +148,22 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      </ListboxOption>
                   ))}
                </Listbox>
-
+               <SwitchField disabled={disabled} fullWidth>
+                  <Label>Public</Label>
+                  <Description>
+                     Make your deck public to allow anyone to view it
+                  </Description>
+                  <Switch
+                     onChange={() => {
+                        fetcher.submit(
+                           { deckId: deck.id, intent: "toggleDeckPublic" },
+                           { method: "POST" },
+                        );
+                     }}
+                     defaultChecked={deck.isPublic ?? false}
+                     color="emerald"
+                  />
+               </SwitchField>
                <div className="border border-color-sub px-3 rounded-xl pb-1 mb-4">
                   <ListTable
                      columnViewability={{
@@ -154,6 +171,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                         cardType: false,
                         isEX: false,
                      }}
+                     hideViewMode={true}
                      pageSize={allCards.length}
                      gridView={deckBuilderTrayGridView}
                      gridContainerClassNames="whitespace-nowrap overflow-y-hidden overflow-x-auto space-x-2 
@@ -169,6 +187,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                </div>
             </>
          )}
+
          <div className="border border-color-sub rounded-xl p-2 bg-2-sub mb-4">
             {deckCards?.length ? (
                <div className="tablet:grid-cols-5 grid grid-cols-3 gap-2">
@@ -217,8 +236,46 @@ function DeckCell({
    const isCardUpdating = isAdding(fetcher, "updateCardInDeck");
    const disabled = isCardUpdating;
 
+   const isHighlighting = isAdding(fetcher, "highlightCard");
+   //@ts-ignore
+   const isHighlighted = card?.isHighlighted;
+
    return (
-      <>
+      <div className="relative group">
+         <Tooltip>
+            <TooltipTrigger
+               onClick={() => {
+                  fetcher.submit(
+                     {
+                        deckId: entry.id,
+                        cardId: card?.id ?? "",
+                        intent: "highlightCard",
+                     },
+                     { method: "POST" },
+                  );
+               }}
+               className={clsx(
+                  "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
+                  isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
+               )}
+            >
+               {isHighlighting ? (
+                  <Icon name="loader-2" className="animate-spin" size={12} />
+               ) : (
+                  <Icon
+                     name="star"
+                     className={clsx(
+                        isHighlighted ? "text-yellow-800" : "text-white",
+                     )}
+                     title="Add to Highlights"
+                     size={12}
+                  />
+               )}
+            </TooltipTrigger>
+            <TooltipContent>
+               {isHighlighted ? "Remove from Highlights" : "Add to Highlights"}
+            </TooltipContent>
+         </Tooltip>
          <Dialog
             className="relative flex items-center justify-center"
             size="tablet"
@@ -300,7 +357,7 @@ function DeckCell({
                </div>
             )}
          </button>
-      </>
+      </div>
    );
 }
 
@@ -324,49 +381,12 @@ const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor("name", {
 
       const isCardAdding = isAdding(fetcher, "addCardToDeck");
 
-      const isHighlighting = isAdding(fetcher, "highlightCard");
       const disabled = isCardAdding;
 
       const { entry } = useLoaderData<any>();
-      //@ts-ignore
-      const isHighlighted = info.row.original?.isHighlighted;
 
       return (
          <div className="relative group">
-            <Tooltip>
-               <TooltipTrigger
-                  onClick={() => {
-                     fetcher.submit(
-                        {
-                           deckId: entry.id,
-                           cardId: info.row.original?.id,
-                           intent: "highlightCard",
-                        },
-                        { method: "POST" },
-                     );
-                  }}
-                  className={clsx(
-                     "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
-                     isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
-                  )}
-               >
-                  {isHighlighting ? (
-                     <Icon name="loader-2" className="animate-spin" size={12} />
-                  ) : (
-                     <Icon
-                        name="star"
-                        className={clsx(
-                           isHighlighted ? "text-yellow-800" : "text-white",
-                        )}
-                        title="Add to Highlights"
-                        size={12}
-                     />
-                  )}
-               </TooltipTrigger>
-               <TooltipContent>
-                  {isHighlighted ? "Remove" : "Add to Highlights"}
-               </TooltipContent>
-            </Tooltip>
             <button
                disabled={disabled}
                onClick={() => {

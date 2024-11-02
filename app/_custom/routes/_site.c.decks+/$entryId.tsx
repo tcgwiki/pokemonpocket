@@ -47,31 +47,16 @@ export async function loader({
       entry.data as {
          allCards: { docs: any[] };
       }
-   ).allCards.docs
-      .map((card) => {
-         return {
-            ...card.cards[0],
-            id: card.id,
-            user: card.user,
-            isHighlighted: (
-               entry.data as { deck: { highlightCards?: any[] } }
-            ).deck.highlightCards?.some(
-               (highlight) => highlight.id === card.id,
-            ),
-         };
-      })
-      .sort((a, b) => {
-         // Sort by highlighted first
-         if (a.isHighlighted && !b.isHighlighted) return -1;
-         if (!a.isHighlighted && b.isHighlighted) return 1;
-
-         // Then sort by card type - Pokemon first
-         if (a.cardType === "pokemon" && b.cardType !== "pokemon") return -1;
-         if (a.cardType !== "pokemon" && b.cardType === "pokemon") return 1;
-
-         return 0;
-      });
-
+   ).allCards.docs.map((card) => {
+      return {
+         ...card.cards[0],
+         id: card.id,
+         user: card.user,
+         isHighlighted: (
+            entry.data as { deck: { highlightCards?: any[] } }
+         ).deck.highlightCards?.some((highlight) => highlight.id === card.id),
+      };
+   });
    const deckCards = (
       entry.data as { deck: { cards: any[]; highlightCards?: any[] } }
    ).deck.cards
@@ -142,10 +127,37 @@ export const action: ActionFunction = async ({
          "updateDeckName",
          "updateArchetype",
          "highlightCard",
+         "toggleDeckPublic",
       ]),
    });
 
    switch (intent) {
+      case "toggleDeckPublic": {
+         try {
+            const { deckId } = await zx.parseForm(request, {
+               deckId: z.string(),
+            });
+
+            const deckData = await authRestFetcher({
+               isAuthOverride: true,
+               method: "GET",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
+            });
+
+            const updatedDeck = await authRestFetcher({
+               isAuthOverride: true,
+               method: "PATCH",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+               body: { isPublic: !deckData.isPublic },
+            });
+
+            if (updatedDeck) {
+               return jsonWithSuccess(null, "Deck visibility updated");
+            }
+         } catch (error) {
+            return jsonWithError(null, "Something went wrong...");
+         }
+      }
       case "deleteDeck": {
          try {
             const { deckId } = await zx.parseForm(request, {
@@ -384,6 +396,12 @@ export const action: ActionFunction = async ({
                }
 
                if (cardCount === 1) {
+                  // Remove from highlighted cards if present
+                  const updatedHighlightCards =
+                     deckData.highlightCards?.filter(
+                        (card: any) => card !== cardId,
+                     ) || [];
+
                   const updatedUserDeck = await authRestFetcher({
                      isAuthOverride: true,
                      method: "PATCH",
@@ -392,6 +410,7 @@ export const action: ActionFunction = async ({
                         cards: deckData.cards.filter(
                            (card: any) => card.card !== cardId,
                         ),
+                        highlightCards: updatedHighlightCards,
                      },
                   });
 
@@ -493,6 +512,7 @@ const QUERY = gql`
          slug
          name
          user
+         isPublic
          types {
             id
             name
