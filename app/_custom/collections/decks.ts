@@ -48,6 +48,7 @@ export const Decks: CollectionConfig = {
          type: "relationship",
          relationTo: "card-groups",
          hasMany: true,
+         maxRows: 3,
       },
       {
          name: "archetype",

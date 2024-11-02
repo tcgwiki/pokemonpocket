@@ -1,151 +1,458 @@
-import { useState } from "react";
-
-import {
-   Disclosure,
-   DisclosureButton,
-   DisclosurePanel,
-} from "@headlessui/react";
-import { Link } from "@remix-run/react";
+import { useEffect, useState } from "react";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
-import clsx from "clsx";
 
-import { Badge } from "~/components/Badge";
 import { Button } from "~/components/Button";
 import { Dialog } from "~/components/Dialog";
 import { Icon } from "~/components/Icon";
 import { Image } from "~/components/Image";
-import type { Card, Deck } from "~/db/payload-custom-types";
+import type { Card } from "~/db/payload-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 
 import { cardRarityEnum } from "../../_site.c.cards+/components/Cards.Main";
 import { ShinyCard } from "../../_site.c.cards+/components/ShinyCard";
-import { TextLink } from "~/components/Text";
+import { DeckLoaderData } from "../$entryId";
+import clsx from "clsx";
+import { isAdding } from "~/utils/form";
+import { useRootLoaderData } from "~/utils/useSiteLoaderData";
+import { Input, InputGroup } from "~/components/Input";
+import { useDebouncedValue, useIsMount } from "~/utils/use-debounce";
+import { ListboxLabel, ListboxOption, Listbox } from "~/components/Listbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
+import {
+   Dropdown,
+   DropdownButton,
+   DropdownItem,
+   DropdownMenu,
+} from "~/components/Dropdown";
 
-import { CustomEditorEmbed } from "~/routes/_editor+/core/components/CustomEditorEmbed";
-import { ContentEmbed } from "~/db/payload-types";
+const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
-const columnHelper = createColumnHelper<{ card: Card; count: number }>();
+export function DecksDeck({ data }: { data: DeckLoaderData }) {
+   const { deck, allCards, deckCards, archetypes } = data;
+   const { user } = useRootLoaderData();
 
-export function DecksDeck({
-   data,
-}: {
-   data: { deck: Deck & { cards: Card[] } };
-}) {
-   const { deck } = data;
+   const isOwner = deck.user === user?.id;
+   const fetcher = useFetcher();
+   const isMount = useIsMount();
+
+   const [deckName, setDeckName] = useState(deck.name);
+   const debouncedDeckName = useDebouncedValue(deckName, 500);
+
+   useEffect(() => {
+      if (!isMount) {
+         fetcher.submit(
+            {
+               deckId: deck.id,
+               deckName: debouncedDeckName ?? "",
+               intent: "updateDeckName",
+            },
+            { method: "POST" },
+         );
+      }
+   }, [debouncedDeckName]);
+
+   const isDeckNameUpdating = isAdding(fetcher, "updateDeckName");
+
+   const isArchetypeUpdating = isAdding(fetcher, "updateArchetype");
+   const isDeleting = isAdding(fetcher, "deleteDeck");
+   const disabled = isDeckNameUpdating || isArchetypeUpdating;
 
    return (
-      <ListTable
-         columnViewability={{
-            pokemonType: false,
-            cardType: false,
-            isEX: false,
-         }}
-         gridView={deckCardGridView}
-         gridContainerClassNames="tablet:grid-cols-5 grid grid-cols-3 gap-2"
-         gridCellClassNames="relative flex items-center justify-center"
-         defaultViewType="grid"
-         data={{ listData: { docs: deck.cards } }}
-         columns={deckCardColumns}
-         filters={deckCardFilters}
-         pager={false}
-      />
+      <div>
+         {isOwner && (
+            <>
+               <div className="flex items-start gap-2">
+                  <div className="flex-grow">
+                     <InputGroup>
+                        {isDeckNameUpdating ? (
+                           <Icon
+                              name="loader-2"
+                              size={16}
+                              className="animate-spin"
+                           />
+                        ) : (
+                           <Icon name="text" size={16} />
+                        )}
+                        <Input
+                           disabled={disabled}
+                           className="mb-4 w-full"
+                           defaultValue={deck.name ?? ""}
+                           name="deckName"
+                           type="text"
+                           onChange={(e: any) => {
+                              setDeckName(e.target.value);
+                           }}
+                        />
+                     </InputGroup>
+                  </div>
+                  <Dropdown>
+                     <DropdownButton color="light/zinc" className="h-9">
+                        <Icon name="ellipsis" size={16} />
+                     </DropdownButton>
+                     <DropdownMenu>
+                        <DropdownItem
+                           onClick={() => {
+                              fetcher.submit(
+                                 { deckId: deck.id, intent: "deleteDeck" },
+                                 { method: "POST" },
+                              );
+                           }}
+                        >
+                           Delete
+                        </DropdownItem>
+                     </DropdownMenu>
+                  </Dropdown>
+                  {/* <Button
+                     color="red"
+                     onClick={() => {
+                        fetcher.submit(
+                           { deckId: deck.id, intent: "deleteDeck" },
+                           { method: "POST" },
+                        );
+                     }}
+                  >
+                     {isDeleting ? (
+                        <Icon
+                           name="loader-2"
+                           size={16}
+                           className="animate-spin"
+                        />
+                     ) : (
+                        <Icon name="trash" size={16} />
+                     )}
+                  </Button> */}
+               </div>
+               <Listbox
+                  disabled={disabled}
+                  className="mb-4"
+                  value={deck.archetype?.id ?? ""}
+                  defaultValue={deck.archetype?.id}
+                  onChange={(archetypeId: string) => {
+                     fetcher.submit(
+                        {
+                           deckId: deck.id,
+                           archetypeId,
+                           intent: "updateArchetype",
+                        },
+                        { method: "POST" },
+                     );
+                  }}
+               >
+                  {archetypes.map((archetype) => (
+                     <ListboxOption key={archetype.id} value={archetype.id}>
+                        <ListboxLabel>{archetype.name}</ListboxLabel>
+                     </ListboxOption>
+                  ))}
+               </Listbox>
+
+               <div className="border border-color-sub px-3 rounded-xl pb-1 mb-4">
+                  <ListTable
+                     columnViewability={{
+                        pokemonType: false,
+                        cardType: false,
+                        isEX: false,
+                     }}
+                     pageSize={allCards.length}
+                     gridView={deckBuilderTrayGridView}
+                     gridContainerClassNames="whitespace-nowrap overflow-y-hidden overflow-x-auto space-x-2 
+                     dark:scrollbar-thumb-dark500 dark:scrollbar-track-bg2Dark
+                     scrollbar-thumb-zinc-200 scrollbar-track-zinc-50 scrollbar"
+                     gridCellClassNames="relative inline-flex items-center justify-center w-24"
+                     defaultViewType="grid"
+                     data={{ listData: { docs: allCards } }}
+                     columns={deckBuilderTrayColumns}
+                     filters={deckCardFilters}
+                     pager={false}
+                  />
+               </div>
+            </>
+         )}
+         <div className="border border-color-sub rounded-xl p-2 bg-2-sub mb-4">
+            {deckCards?.length ? (
+               <div className="tablet:grid-cols-5 grid grid-cols-3 gap-2">
+                  {deckCards.map((card) => {
+                     return (
+                        <DeckCell
+                           key={card.id}
+                           card={card}
+                           isOwner={isOwner}
+                           count={card.count}
+                        />
+                     );
+                  })}
+               </div>
+            ) : (
+               <div className="text-center text-sm text-zinc-500">
+                  No cards in deck
+               </div>
+            )}
+         </div>
+      </div>
    );
 }
 
-const deckCardGridView = columnHelper.accessor("name", {
-   filterFn: fuzzyFilter,
-   cell: (info) => {
-      const [isOpen, setIsOpen] = useState(false);
+function DeckCell({
+   card,
+   count,
+   isOwner,
+}: {
+   card: Card | undefined;
+   count: number | null | undefined;
+   isOwner: boolean;
+}) {
+   const [isOpen, setIsOpen] = useState(false);
 
-      const cardType =
-         info.row.original?.card?.cardType === "pokemon"
-            ? "pokémon"
-            : "trainer";
+   const cardType = card?.cardType === "pokemon" ? "pokémon" : "trainer";
 
-      const rarity =
-         info.row.original?.card?.rarity?.name &&
-         info.row.original?.card?.rarity.name in cardRarityEnum
-            ? cardRarityEnum[
-                 info.row.original?.card?.rarity
-                    .name as keyof typeof cardRarityEnum
-              ]
-            : "common";
+   const rarity =
+      card?.rarity?.name && card.rarity.name in cardRarityEnum
+         ? cardRarityEnum[card.rarity.name as keyof typeof cardRarityEnum]
+         : "common";
 
-      return (
-         <>
-            <Dialog
-               className="relative flex items-center justify-center"
-               size="tablet"
-               onClose={setIsOpen}
-               open={isOpen}
+   const fetcher = useFetcher();
+   const { entry } = useLoaderData<any>();
+
+   const isCardUpdating = isAdding(fetcher, "updateCardInDeck");
+   const disabled = isCardUpdating;
+
+   return (
+      <>
+         <Dialog
+            className="relative flex items-center justify-center"
+            size="tablet"
+            onClose={setIsOpen}
+            open={isOpen}
+         >
+            <div
+               className="flex items-center flex-col gap-5 justify-center"
+               style={{
+                  viewTransitionName: card?.slug ?? undefined,
+               }}
             >
-               <div
-                  className="flex items-center flex-col gap-5 justify-center"
-                  style={{
-                     viewTransitionName:
-                        info.row.original?.card?.slug ?? undefined,
-                  }}
-               >
-                  {/* @ts-ignore */}
-                  <ShinyCard supertype={cardType} rarity={rarity}>
-                     <Image
-                        className="object-contain"
-                        width={367}
-                        height={512}
-                        url={
-                           info.row.original?.card?.icon?.url ??
-                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                        }
-                        alt={info.row.original?.card?.name ?? "Card Image"}
-                        loading="lazy"
-                     />
-                  </ShinyCard>
-                  <Button href={`/c/cards/${info.row.original?.card?.slug}`}>
-                     Go to card
-                     <Icon name="chevron-right" size={16} />
-                  </Button>
-               </div>
-            </Dialog>
-            <>
-               <div className="sr-only">{info.row.original?.card?.name}</div>
-               <span className="absolute top-0 right-0 rounded-tr rounded-bl bg-red-500 text-white p-1.5 text-xs font-bold">
-                  x{info.row.original?.card?.count}
-               </span>
-               <button onClick={() => setIsOpen(true)}>
+               {/* @ts-ignore */}
+               <ShinyCard supertype={cardType} rarity={rarity}>
                   <Image
                      className="object-contain"
                      width={367}
                      height={512}
                      url={
-                        info.row.original?.card?.icon?.url ??
+                        card?.icon?.url ??
                         "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                      }
-                     alt={info.row.original?.card?.name ?? "Card Image"}
+                     alt={card?.name ?? "Card Image"}
                      loading="lazy"
                   />
-               </button>
-            </>
-         </>
+               </ShinyCard>
+               <Button href={`/c/cards/${card?.slug}`}>
+                  Go to card
+                  <Icon name="chevron-right" size={16} />
+               </Button>
+            </div>
+         </Dialog>
+         <button
+            disabled={disabled}
+            onClick={
+               !isOwner
+                  ? () => setIsOpen(true)
+                  : () => {
+                       fetcher.submit(
+                          //@ts-ignore
+                          {
+                             deckId: entry.id,
+                             cardId: card?.id,
+                             cardCount: count,
+                             intent: "updateCardInDeck",
+                          },
+                          {
+                             method: "POST",
+                          },
+                       );
+                    }
+            }
+            className="relative"
+         >
+            <div className="sr-only">{card?.name}</div>
+            <Image
+               className={clsx(
+                  "object-contain",
+                  isCardUpdating && "opacity-50",
+               )}
+               width={367}
+               height={512}
+               url={
+                  card?.icon?.url ??
+                  "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+               }
+               alt={card?.name ?? "Card Image"}
+               loading="lazy"
+            />
+            <div
+               className="absolute bottom-1 right-1 text-xs text-white font-bold
+                   size-6 rounded-md flex items-center justify-center bg-zinc-900"
+            >
+               {count}
+            </div>
+            {isCardUpdating && (
+               <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <Icon name="loader-2" size={20} className="animate-spin" />
+               </div>
+            )}
+         </button>
+      </>
+   );
+}
+
+const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor("name", {
+   filterFn: fuzzyFilter,
+   cell: (info) => {
+      const [isOpen, setIsOpen] = useState(false);
+
+      const cardType =
+         info.row.original?.cardType === "pokemon" ? "pokémon" : "trainer";
+
+      const rarity =
+         info.row.original?.rarity?.name &&
+         info.row.original?.rarity.name in cardRarityEnum
+            ? cardRarityEnum[
+                 info.row.original?.rarity.name as keyof typeof cardRarityEnum
+              ]
+            : "common";
+
+      const fetcher = useFetcher();
+
+      const isCardAdding = isAdding(fetcher, "addCardToDeck");
+
+      const isHighlighting = isAdding(fetcher, "highlightCard");
+      const disabled = isCardAdding;
+
+      const { entry } = useLoaderData<any>();
+      //@ts-ignore
+      const isHighlighted = info.row.original?.isHighlighted;
+
+      return (
+         <div className="relative group">
+            <Tooltip>
+               <TooltipTrigger
+                  onClick={() => {
+                     fetcher.submit(
+                        {
+                           deckId: entry.id,
+                           cardId: info.row.original?.id,
+                           intent: "highlightCard",
+                        },
+                        { method: "POST" },
+                     );
+                  }}
+                  className={clsx(
+                     "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
+                     isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
+                  )}
+               >
+                  {isHighlighting ? (
+                     <Icon name="loader-2" className="animate-spin" size={12} />
+                  ) : (
+                     <Icon
+                        name="star"
+                        className={clsx(
+                           isHighlighted ? "text-yellow-800" : "text-white",
+                        )}
+                        title="Add to Highlights"
+                        size={12}
+                     />
+                  )}
+               </TooltipTrigger>
+               <TooltipContent>
+                  {isHighlighted ? "Remove" : "Add to Highlights"}
+               </TooltipContent>
+            </Tooltip>
+            <button
+               disabled={disabled}
+               onClick={() => {
+                  fetcher.submit(
+                     {
+                        deckId: entry.id,
+                        cardId: info.row.original?.id,
+                        intent: "addCardToDeck",
+                     },
+                     {
+                        method: "POST",
+                     },
+                  );
+               }}
+            >
+               <Tooltip placement="right">
+                  <TooltipTrigger className="group">
+                     <Image
+                        className={clsx(
+                           "object-contain transition-all duration-150 ease-in-out hover:cursor-pointer hover:opacity-80",
+                           isCardAdding && "opacity-50",
+                        )}
+                        width={367}
+                        height={512}
+                        url={
+                           info.row.original?.icon?.url ??
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        alt={info.row.original?.name ?? "Card Image"}
+                        loading="lazy"
+                     />
+                     {isCardAdding ? (
+                        <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                           <Icon
+                              name="loader-2"
+                              size={20}
+                              className="animate-spin"
+                           />
+                        </div>
+                     ) : (
+                        <Icon
+                           name="plus"
+                           size={20}
+                           className="dark:text-white text-zinc-900 absolute opacity-0 group-hover:opacity-100 transition-all 
+                           ease-in-out top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        />
+                     )}
+                  </TooltipTrigger>
+                  <TooltipContent>
+                     <Image
+                        className={clsx(
+                           "object-contain w-[300px]",
+                           isCardAdding && "opacity-50",
+                        )}
+                        width={367}
+                        height={512}
+                        url={
+                           info.row.original?.icon?.url ??
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        alt={info.row.original?.name ?? "Card Image"}
+                        loading="lazy"
+                     />
+                  </TooltipContent>
+               </Tooltip>
+            </button>
+         </div>
       );
    },
 });
 
-export const deckCardColumns = [
-   columnHelper.accessor("name", {
+export const deckBuilderTrayColumns = [
+   deckBuilderTrayColumnHelper.accessor("name", {
       header: "Card",
       filterFn: fuzzyFilter,
       cell: (info) => {
          return (
             <Link
-               to={`/c/cards/${info.row.original?.card?.slug}`}
+               to={`/c/cards/${info.row.original?.slug}`}
                className="flex items-center gap-3 group py-0.5"
             >
                <Image
                   className="w-9 object-contain"
                   width={100}
                   url={
-                     info.row.original?.card?.icon?.url ??
+                     info.row.original?.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
                   loading="lazy"
@@ -155,12 +462,12 @@ export const deckCardColumns = [
                 decoration-zinc-400 underline-offset-2 truncate"
                >
                   <div className="truncate">{info.getValue()}</div>
-                  {info.row.original?.card?.pokemonType?.icon?.url ? (
+                  {info.row.original?.pokemonType?.icon?.url ? (
                      <Image
                         className="size-4 object-contain"
                         width={40}
                         height={40}
-                        url={info.row.original?.card?.pokemonType?.icon?.url}
+                        url={info.row.original?.pokemonType?.icon?.url}
                         loading="lazy"
                      />
                   ) : undefined}
@@ -169,13 +476,13 @@ export const deckCardColumns = [
          );
       },
    }),
-   columnHelper.accessor("pokemonType", {
+   deckBuilderTrayColumnHelper.accessor("pokemonType", {
       header: "Type",
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.pokemonType?.name);
       },
    }),
-   columnHelper.accessor("weaknessType", {
+   deckBuilderTrayColumnHelper.accessor("weaknessType", {
       header: () => <div className="text-center w-full">Weakness</div>,
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.weaknessType?.name);
@@ -194,37 +501,15 @@ export const deckCardColumns = [
          );
       },
    }),
-   columnHelper.accessor("cardType", {
+   deckBuilderTrayColumnHelper.accessor("cardType", {
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.cardType?.toString());
       },
    }),
-   columnHelper.accessor("isEX", {
+   deckBuilderTrayColumnHelper.accessor("isEX", {
       header: "Is EX Pokémon?",
       filterFn: (row, columnId, filterValue) => {
          return filterValue.includes(row?.original?.isEX?.toString());
-      },
-   }),
-   columnHelper.accessor("hp", {
-      header: () => <div className="text-center w-full">HP</div>,
-      cell: (info) => {
-         return (
-            <div className="flex items-center justify-center">
-               {info.getValue() ? info.getValue() : "-"}
-            </div>
-         );
-      },
-   }),
-   columnHelper.accessor("count", {
-      header: () => <div className="text-right w-full">Qty</div>,
-      cell: (info) => {
-         return info.getValue() ? (
-            <div className="flex items-center justify-end">
-               <Badge color="red">x{info.getValue()}</Badge>
-            </div>
-         ) : (
-            "-"
-         );
       },
    }),
 ];
