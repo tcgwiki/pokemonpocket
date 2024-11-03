@@ -88,7 +88,8 @@ export default function ListPage() {
             </div>
             <LoggedOut>
                <Text className="pt-2.5">
-                  <TextLink href="/login">Login</TextLink> to create a deck.
+                  <TextLink href="/login?redirectTo=/c/decks">Login</TextLink>{" "}
+                  to create a deck.
                </Text>
             </LoggedOut>
             <LoggedIn>
@@ -181,7 +182,7 @@ const gridView = columnHelper.accessor("name", {
       >
          <div className="absolute top-2 right-2 text-zinc-500 dark:text-zinc-400">
             {info.row.original?.isPublic ? (
-               <Icon name="radio" size={14} />
+               <Icon name="eye" size={14} />
             ) : (
                <Icon name="eye-off" size={14} />
             )}

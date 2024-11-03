@@ -33,6 +33,8 @@ import { initialValue } from "~/routes/_editor+/core/utils";
 
 import type { Descendant } from "slate";
 import { toast } from "sonner";
+import { LoggedIn } from "~/routes/_auth+/components/LoggedIn";
+import { EditorView } from "~/routes/_editor+/core/components/EditorView";
 
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
@@ -45,7 +47,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    const isMount = useIsMount();
 
    const [deckName, setDeckName] = useState(deck.name);
-   const debouncedDeckName = useDebouncedValue(deckName, 500);
+   const debouncedDeckName = useDebouncedValue(deckName, 1200);
 
    useEffect(() => {
       if (!isMount) {
@@ -276,12 +278,18 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                </div>
             )}
          </div>
-         <ManaEditor
-            onChange={(value) => {
-               setDescription(value);
-            }}
-            defaultValue={(deck.description ?? initialValue()) as Descendant[]}
-         />
+         {isOwner ? (
+            <ManaEditor
+               onChange={(value) => {
+                  setDescription(value);
+               }}
+               defaultValue={
+                  (deck.description ?? initialValue()) as Descendant[]
+               }
+            />
+         ) : (
+            <EditorView data={deck.description} />
+         )}
       </div>
    );
 }
@@ -315,41 +323,45 @@ function DeckCell({
    const isHighlighted = card?.isHighlighted;
 
    return (
-      <div className="relative group">
-         <Tooltip>
-            <TooltipTrigger
-               onClick={() => {
-                  fetcher.submit(
-                     {
-                        deckId: entry.id,
-                        cardId: card?.id ?? "",
-                        intent: "highlightCard",
-                     },
-                     { method: "POST" },
-                  );
-               }}
-               className={clsx(
-                  "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
-                  isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
-               )}
-            >
-               {isHighlighting ? (
-                  <Icon name="loader-2" className="animate-spin" size={12} />
-               ) : (
-                  <Icon
-                     name="star"
-                     className={clsx(
-                        isHighlighted ? "text-yellow-800" : "text-white",
-                     )}
-                     title="Add to Highlights"
-                     size={12}
-                  />
-               )}
-            </TooltipTrigger>
-            <TooltipContent>
-               {isHighlighted ? "Remove from Highlights" : "Add to Highlights"}
-            </TooltipContent>
-         </Tooltip>
+      <div className="relative group flex items-center justify-center">
+         <LoggedIn>
+            <Tooltip>
+               <TooltipTrigger
+                  onClick={() => {
+                     fetcher.submit(
+                        {
+                           deckId: entry.id,
+                           cardId: card?.id ?? "",
+                           intent: "highlightCard",
+                        },
+                        { method: "POST" },
+                     );
+                  }}
+                  className={clsx(
+                     "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
+                     isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
+                  )}
+               >
+                  {isHighlighting ? (
+                     <Icon name="loader-2" className="animate-spin" size={12} />
+                  ) : (
+                     <Icon
+                        name="star"
+                        className={clsx(
+                           isHighlighted ? "text-yellow-800" : "text-white",
+                        )}
+                        title="Add to Highlights"
+                        size={12}
+                     />
+                  )}
+               </TooltipTrigger>
+               <TooltipContent>
+                  {isHighlighted
+                     ? "Remove from Highlights"
+                     : "Add to Highlights"}
+               </TooltipContent>
+            </Tooltip>
+         </LoggedIn>
          <Dialog
             className="relative flex items-center justify-center"
             size="tablet"
@@ -423,7 +435,7 @@ function DeckCell({
                className="absolute bottom-1 right-1 text-xs text-white font-bold
                    size-6 rounded-md flex items-center justify-center bg-zinc-900"
             >
-               {count}
+               <span className="text-xs">x</span> {count}
             </div>
             {isCardUpdating && (
                <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -460,8 +472,8 @@ const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor("name", {
       const { entry } = useLoaderData<any>();
 
       return (
-         <div className="relative group">
-            <button
+         <Tooltip setDelay={800} placement="right">
+            <TooltipTrigger
                disabled={disabled}
                onClick={() => {
                   fetcher.submit(
@@ -475,59 +487,52 @@ const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor("name", {
                      },
                   );
                }}
+               className="group relative"
             >
-               <Tooltip placement="right">
-                  <TooltipTrigger className="group">
-                     <Image
-                        className={clsx(
-                           "object-contain transition-all duration-150 ease-in-out hover:cursor-pointer hover:opacity-80",
-                           isCardAdding && "opacity-50",
-                        )}
-                        width={367}
-                        height={512}
-                        url={
-                           info.row.original?.icon?.url ??
-                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                        }
-                        alt={info.row.original?.name ?? "Card Image"}
-                        loading="lazy"
-                     />
-                     {isCardAdding ? (
-                        <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                           <Icon
-                              name="loader-2"
-                              size={20}
-                              className="animate-spin"
-                           />
-                        </div>
-                     ) : (
-                        <Icon
-                           name="plus"
-                           size={20}
-                           className="dark:text-white text-zinc-900 absolute opacity-0 group-hover:opacity-100 transition-all 
+               <Image
+                  className={clsx(
+                     "object-contain transition-all duration-150 ease-in-out hover:cursor-pointer hover:opacity-80",
+                     isCardAdding && "opacity-50",
+                  )}
+                  width={367}
+                  height={512}
+                  url={
+                     info.row.original?.icon?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                  }
+                  alt={info.row.original?.name ?? "Card Image"}
+                  loading="lazy"
+               />
+               {isCardAdding ? (
+                  <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                     <Icon name="loader-2" size={20} className="animate-spin" />
+                  </div>
+               ) : (
+                  <Icon
+                     name="plus"
+                     size={20}
+                     className="dark:text-white text-zinc-900 absolute opacity-0 group-hover:opacity-100 transition-all 
                            ease-in-out top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                        />
-                     )}
-                  </TooltipTrigger>
-                  <TooltipContent>
-                     <Image
-                        className={clsx(
-                           "object-contain w-[300px]",
-                           isCardAdding && "opacity-50",
-                        )}
-                        width={367}
-                        height={512}
-                        url={
-                           info.row.original?.icon?.url ??
-                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                        }
-                        alt={info.row.original?.name ?? "Card Image"}
-                        loading="lazy"
-                     />
-                  </TooltipContent>
-               </Tooltip>
-            </button>
-         </div>
+                  />
+               )}
+            </TooltipTrigger>
+            <TooltipContent>
+               <Image
+                  className={clsx(
+                     "object-contain w-[300px]",
+                     isCardAdding && "opacity-50",
+                  )}
+                  width={367}
+                  height={512}
+                  url={
+                     info.row.original?.icon?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                  }
+                  alt={info.row.original?.name ?? "Card Image"}
+                  loading="lazy"
+               />
+            </TooltipContent>
+         </Tooltip>
       );
    },
 });

@@ -138,16 +138,23 @@ export const action: ActionFunction = async ({
             deckId: z.string(),
             description: z.string(),
          });
+
          const deckData = await authRestFetcher({
             isAuthOverride: true,
-            method: "PATCH",
-            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
-            body: { description },
+            method: "GET",
+            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
          });
 
          if (deckData.user !== user.id) {
             return jsonWithError(null, "You cannot update this deck");
          }
+
+         const updatedDeck = await authRestFetcher({
+            isAuthOverride: true,
+            method: "PATCH",
+            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+            body: { description: JSON.parse(description) },
+         });
 
          return jsonWithSuccess(null, "Description updated");
       }
