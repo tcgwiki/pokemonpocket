@@ -55,36 +55,48 @@ const gridView = columnHelper.accessor("name", {
          className="flex gap-3 flex-col justify-center"
          key={info.row.original.id}
       >
-         <div className="inline-flex mx-auto -space-x-8">
-            {info.row.original?.highlightCards?.map(
-               (card) =>
-                  card.icon?.url && (
-                     <Tooltip placement="right-start" key={card.id}>
-                        <TooltipTrigger
-                           className="shadow-sm shadow-1 z-10"
-                           key={card.id}
-                        >
-                           <Image
-                              url={card.icon?.url}
-                              alt={card.name ?? ""}
-                              className="w-12 object-contain"
-                              width={200}
-                              height={280}
-                           />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                           <Image
-                              url={card.icon?.url}
-                              alt={card.name ?? ""}
-                              width={367}
-                              height={512}
-                              className="w-full object-contain"
-                           />
-                        </TooltipContent>
-                     </Tooltip>
-                  ),
-            )}
-         </div>
+         {info.row.original?.highlightCards?.length &&
+         info.row.original?.highlightCards?.length > 0 ? (
+            <div className="inline-flex mx-auto -space-x-8">
+               {info.row.original?.highlightCards?.map(
+                  (card) =>
+                     card.icon?.url && (
+                        <Tooltip placement="right-start" key={card.id}>
+                           <TooltipTrigger
+                              className="shadow-sm shadow-1 z-10"
+                              key={card.id}
+                           >
+                              <Image
+                                 url={card.icon?.url}
+                                 alt={card.name ?? ""}
+                                 className="w-12 object-contain"
+                                 width={200}
+                                 height={280}
+                              />
+                           </TooltipTrigger>
+                           <TooltipContent>
+                              <Image
+                                 url={card.icon?.url}
+                                 alt={card.name ?? ""}
+                                 width={367}
+                                 height={512}
+                                 className="w-full object-contain"
+                              />
+                           </TooltipContent>
+                        </Tooltip>
+                     ),
+               )}
+            </div>
+         ) : (
+            <Image
+               url={
+                  "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+               }
+               className="w-12 mx-auto object-contain"
+               width={200}
+               height={280}
+            />
+         )}
          <div className="text-center text-sm font-bold border-t pt-1 dark:border-zinc-600 space-y-1">
             {info.row.original.types && (
                <div

@@ -20,7 +20,6 @@ import { jsonWithError, redirectWithSuccess } from "remix-toast";
 import { authRestFetcher } from "~/utils/fetchers.server";
 import { manaSlug } from "~/utils/url-slug";
 import { nanoid } from "nanoid";
-import { useRootLoaderData } from "~/utils/useSiteLoaderData";
 import { isAdding } from "~/utils/form";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { H3 } from "~/components/Headers";
@@ -29,6 +28,7 @@ import dt from "date-and-time";
 import { LoggedIn } from "~/routes/_auth+/components/LoggedIn";
 import { LoggedOut } from "~/routes/_auth+/components/LoggedOut";
 import { Text, TextLink } from "~/components/Text";
+import { safeNanoID, siteNanoID } from "~/utils/nanoid";
 
 export async function loader({
    context: { payload, user },
@@ -149,9 +149,9 @@ export const action: ActionFunction = async ({
                method: "POST",
                path: `https://pokemonpocket.tcg.wiki:4000/api/decks`,
                body: {
-                  name: "Untitled Deck",
+                  name: `${user.username}'s Deck`,
                   archetype: "6725f81a5d92d12f244d12f8",
-                  slug: manaSlug(`untitled-deck-${user.username}-${nanoid(6)}`),
+                  slug: manaSlug(`${user.username}-${siteNanoID(8)}`),
                   user: user.id,
                },
             });
@@ -176,9 +176,16 @@ const gridView = columnHelper.accessor("name", {
    cell: (info) => (
       <Link
          to={`/c/decks/${info.row.original.slug}`}
-         className="flex gap-3 flex-col justify-center h-full pt-3"
+         className="flex gap-3 flex-col justify-center h-full pt-3 relative"
          key={info.row.original.id}
       >
+         <div className="absolute top-2 right-2 text-zinc-500 dark:text-zinc-400">
+            {info.row.original?.isPublic ? (
+               <Icon name="radio" size={14} />
+            ) : (
+               <Icon name="eye-off" size={14} />
+            )}
+         </div>
          {info.row.original?.highlightCards?.length &&
          info.row.original?.highlightCards?.length > 0 ? (
             <div className="inline-flex mx-auto -space-x-8">
@@ -213,7 +220,11 @@ const gridView = columnHelper.accessor("name", {
             </div>
          ) : (
             <div className="flex items-center justify-center">
-               <div className="w-12 h-[67px] bg-zinc-200 dark:bg-dark450 rounded-lg"></div>
+               <Image
+                  className="w-12 object-contain"
+                  width={100}
+                  url="https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+               />
             </div>
          )}
          <div className="text-center text-sm border-t p-2 dark:border-zinc-700 space-y-1 flex flex-col justify-center">
@@ -260,6 +271,7 @@ const DECKS = gql`
             updatedAt
             name
             slug
+            isPublic
             icon {
                url
             }

@@ -39,6 +39,10 @@ export const Decks: CollectionConfig = {
          type: "text",
       },
       {
+         name: "description",
+         type: "json",
+      },
+      {
          name: "user",
          type: "text",
          defaultValue: ({ user }: { user: User }) => user?.id,

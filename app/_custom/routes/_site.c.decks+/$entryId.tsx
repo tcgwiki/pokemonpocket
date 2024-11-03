@@ -121,6 +121,7 @@ export const action: ActionFunction = async ({
 
    const { intent } = await zx.parseForm(request, {
       intent: z.enum([
+         "updateDescription",
          "deleteDeck",
          "addCardToDeck",
          "updateCardInDeck",
@@ -132,6 +133,24 @@ export const action: ActionFunction = async ({
    });
 
    switch (intent) {
+      case "updateDescription": {
+         const { description, deckId } = await zx.parseForm(request, {
+            deckId: z.string(),
+            description: z.string(),
+         });
+         const deckData = await authRestFetcher({
+            isAuthOverride: true,
+            method: "PATCH",
+            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+            body: { description },
+         });
+
+         if (deckData.user !== user.id) {
+            return jsonWithError(null, "You cannot update this deck");
+         }
+
+         return jsonWithSuccess(null, "Description updated");
+      }
       case "toggleDeckPublic": {
          try {
             const { deckId } = await zx.parseForm(request, {
@@ -143,6 +162,10 @@ export const action: ActionFunction = async ({
                method: "GET",
                path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
             });
+
+            if (deckData.user !== user.id) {
+               return jsonWithError(null, "You cannot update this deck");
+            }
 
             const updatedDeck = await authRestFetcher({
                isAuthOverride: true,
@@ -512,6 +535,7 @@ const QUERY = gql`
          slug
          name
          user
+         description
          isPublic
          types {
             id

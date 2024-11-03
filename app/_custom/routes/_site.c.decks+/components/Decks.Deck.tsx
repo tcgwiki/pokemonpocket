@@ -28,6 +28,11 @@ import {
 } from "~/components/Dropdown";
 import { SwitchField, Switch } from "~/components/Switch";
 import { Description, Label } from "~/components/Fieldset";
+import { ManaEditor } from "~/routes/_editor+/editor";
+import { initialValue } from "~/routes/_editor+/core/utils";
+
+import type { Descendant } from "slate";
+import { toast } from "sonner";
 
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
@@ -61,12 +66,33 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    const isDeleting = isAdding(fetcher, "deleteDeck");
    const disabled = isDeckNameUpdating || isArchetypeUpdating;
 
+   const deckLink = `/c/decks/${deck.slug}`;
+
+   const [description, setDescription] = useState(deck.description);
+   const debouncedDescription = useDebouncedValue(description, 1000);
+
+   useEffect(() => {
+      if (!isMount) {
+         fetcher.submit(
+            {
+               description: JSON.stringify(debouncedDescription),
+               deckId: deck.id,
+               intent: "updateDescription",
+            },
+            { method: "POST" },
+         );
+      }
+   }, [debouncedDescription]);
+
    return (
       <div>
          {isOwner && (
             <>
-               <div className="flex items-start gap-2">
+               <div className="flex items-center gap-2">
                   <div className="flex-grow">
+                     <div className="text-sm text-1 pb-1.5 pl-0.5 font-semibold">
+                        Deck Name
+                     </div>
                      <InputGroup>
                         {isDeckNameUpdating ? (
                            <Icon
@@ -91,7 +117,10 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      </InputGroup>
                   </div>
                   <Dropdown>
-                     <DropdownButton color="light/zinc" className="h-9">
+                     <DropdownButton
+                        color="light/zinc"
+                        className="tablet:size-9 mt-2.5"
+                     >
                         <Icon name="ellipsis" size={16} />
                      </DropdownButton>
                      <DropdownMenu>
@@ -127,6 +156,18 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      )}
                   </Button> */}
                </div>
+               <div className="text-sm text-1 pb-1.5 pl-0.5 font-semibold flex items-center gap-1.5">
+                  <span>Archetype</span>
+                  <Tooltip placement="right">
+                     <TooltipTrigger>
+                        <Icon title="Archetype" name="info" size={14} />
+                     </TooltipTrigger>
+                     <TooltipContent className="text-sm w-40 bg-zinc-900 rounded-lg p-2 text-white">
+                        Deck archetype refers to a specific strategy or theme
+                        that defines how a deck is built and played.
+                     </TooltipContent>
+                  </Tooltip>
+               </div>
                <Listbox
                   disabled={disabled}
                   className="mb-4"
@@ -150,9 +191,11 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                   ))}
                </Listbox>
                <SwitchField disabled={disabled} fullWidth>
-                  <Label>Public</Label>
-                  <Description>
-                     Make your deck public to allow anyone to view it
+                  <Label className="font-bold">Public</Label>
+                  <Description className="flex items-center gap-2 w-full">
+                     <span>
+                        Make your deck public to allow anyone to view it
+                     </span>
                   </Description>
                   <Switch
                      onChange={() => {
@@ -164,6 +207,30 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      defaultChecked={deck.isPublic ?? false}
                      color="emerald"
                   />
+                  {deckLink && (
+                     <Tooltip placement="left">
+                        <TooltipTrigger
+                           className="dark:bg-dark500 bg-white mt-1 shadow-sm dark:border-zinc-500
+                              flex items-center gap-1 border border-zinc-200 shadow-1
+                              rounded-full px-3 py-1 text-xs dark:text-zinc-100 justify-center"
+                           onClick={() => {
+                              navigator.clipboard.writeText(
+                                 window.location.origin + deckLink,
+                              );
+                              toast.success("Copied to clipboard");
+                           }}
+                        >
+                           <Icon
+                              name="link"
+                              className="dark:text-white text-zinc-900"
+                              size={10}
+                           />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           Copy deck link to clipboard
+                        </TooltipContent>
+                     </Tooltip>
+                  )}
                </SwitchField>
                <div className="border border-color-sub px-3 rounded-xl pb-1 mb-4">
                   <ListTable
@@ -209,6 +276,12 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                </div>
             )}
          </div>
+         <ManaEditor
+            onChange={(value) => {
+               setDescription(value);
+            }}
+            defaultValue={(deck.description ?? initialValue()) as Descendant[]}
+         />
       </div>
    );
 }
