@@ -78,6 +78,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                            <Icon name="text" size={16} />
                         )}
                         <Input
+                           placeholder="Type a deck name..."
                            disabled={disabled}
                            className="mb-4 w-full"
                            defaultValue={deck.name ?? ""}
