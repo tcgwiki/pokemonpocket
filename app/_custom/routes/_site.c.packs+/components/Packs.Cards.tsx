@@ -1,182 +1,195 @@
-import { Pack } from "~/db/payload-custom-types";
+import { Card, Pack } from "~/db/payload-custom-types";
 import { Image } from "~/components/Image";
+import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
+import { H3 } from "~/components/Headers";
+import { cardFilters } from "../../_site.c.cards+/_index";
+import { createColumnHelper } from "@tanstack/react-table";
+import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { Link } from "@remix-run/react";
 
 export function PacksCards({ data }: { data: Pack }) {
+   // Group cards by slot
+   const groupedCards = data.cards?.reduce(
+      (acc, card) => {
+         const slot = card.slot || "Unknown";
+         if (!acc[slot]) acc[slot] = [];
+         acc[slot].push(card);
+         return acc;
+      },
+      {} as Record<string, typeof data.cards>,
+   );
+
    return (
-      <>
-         {Object.entries(
-            data?.cards?.reduce(
-               (acc, { card, rates }) => {
-                  rates?.forEach(({ slot, percent }) => {
-                     if (slot) {
-                        if (!acc[slot]) acc[slot] = [];
-                        if (card)
-                           acc[slot].push({ ...card, percent: percent ?? 0 });
-                     }
-                  });
-                  return acc;
-               },
-               {} as Record<
-                  string,
-                  ((typeof data.cards)[number]["card"] & { percent: number })[]
-               >,
-            ) ?? {},
-         ).map(([slot, cards]) => (
-            <div key={slot} className="mb-5">
-               <div className="py-3 text-1">
-                  {ratesEnum[slot as keyof typeof ratesEnum] || slot}
+      <div className="space-y-4">
+         {groupedCards &&
+            Object.entries(groupedCards).map(([slot, cards]) => (
+               <div key={slot} className="mt-8">
+                  <H3 id={slot}>{ratesEnum[slot as keyof typeof ratesEnum]}</H3>
+                  <ListTable
+                     gridView={packGridView}
+                     columnViewability={{
+                        pokemonType: false,
+                        isEX: false,
+                        cardType: false,
+                     }}
+                     hideViewMode={true}
+                     pager={false}
+                     pageSize={100}
+                     gridCellClassNames=" "
+                     defaultViewType="grid"
+                     defaultSort={[{ id: "rarity", desc: true }]}
+                     data={{
+                        listData: {
+                           docs: cards.map((c) => ({
+                              ...c.card,
+                              percent: c.percent,
+                           })),
+                        },
+                     }}
+                     columns={packCardColumns}
+                     filters={cardFilters}
+                  />
                </div>
-               {Object.entries(
-                  cards.reduce(
-                     (acc, card) => {
-                        if (card.rarity?.name) {
-                           if (!acc[card.rarity.name])
-                              acc[card.rarity.name] = [];
-                           acc[card.rarity.name]?.push(card);
-                        }
-                        return acc;
-                     },
-                     {} as Record<string, typeof cards>,
-                  ),
-               ).map(([rarity, rarityCards]) => (
-                  <div
-                     key={rarity}
-                     className="mb-2 border border-color-sub rounded-lg dark:bg-dark350 overflow-hidden shadow-sm shadow-1"
-                  >
-                     <h4 className="text-lg font-semibold bg-zinc-50 dark:bg-dark400 flex items-center justify-between border-b border-color-sub p-2 pr-3">
-                        {ratesPerRarity[slot as keyof typeof ratesPerRarity]?.[
-                           rarity as keyof (typeof ratesPerRarity)[keyof typeof ratesPerRarity]
-                           //@ts-ignore
-                        ]?.icon && (
-                           <Image
-                              height={100}
-                              url={
-                                 ratesPerRarity[
-                                    slot as keyof typeof ratesPerRarity
-                                 ][
-                                    rarity as keyof (typeof ratesPerRarity)[keyof typeof ratesPerRarity]
-                                    //@ts-ignore
-                                 ].icon
-                              }
-                              alt={`${rarity} icon`}
-                              className="h-6 object-contain"
-                           />
-                        )}
-                        <span className="text-sm">
-                           {ratesPerRarity[
-                              slot as keyof typeof ratesPerRarity
-                           ]?.[
-                              rarity as keyof (typeof ratesPerRarity)[keyof typeof ratesPerRarity]
-                              //@ts-ignore
-                           ]?.value ?? 0}
-                           %
-                        </span>
-                     </h4>
-                     <div className="divide-y divide-color-sub">
-                        {rarityCards.map((card) => (
-                           <Link
-                              to={`/c/cards/${card.slug}`}
-                              key={card.id}
-                              className="flex items-center justify-between gap-3 p-2.5 group"
-                           >
-                              <div className="flex items-center flex-grow gap-3">
-                                 <Image
-                                    width={80}
-                                    height={112}
-                                    url={card.icon?.url}
-                                    alt={card.name ?? ""}
-                                    className="w-8 object-contain"
-                                 />
-                                 <div className="font-semibold group-hover:underline">
-                                    {card.name}
-                                 </div>
-                              </div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                 {card.percent.toFixed(2)}%
-                              </div>
-                           </Link>
-                        ))}
-                     </div>
-                  </div>
-               ))}
-            </div>
-         ))}
-      </>
+            ))}
+      </div>
    );
 }
 
 const ratesEnum = {
-   _1_3: "Card inclusion probability rate for the 1st to 3rd cards",
+   _12345: "Card inclusion probability rate for the 1st to 5th cards",
+   _123: "Card inclusion probability rate for the 1st to 3rd cards",
    _4: "Card inclusion probability rate for the 4th card",
    _5: "Card inclusion probability rate for the 5th card",
 };
 
-const ratesPerRarity = {
-   _1_3: {
-      C: {
-         value: 100,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_C.png",
+const columnHelper = createColumnHelper<Card>();
+
+export const packGridView = columnHelper.accessor("name", {
+   filterFn: fuzzyFilter,
+   cell: (info) => (
+      <Link
+         className="block relative"
+         to={`/c/cards/${info.row.original?.slug}`}
+      >
+         <div className="sr-only">{info.getValue()}</div>
+         <Image
+            className="object-contain"
+            width={400}
+            url={
+               info.row.original?.icon?.url ??
+               "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+            }
+         />
+         {info.row.original.percent ? (
+            <div className="text-sm font-bold absolute top-1.5 right-1.5 bg-zinc-900 text-white rounded-md px-1.5 py-0.5">
+               {info.row.original.percent?.toFixed(2)}%
+            </div>
+         ) : undefined}
+      </Link>
+   ),
+});
+
+export const packCardColumns = [
+   columnHelper.accessor("name", {
+      header: "Card",
+      filterFn: fuzzyFilter,
+      cell: (info) => {
+         return (
+            <Link
+               to={`/c/cards/${info.row.original.slug}`}
+               className="flex items-center gap-3 group py-0.5"
+            >
+               <Image
+                  className="w-9 object-contain"
+                  width={100}
+                  url={
+                     info.row.original.icon?.url ??
+                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                  }
+               />
+               <span
+                  className="space-y-1.5 font-semibold group-hover:underline
+                decoration-zinc-400 underline-offset-2 truncate"
+               >
+                  <div className="truncate">{info.getValue()}</div>
+                  {info.row.original.pokemonType?.icon?.url ? (
+                     <Image
+                        className="size-4 object-contain"
+                        width={40}
+                        height={40}
+                        url={info.row.original.pokemonType?.icon?.url}
+                     />
+                  ) : undefined}
+               </span>
+            </Link>
+         );
       },
-   },
-   _4: {
-      UR: {
-         value: 0.04,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
+   }),
+   columnHelper.accessor("pokemonType", {
+      header: "Type",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.pokemonType?.name);
       },
-      IM: {
-         value: 0.222,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
+   }),
+   columnHelper.accessor("rarity", {
+      header: "Rarity",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.rarity?.name);
       },
-      SR: {
-         value: 0.5,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SR.png",
+      cell: (info) => {
+         return info.getValue()?.icon?.url ? (
+            <Image
+               className="h-6"
+               height={40}
+               url={info.getValue()?.icon?.url}
+            />
+         ) : (
+            "-"
+         );
       },
-      AR: {
-         value: 2.572,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
+   }),
+   columnHelper.accessor("weaknessType", {
+      header: "Weakness",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.weaknessType?.name);
       },
-      RR: {
-         value: 1.666,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
+      cell: (info) => {
+         return info.getValue()?.icon?.url ? (
+            <Image
+               className="size-4"
+               width={40}
+               height={40}
+               url={info.getValue()?.icon?.url}
+            />
+         ) : (
+            "-"
+         );
       },
-      R: {
-         value: 5.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
+   }),
+
+   columnHelper.accessor("retreatCost", {
+      header: "Retreat",
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.retreatCost);
       },
-      U: {
-         value: 90.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
+      cell: (info) => {
+         return info.getValue() ? info.getValue() : "-";
       },
-   },
-   _5: {
-      UR: {
-         value: 0.16,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png",
+   }),
+   columnHelper.accessor("isEX", {
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.isEX?.toString());
       },
-      IM: {
-         value: 0.888,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_IM.png",
+   }),
+   columnHelper.accessor("cardType", {
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.cardType?.toString());
       },
-      SR: {
-         value: 2.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_SAR.png",
+   }),
+   columnHelper.accessor("hp", {
+      header: "HP",
+      cell: (info) => {
+         return info.getValue() ? info.getValue() : "-";
       },
-      AR: {
-         value: 10.288,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png",
-      },
-      RR: {
-         value: 6.664,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_RR.png",
-      },
-      R: {
-         value: 20.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_R.png",
-      },
-      U: {
-         value: 60.0,
-         icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_U.png",
-      },
-   },
-};
+   }),
+];

@@ -5,6 +5,7 @@ import { Link } from "@remix-run/react";
 import dt from "date-and-time";
 
 import { Icon } from "~/components/Icon";
+import { Button } from "~/components/Button";
 
 export function PacksMain({ data }: { data: Pack }) {
    const pack = data;
@@ -33,6 +34,24 @@ export function PacksMain({ data }: { data: Pack }) {
                url={pack.expansion?.logo?.url}
             />
          </Link>
+         <div
+            className="flex items-center max-tablet:flex-col tablet:gap-2 gap-3 border p-4 tablet:p-3 rounded-xl shadow-sm dark:shadow-zinc-800/50 text-sm
+               border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950 mt-4 justify-between font-bold"
+         >
+            <span>
+               Pull{" "}
+               <span className="underline underline-offset-4 decoration-amber-300">
+                  {pack.name}
+               </span>{" "}
+               in the pack simulator
+            </span>
+            <Button
+               color="amber"
+               href={`/pack-simulator?expansion=${pack.expansion?.id}&pack=${pack.id}`}
+            >
+               Pack Simulator
+            </Button>
+         </div>
       </>
    );
 }

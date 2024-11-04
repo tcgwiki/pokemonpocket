@@ -27,6 +27,7 @@ export async function loader({
          query: PACK_QUERY,
       },
    });
+
    return json({
       entry,
    });
@@ -52,12 +53,15 @@ const PACK_QUERY = gql`
          slug
          name
          expansion {
+            id
             slug
             logo {
                url
             }
          }
          cards {
+            slot
+            percent
             card {
                id
                name
