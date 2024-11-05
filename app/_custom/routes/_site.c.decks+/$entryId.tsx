@@ -123,16 +123,44 @@ export const action: ActionFunction = async ({
       intent: z.enum([
          "updateDescription",
          "deleteDeck",
-         "addCardToDeck",
-         "updateCardInDeck",
          "updateDeckName",
          "updateArchetype",
          "highlightCard",
          "toggleDeckPublic",
+         "updateDeckCards",
       ]),
    });
 
    switch (intent) {
+      case "updateDeckCards": {
+         const { deckId, deckCards } = await zx.parseForm(request, {
+            deckId: z.string(),
+            deckCards: z.any(),
+         });
+
+         const deckData = await authRestFetcher({
+            isAuthOverride: true,
+            method: "GET",
+            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
+         });
+
+         if (deckData.user !== user.id) {
+            return jsonWithError(null, "You cannot update this deck");
+         }
+
+         const updatedDeck = await authRestFetcher({
+            isAuthOverride: true,
+            method: "PATCH",
+            path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+            body: { cards: JSON.parse(deckCards) },
+         });
+
+         if (updatedDeck) {
+            return jsonWithSuccess(null, "Deck updated");
+         }
+
+         return jsonWithError(null, "Failed to update deck cards");
+      }
       case "updateDescription": {
          const { description, deckId } = await zx.parseForm(request, {
             deckId: z.string(),
@@ -333,145 +361,6 @@ export const action: ActionFunction = async ({
             return jsonWithError(
                null,
                "Something went wrong...unable to update deck name",
-            );
-         }
-      }
-      case "addCardToDeck": {
-         try {
-            const { deckId, cardId } = await zx.parseForm(request, {
-               deckId: z.string(),
-               cardId: z.string(),
-            });
-
-            //Users can only mutate their own decks
-            const deckData = await authRestFetcher({
-               isAuthOverride: true,
-               method: "GET",
-               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
-            });
-
-            const existingCard = deckData.cards.find(
-               (card: any) => card.card === cardId,
-            );
-
-            let updatedDeckCards;
-            if (existingCard) {
-               if (existingCard.count >= 2) {
-                  return jsonWithError(
-                     null,
-                     "Maximum of 2 copies per card allowed in deck",
-                  );
-               }
-               updatedDeckCards = deckData.cards.map((card: any) =>
-                  card.card === cardId
-                     ? { ...card, count: card.count + 1 }
-                     : card,
-               );
-            } else {
-               updatedDeckCards = [
-                  ...deckData.cards,
-                  {
-                     card: cardId,
-                     count: 1,
-                  },
-               ];
-            }
-
-            if (deckData.user === user.id) {
-               const updatedUserDeck = await authRestFetcher({
-                  isAuthOverride: true,
-                  method: "PATCH",
-                  path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
-                  body: {
-                     cards: updatedDeckCards,
-                  },
-               });
-
-               if (updatedUserDeck) {
-                  return jsonWithSuccess(null, `Added`);
-               }
-            }
-
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to update card",
-            );
-         } catch (error) {
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to update card",
-            );
-         }
-      }
-      case "updateCardInDeck": {
-         try {
-            const { deckId, cardId, cardCount } = await zx.parseForm(request, {
-               deckId: z.string(),
-               cardId: z.string(),
-               cardCount: z.coerce.number(),
-            });
-            const deckData = await authRestFetcher({
-               isAuthOverride: true,
-               method: "GET",
-               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
-            });
-
-            //Users can only mutate their own cards
-            if (deckData.user === user.id) {
-               if (cardCount !== 1 && cardCount !== 2) {
-                  return jsonWithError(
-                     null,
-                     "Invalid card count...must be 1 or 2",
-                  );
-               }
-
-               if (cardCount === 1) {
-                  // Remove from highlighted cards if present
-                  const updatedHighlightCards =
-                     deckData.highlightCards?.filter(
-                        (card: any) => card !== cardId,
-                     ) || [];
-
-                  const updatedUserDeck = await authRestFetcher({
-                     isAuthOverride: true,
-                     method: "PATCH",
-                     path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
-                     body: {
-                        cards: deckData.cards.filter(
-                           (card: any) => card.card !== cardId,
-                        ),
-                        highlightCards: updatedHighlightCards,
-                     },
-                  });
-
-                  if (updatedUserDeck) {
-                     return jsonWithSuccess(null, "Card removed");
-                  }
-               }
-               if (cardCount === 2) {
-                  const updatedUserDeck = await authRestFetcher({
-                     isAuthOverride: true,
-                     method: "PATCH",
-                     path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
-                     body: {
-                        cards: deckData.cards.map((card: any) =>
-                           card.card === cardId ? { ...card, count: 1 } : card,
-                        ),
-                     },
-                  });
-                  if (updatedUserDeck) {
-                     return jsonWithSuccess(null, "Card quantity updated");
-                  }
-               }
-            }
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to update card",
-            );
-         } catch (error) {
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to update card",
             );
          }
       }

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
+import { memo } from "react";
 
 import { Button } from "~/components/Button";
 import { Dialog } from "~/components/Dialog";
@@ -38,16 +39,96 @@ import { EditorView } from "~/routes/_editor+/core/components/EditorView";
 
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
-export function DecksDeck({ data }: { data: DeckLoaderData }) {
-   const { deck, allCards, deckCards, archetypes } = data;
-   const { user } = useRootLoaderData();
+const isValidCardAddition = (
+   totalCards: number,
+   existingCardCount?: number,
+) => {
+   if (existingCardCount && existingCardCount >= 2) {
+      toast.error("Maximum of 2 copies per card allowed in deck");
+      return false;
+   }
+   if (totalCards >= 20) {
+      toast.error("Maximum of 20 cards allowed in deck");
+      return false;
+   }
+   return true;
+};
 
+export function DecksDeck({ data }: { data: DeckLoaderData }) {
+   const { deck, allCards, deckCards: initialDeckCards, archetypes } = data;
+   const { user } = useRootLoaderData();
    const isOwner = deck.user === user?.id;
    const fetcher = useFetcher();
    const isMount = useIsMount();
 
+   const [deckCards, setDeckCards] = useState(initialDeckCards);
+
+   const sortCards = useCallback(
+      (cards: (Card & { count?: number; isHighlighted?: boolean })[]) => {
+         return [...cards].sort((a, b) => {
+            if (a.isHighlighted !== b.isHighlighted)
+               return a.isHighlighted ? -1 : 1;
+            if (a.cardType !== b.cardType)
+               return a.cardType === "pokemon" ? -1 : 1;
+            return (a.name ?? "").localeCompare(b.name ?? "");
+         });
+      },
+      [],
+   );
+
+   const handleAddCard = useCallback(
+      (cardId: string) => {
+         const totalCards = deckCards.reduce(
+            (sum, card) => sum + (card.count ?? 0),
+            0,
+         );
+         const existingCard = deckCards.find((card) => card.id === cardId);
+
+         if (!isValidCardAddition(totalCards, existingCard?.count)) return;
+
+         if (existingCard) {
+            setDeckCards((prev) =>
+               prev.map((card) =>
+                  card.id === cardId
+                     ? { ...card, count: card.count + 1 }
+                     : card,
+               ),
+            );
+            return;
+         }
+
+         const cardToAdd = allCards.find((card) => card.id === cardId);
+         if (cardToAdd) {
+            setDeckCards((prev) => [...prev, { ...cardToAdd, count: 1 }]);
+         }
+      },
+      [deckCards, allCards],
+   );
+
+   const handleUpdateCard = useCallback((cardId: string, newCount: number) => {
+      if (newCount === 0) {
+         setDeckCards((prev) => prev.filter((card) => card.id !== cardId));
+      } else {
+         setDeckCards((prev) =>
+            prev.map((card) =>
+               card.id === cardId ? { ...card, count: newCount } : card,
+            ),
+         );
+      }
+   }, []);
+
    const [deckName, setDeckName] = useState(deck.name);
    const debouncedDeckName = useDebouncedValue(deckName, 1200);
+
+   const isDeckNameUpdating = isAdding(fetcher, "updateDeckName");
+
+   const isArchetypeUpdating = isAdding(fetcher, "updateArchetype");
+   const disabled = isDeckNameUpdating || isArchetypeUpdating;
+
+   const deckLink = `/c/decks/${deck.slug}`;
+
+   const [description, setDescription] = useState(deck.description);
+   const debouncedDescription = useDebouncedValue(description, 1000);
 
    useEffect(() => {
       if (!isMount) {
@@ -62,17 +143,6 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
       }
    }, [debouncedDeckName]);
 
-   const isDeckNameUpdating = isAdding(fetcher, "updateDeckName");
-
-   const isArchetypeUpdating = isAdding(fetcher, "updateArchetype");
-   const isDeleting = isAdding(fetcher, "deleteDeck");
-   const disabled = isDeckNameUpdating || isArchetypeUpdating;
-
-   const deckLink = `/c/decks/${deck.slug}`;
-
-   const [description, setDescription] = useState(deck.description);
-   const debouncedDescription = useDebouncedValue(description, 1000);
-
    useEffect(() => {
       if (!isMount) {
          fetcher.submit(
@@ -85,6 +155,115 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
          );
       }
    }, [debouncedDescription]);
+
+   const debouncedDeckCards = useDebouncedValue(deckCards, 1000);
+
+   useEffect(() => {
+      if (isMount) return;
+
+      const updateData = {
+         deckId: deck.id,
+         deckCards: JSON.stringify(
+            debouncedDeckCards.map(({ id, count }) => ({
+               card: id,
+               count,
+            })),
+         ),
+         intent: "updateDeckCards",
+      };
+
+      fetcher.submit(updateData, { method: "POST" });
+   }, [debouncedDeckCards]);
+
+   const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor(
+      "name",
+      {
+         filterFn: fuzzyFilter,
+         cell: (info) => {
+            return (
+               <Tooltip setDelay={800} placement="right">
+                  <TooltipTrigger
+                     disabled={disabled}
+                     onClick={() => handleAddCard(info.row.original?.id ?? "")}
+                     className="group relative"
+                  >
+                     <Image
+                        className="object-contain hover:cursor-pointer"
+                        width={367}
+                        height={512}
+                        url={
+                           info.row.original?.icon?.url ??
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        alt={info.row.original?.name ?? "Card Image"}
+                        loading="lazy"
+                     />
+                     <Icon
+                        name="plus"
+                        size={20}
+                        className="dark:text-white text-zinc-900 absolute opacity-0 group-hover:opacity-100
+                           top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                     />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                     <Image
+                        className={clsx("object-contain w-[300px]")}
+                        width={367}
+                        height={512}
+                        url={
+                           info.row.original?.icon?.url ??
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        alt={info.row.original?.name ?? "Card Image"}
+                        loading="lazy"
+                     />
+                  </TooltipContent>
+               </Tooltip>
+            );
+         },
+      },
+   );
+
+   // Update highlight handling to maintain sort order
+   const handleHighlight = async (
+      cardId: string,
+      currentHighlightState: boolean,
+   ) => {
+      //@ts-ignore
+      setDeckCards((prev) =>
+         sortCards(
+            prev.map((card) =>
+               card.id === cardId
+                  ? { ...card, isHighlighted: !currentHighlightState }
+                  : card,
+            ),
+         ),
+      );
+
+      try {
+         await fetcher.submit(
+            {
+               deckId: deck.id,
+               cardId,
+               intent: "highlightCard",
+            },
+            { method: "POST" },
+         );
+      } catch (error) {
+         // Revert on error
+         //@ts-ignore
+         setDeckCards((prev) =>
+            sortCards(
+               prev.map((card) =>
+                  card.id === cardId
+                     ? { ...card, isHighlighted: currentHighlightState }
+                     : card,
+               ),
+            ),
+         );
+         toast.error("Failed to update highlight status");
+      }
+   };
 
    return (
       <div>
@@ -261,16 +440,16 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
          <div className="border border-color-sub rounded-xl p-2 bg-2-sub mb-4">
             {deckCards?.length ? (
                <div className="tablet:grid-cols-5 grid grid-cols-3 gap-2">
-                  {deckCards.map((card) => {
-                     return (
-                        <DeckCell
-                           key={card.id}
-                           card={card}
-                           isOwner={isOwner}
-                           count={card.count}
-                        />
-                     );
-                  })}
+                  {deckCards.map((card) => (
+                     <DeckCell
+                        key={card.id}
+                        card={card}
+                        isOwner={isOwner}
+                        count={card.count}
+                        onUpdate={handleUpdateCard}
+                        onHighlight={handleHighlight}
+                     />
+                  ))}
                </div>
             ) : (
                <div className="text-center text-sm text-zinc-500">
@@ -294,16 +473,29 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    );
 }
 
-function DeckCell({
+// 6. Extract card image URL to a constant
+const DEFAULT_CARD_IMAGE =
+   "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png";
+
+// 7. Optimize DeckCell component
+const DeckCell = memo(function DeckCell({
    card,
    count,
    isOwner,
+   onUpdate,
+   onHighlight,
 }: {
-   card: Card | undefined;
-   count: number | null | undefined;
+   card: Card & { count?: number; isHighlighted?: boolean };
+   count: number;
    isOwner: boolean;
+   onUpdate: (cardId: string, newCount: number) => void;
+   onHighlight: (
+      cardId: string,
+      currentHighlightState: boolean,
+   ) => Promise<void>;
 }) {
    const [isOpen, setIsOpen] = useState(false);
+   const [isHighlighting, setIsHighlighting] = useState(false);
 
    const cardType = card?.cardType === "pokemon" ? "pokémon" : "trainer";
 
@@ -312,34 +504,22 @@ function DeckCell({
          ? cardRarityEnum[card.rarity.name as keyof typeof cardRarityEnum]
          : "common";
 
-   const fetcher = useFetcher();
-   const { entry } = useLoaderData<any>();
-
-   const isCardUpdating = isAdding(fetcher, "updateCardInDeck");
-   const disabled = isCardUpdating;
-
-   const isHighlighting = isAdding(fetcher, "highlightCard");
-   //@ts-ignore
-   const isHighlighted = card?.isHighlighted;
+   const handleHighlightClick = async () => {
+      if (isHighlighting) return;
+      setIsHighlighting(true);
+      await onHighlight(card.id, !!card.isHighlighted);
+      setIsHighlighting(false);
+   };
 
    return (
       <div className="relative group flex items-center justify-center">
          <LoggedIn>
             <Tooltip>
                <TooltipTrigger
-                  onClick={() => {
-                     fetcher.submit(
-                        {
-                           deckId: entry.id,
-                           cardId: card?.id ?? "",
-                           intent: "highlightCard",
-                        },
-                        { method: "POST" },
-                     );
-                  }}
+                  onClick={handleHighlightClick}
                   className={clsx(
                      "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
-                     isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
+                     card.isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
                   )}
                >
                   {isHighlighting ? (
@@ -348,7 +528,9 @@ function DeckCell({
                      <Icon
                         name="star"
                         className={clsx(
-                           isHighlighted ? "text-yellow-800" : "text-white",
+                           card.isHighlighted
+                              ? "text-yellow-800"
+                              : "text-white",
                         )}
                         title="Add to Highlights"
                         size={12}
@@ -356,7 +538,7 @@ function DeckCell({
                   )}
                </TooltipTrigger>
                <TooltipContent>
-                  {isHighlighted
+                  {card.isHighlighted
                      ? "Remove from Highlights"
                      : "Add to Highlights"}
                </TooltipContent>
@@ -395,33 +577,18 @@ function DeckCell({
             </div>
          </Dialog>
          <button
-            disabled={disabled}
             onClick={
                !isOwner
                   ? () => setIsOpen(true)
                   : () => {
-                       fetcher.submit(
-                          //@ts-ignore
-                          {
-                             deckId: entry.id,
-                             cardId: card?.id,
-                             cardCount: count,
-                             intent: "updateCardInDeck",
-                          },
-                          {
-                             method: "POST",
-                          },
-                       );
+                       onUpdate(card?.id ?? "", (count ?? 1) - 1);
                     }
             }
             className="relative"
          >
             <div className="sr-only">{card?.name}</div>
             <Image
-               className={clsx(
-                  "object-contain",
-                  isCardUpdating && "opacity-50",
-               )}
+               className="object-contain"
                width={367}
                height={512}
                url={
@@ -437,104 +604,9 @@ function DeckCell({
             >
                <span className="text-xs">x</span> {count}
             </div>
-            {isCardUpdating && (
-               <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <Icon name="loader-2" size={20} className="animate-spin" />
-               </div>
-            )}
          </button>
       </div>
    );
-}
-
-const deckBuilderTrayGridView = deckBuilderTrayColumnHelper.accessor("name", {
-   filterFn: fuzzyFilter,
-   cell: (info) => {
-      const [isOpen, setIsOpen] = useState(false);
-
-      const cardType =
-         info.row.original?.cardType === "pokemon" ? "pokémon" : "trainer";
-
-      const rarity =
-         info.row.original?.rarity?.name &&
-         info.row.original?.rarity.name in cardRarityEnum
-            ? cardRarityEnum[
-                 info.row.original?.rarity.name as keyof typeof cardRarityEnum
-              ]
-            : "common";
-
-      const fetcher = useFetcher();
-
-      const isCardAdding = isAdding(fetcher, "addCardToDeck");
-
-      const disabled = isCardAdding;
-
-      const { entry } = useLoaderData<any>();
-
-      return (
-         <Tooltip setDelay={800} placement="right">
-            <TooltipTrigger
-               disabled={disabled}
-               onClick={() => {
-                  fetcher.submit(
-                     {
-                        deckId: entry.id,
-                        cardId: info.row.original?.id,
-                        intent: "addCardToDeck",
-                     },
-                     {
-                        method: "POST",
-                     },
-                  );
-               }}
-               className="group relative"
-            >
-               <Image
-                  className={clsx(
-                     "object-contain transition-all duration-150 ease-in-out hover:cursor-pointer hover:opacity-80",
-                     isCardAdding && "opacity-50",
-                  )}
-                  width={367}
-                  height={512}
-                  url={
-                     info.row.original?.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                  }
-                  alt={info.row.original?.name ?? "Card Image"}
-                  loading="lazy"
-               />
-               {isCardAdding ? (
-                  <div className=" z-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                     <Icon name="loader-2" size={20} className="animate-spin" />
-                  </div>
-               ) : (
-                  <Icon
-                     name="plus"
-                     size={20}
-                     className="dark:text-white text-zinc-900 absolute opacity-0 group-hover:opacity-100 transition-all 
-                           ease-in-out top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                  />
-               )}
-            </TooltipTrigger>
-            <TooltipContent>
-               <Image
-                  className={clsx(
-                     "object-contain w-[300px]",
-                     isCardAdding && "opacity-50",
-                  )}
-                  width={367}
-                  height={512}
-                  url={
-                     info.row.original?.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                  }
-                  alt={info.row.original?.name ?? "Card Image"}
-                  loading="lazy"
-               />
-            </TooltipContent>
-         </Tooltip>
-      );
-   },
 });
 
 export const deckBuilderTrayColumns = [
