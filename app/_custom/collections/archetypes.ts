@@ -60,10 +60,10 @@ export const Archetypes: CollectionConfig = {
          hasMany: true,
       },
       {
-         name: "featuredDeck",
+         name: "featuredDecks",
          type: "relationship",
          relationTo: "decks",
-         hasMany: false,
+         hasMany: true,
       },
    ],
 };
