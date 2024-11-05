@@ -59,30 +59,18 @@ export async function loader({
    });
    const deckCards = (
       entry.data as { deck: { cards: any[]; highlightCards?: any[] } }
-   ).deck.cards
-      .map((card) => {
-         return {
-            ...card.card.cards[0],
-            id: card.card.id,
-            count: card.count,
-            isHighlighted: (
-               entry.data as { deck: { highlightCards?: any[] } }
-            ).deck.highlightCards?.some(
-               (highlight) => highlight.id === card.card.id,
-            ),
-         };
-      })
-      .sort((a, b) => {
-         // Sort by highlighted first
-         if (a.isHighlighted && !b.isHighlighted) return -1;
-         if (!a.isHighlighted && b.isHighlighted) return 1;
-
-         // Then sort by card type - Pokemon first
-         if (a.cardType === "pokemon" && b.cardType !== "pokemon") return -1;
-         if (a.cardType !== "pokemon" && b.cardType === "pokemon") return 1;
-
-         return 0;
-      });
+   ).deck.cards.map((card) => {
+      return {
+         ...card.card.cards[0],
+         id: card.card.id,
+         count: card.count,
+         isHighlighted: (
+            entry.data as { deck: { highlightCards?: any[] } }
+         ).deck.highlightCards?.some(
+            (highlight) => highlight.id === card.card.id,
+         ),
+      };
+   });
 
    return json({
       entry,
@@ -184,7 +172,11 @@ export const action: ActionFunction = async ({
             body: { description: JSON.parse(description) },
          });
 
-         return jsonWithSuccess(null, "Description updated");
+         if (updatedDeck) {
+            return jsonWithSuccess(null, "Description updated");
+         }
+
+         return jsonWithError(null, "Failed to update description");
       }
       case "toggleDeckPublic": {
          try {

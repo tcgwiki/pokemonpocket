@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import { useEffect, useState, useCallback } from "react";
+import { Link, useFetcher } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { memo } from "react";
 
@@ -87,11 +87,14 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
          if (!isValidCardAddition(totalCards, existingCard?.count)) return;
 
          if (existingCard) {
+            //@ts-ignore
             setDeckCards((prev) =>
-               prev.map((card) =>
-                  card.id === cardId
-                     ? { ...card, count: card.count + 1 }
-                     : card,
+               sortCards(
+                  prev.map((card) =>
+                     card.id === cardId
+                        ? { ...card, count: card.count + 1 }
+                        : card,
+                  ),
                ),
             );
             return;
@@ -99,10 +102,13 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
 
          const cardToAdd = allCards.find((card) => card.id === cardId);
          if (cardToAdd) {
-            setDeckCards((prev) => [...prev, { ...cardToAdd, count: 1 }]);
+            //@ts-ignore
+            setDeckCards((prev) =>
+               sortCards([...prev, { ...cardToAdd, count: 1 }]),
+            );
          }
       },
-      [deckCards, allCards],
+      [deckCards, allCards, sortCards],
    );
 
    const handleUpdateCard = useCallback((cardId: string, newCount: number) => {
@@ -317,25 +323,6 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                         </DropdownItem>
                      </DropdownMenu>
                   </Dropdown>
-                  {/* <Button
-                     color="red"
-                     onClick={() => {
-                        fetcher.submit(
-                           { deckId: deck.id, intent: "deleteDeck" },
-                           { method: "POST" },
-                        );
-                     }}
-                  >
-                     {isDeleting ? (
-                        <Icon
-                           name="loader-2"
-                           size={16}
-                           className="animate-spin"
-                        />
-                     ) : (
-                        <Icon name="trash" size={16} />
-                     )}
-                  </Button> */}
                </div>
                <div className="text-sm text-1 pb-1.5 pl-0.5 font-semibold flex items-center gap-1.5">
                   <span>Archetype</span>
@@ -473,11 +460,6 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    );
 }
 
-// 6. Extract card image URL to a constant
-const DEFAULT_CARD_IMAGE =
-   "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png";
-
-// 7. Optimize DeckCell component
 const DeckCell = memo(function DeckCell({
    card,
    count,
@@ -513,7 +495,7 @@ const DeckCell = memo(function DeckCell({
 
    return (
       <div className="relative group flex items-center justify-center">
-         <LoggedIn>
+         {isOwner ? (
             <Tooltip>
                <TooltipTrigger
                   onClick={handleHighlightClick}
@@ -543,7 +525,7 @@ const DeckCell = memo(function DeckCell({
                      : "Add to Highlights"}
                </TooltipContent>
             </Tooltip>
-         </LoggedIn>
+         ) : undefined}
          <Dialog
             className="relative flex items-center justify-center"
             size="tablet"
