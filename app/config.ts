@@ -8,5 +8,5 @@ export type ManaConfig = {
 
 export const settings: ManaConfig = {
    fromName: "No Reply - TCG Wiki",
-   fromEmail: "admin@tcg.wiki",
+   fromEmail: "noreply@tcg.wiki",
 };
