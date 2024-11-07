@@ -24,43 +24,61 @@ start();
 const resaveCollection = async () => {
    const results = await payload.find({
       collection: "cards",
-      depth: 2,
-      sort: "rarity",
-      limit: 500,
+      depth: 0,
+      sort: "cardType",
+      limit: 10,
    });
 
    for (const result of results.docs) {
-      const charactersUpTillFirstSpace = result.name.split("-")[0].trim();
-      const exisintingCard = await payload.find({
+      const cardName = result.name.split("-")[0].trim() + result.expansion.name;
+
+      const existingCard = await payload.find({
          collection: "card-groups",
          depth: 0,
          where: {
             name: {
-               equals: charactersUpTillFirstSpace,
+               equals: cardName,
             },
          },
       });
-      console.log(exisintingCard);
-      if (exisintingCard.totalDocs > 0) {
-         console.log("adding existing card", exisintingCard.docs[0]?.name);
-         await payload.update({
-            collection: "card-groups",
-            id: exisintingCard.docs[0].id,
-            data: {
-               cards: [...exisintingCard.docs[0].cards, result.id],
-            },
-         });
-      } else
-         await payload.create({
-            collection: "card-groups",
-            data: {
-               id: manaSlug(charactersUpTillFirstSpace),
-               name: charactersUpTillFirstSpace,
-               cards: [result.id],
-               icon: result.icon.id,
-               slug: manaSlug(charactersUpTillFirstSpace),
-            },
-         });
+
+      const commaSeparatedMoves = result.moves.join(",");
+
+      const existingCardsArray = existingCard.docs[0]?.cards;
+
+      // Find cards with matching moves
+      const matchingCards = existingCardsArray.filter(
+         (card) =>
+            card.moves &&
+            card.moves.toLowerCase() === commaSeparatedMoves.toLowerCase(),
+      );
+      // console.log(matchingCards, "matchingCards");
+
+      if (matchingCards.length > 0) {
+         console.log("adding existing card", existingCard.docs[0]?.name);
+         // await payload.update({
+         //    collection: "card-groups",
+         //    id: existingCard.docs[0].id,
+         //    data: {
+         //       cards: [...existingCard.docs[0].cards, result.id],
+         //    },
+         // });
+      } else {
+         // Create new card group with new name
+
+         const setName = result.expansion.name;
+         console.log(result.name);
+         // await payload.create({
+         //    collection: "card-groups",
+         //    data: {
+         //       id: manaSlug(`${charactersUpTillFirstSpace}-${setName}`),
+         //       name: `${charactersUpTillFirstSpace} - ${setName}`,
+         //       cards: [result.id],
+         //       icon: result.icon.id,
+         //       slug: manaSlug(`${charactersUpTillFirstSpace}-${setName}`),
+         //    },
+         // });
+      }
    }
 
    console.log("Complete");
