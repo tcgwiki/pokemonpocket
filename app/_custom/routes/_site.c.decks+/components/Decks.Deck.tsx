@@ -592,11 +592,11 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                />
                <div
                   className="h-1 block bg-blue-500"
-                  style={{ width: `${totalSupporterCardsWidthPercent}%` }}
+                  style={{ width: `${totalItemCardsWidthPercent}%` }}
                />
                <div
                   className="h-1 block bg-orange-500"
-                  style={{ width: `${totalItemCardsWidthPercent}%` }}
+                  style={{ width: `${totalSupporterCardsWidthPercent}%` }}
                />
             </div>
             <div className="text-sm flex items-center gap-4">
