@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useFetcher, useNavigation } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { memo } from "react";
 
@@ -36,6 +36,8 @@ import type { Descendant } from "slate";
 import { toast } from "sonner";
 import { EditorView } from "~/routes/_editor+/core/components/EditorView";
 
+import dt from "date-and-time";
+
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
 
 const isValidCardAddition = (
@@ -54,22 +56,47 @@ const isValidCardAddition = (
 };
 
 export function DecksDeck({ data }: { data: DeckLoaderData }) {
-   const { deck, allCards, deckCards: initialDeckCards, archetypes } = data;
+   const {
+      deck,
+      allCards,
+      deckCards: initialDeckCards,
+      archetypes,
+      userInfo,
+   } = data;
    const { user } = useRootLoaderData();
    const isOwner = deck.user === user?.id;
    const fetcher = useFetcher();
    const isMount = useIsMount();
-   const navigation = useNavigation();
 
    const [deckCards, setDeckCards] = useState(initialDeckCards);
 
    const sortCards = useCallback(
       (cards: (Card & { count?: number; isHighlighted?: boolean })[]) => {
          return [...cards].sort((a, b) => {
+            // First sort by highlight status
             if (a.isHighlighted !== b.isHighlighted)
                return a.isHighlighted ? -1 : 1;
+
+            // Then sort by card type (pokemon first)
             if (a.cardType !== b.cardType)
                return a.cardType === "pokemon" ? -1 : 1;
+
+            // For trainer cards, sort by trainer type
+            if (a.cardType === "trainer" && b.cardType === "trainer") {
+               // Define trainer type order: item -> fossil -> supporter
+               const trainerTypeOrder = { item: 0, fossil: 1, supporter: 2 };
+               const aOrder =
+                  trainerTypeOrder[
+                     a.trainerType as keyof typeof trainerTypeOrder
+                  ] ?? 3;
+               const bOrder =
+                  trainerTypeOrder[
+                     b.trainerType as keyof typeof trainerTypeOrder
+                  ] ?? 3;
+               if (aOrder !== bOrder) return aOrder - bOrder;
+            }
+
+            // Finally sort by name
             return (a.name ?? "").localeCompare(b.name ?? "");
          });
       },
@@ -283,6 +310,28 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
       setOptimisticTypes(deck.types ?? []);
    }, [deck.types]);
 
+   const totalPokemonCards = deckCards
+      .filter((card) => card.cardType === "pokemon")
+      .reduce((sum, card) => sum + (card.count ?? 0), 0);
+
+   const totalSupporterCards = deckCards
+      .filter((card) => card.trainerType === "supporter")
+      .reduce((sum, card) => sum + (card.count ?? 0), 0);
+
+   const totalItemCards = deckCards
+      .filter(
+         (card) => card.trainerType === "item" || card.trainerType === "fossil",
+      )
+      .reduce((sum, card) => sum + (card.count ?? 0), 0);
+
+   const totalPokemonCardsWidthPercent = (totalPokemonCards / 20) * 100;
+   const totalSupporterCardsWidthPercent = (totalSupporterCards / 20) * 100;
+   const totalItemCardsWidthPercent = (totalItemCards / 20) * 100;
+
+   const showDescription =
+      //@ts-ignore
+      !!deck?.description?.[0]?.children?.[0]?.text || isOwner;
+
    return (
       <div>
          {isOwner && (
@@ -370,12 +419,12 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      </ListboxOption>
                   ))}
                </Listbox>
-               <div className="grid grid-cols-8 gap-3 flex-grow w-full pb-4">
+               <div className="text-sm text-1 pb-1.5 font-semibold">Energy</div>
+               <div className="grid grid-cols-8 gap-3 flex-grow w-full pb-5">
                   {deckTypes.map((type) => {
                      const isSelected = optimisticTypes.some(
                         (t) => t.id === type.value,
                      );
-
                      return (
                         <button
                            disabled={disabled}
@@ -471,7 +520,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                   )}
                </SwitchField>
 
-               <div className="border border-color-sub px-3 rounded-xl pb-1 mb-4">
+               <div className="border border-color-sub p-3 pt-0 rounded-xl mb-4">
                   <ListTable
                      columnViewability={{
                         pokemonType: false,
@@ -482,7 +531,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      pageSize={allCards.length}
                      gridView={deckBuilderTrayGridView}
                      gridContainerClassNames="whitespace-nowrap overflow-y-hidden overflow-x-auto  
-                     dark:scrollbar-thumb-dark500 dark:scrollbar-track-bg2Dark grid grid-rows-2 grid-flow-col gap-3
+                     dark:scrollbar-thumb-dark500 dark:scrollbar-track-bg2Dark grid grid-rows-2 grid-flow-col gap-2
                      scrollbar-thumb-zinc-200 scrollbar-track-zinc-50 scrollbar"
                      gridCellClassNames="relative inline-flex items-center justify-center w-24"
                      defaultViewType="grid"
@@ -494,38 +543,127 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                </div>
             </>
          )}
-
-         <div className="border border-color-sub rounded-xl p-2 bg-2-sub mb-4">
-            {deckCards?.length ? (
-               <div className="tablet:grid-cols-5 grid grid-cols-3 gap-2">
-                  {deckCards.map((card) => (
-                     <DeckCell
-                        key={card.id}
-                        card={card}
-                        isOwner={isOwner}
-                        count={card.count}
-                        onUpdate={handleUpdateCard}
-                        onHighlight={handleHighlight}
+         <div className="text-[10px] flex items-center gap-2 font-bold text-1">
+            {dt.format(new Date(deck.updatedAt), "MMM DD")}
+         </div>
+         <div className="flex items-center justify-between gap-2 mt-1.5 mb-4 py-2 border-y-2 border-color-sub relative">
+            {userInfo && (
+               <div className="flex items-center gap-2">
+                  {userInfo.avatar ? (
+                     <Image
+                        className="size-8 border border-color-sub object-contain rounded-full"
+                        width={64}
+                        height={64}
+                        url={userInfo.avatar}
+                        loading="lazy"
                      />
-                  ))}
-               </div>
-            ) : (
-               <div className="text-center text-sm text-zinc-500">
-                  No cards in deck
+                  ) : undefined}
+                  <div className="flex gap-1 flex-col">
+                     <span className="text-sm font-semibold">
+                        {userInfo.username}
+                     </span>
+                     <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5">
+                           {deck?.types &&
+                              deck.types.map((type) => (
+                                 <Image
+                                    className="size-3 object-contain"
+                                    width={40}
+                                    height={40}
+                                    url={type.icon?.url}
+                                    loading="lazy"
+                                 />
+                              ))}
+                        </div>
+                        <Link
+                           className="text-xs text-1 hover:underline"
+                           to={`/c/archetypes/${deck.archetype?.slug}`}
+                        >
+                           {deck.archetype?.name}
+                        </Link>
+                     </div>
+                  </div>
                </div>
             )}
+            <div className="flex items-center justify-end rounded-full overflow-hidden absolute -top-[3px] right-0 w-52">
+               <div
+                  className="h-1 block bg-gray-500"
+                  style={{ width: `${totalPokemonCardsWidthPercent}%` }}
+               />
+               <div
+                  className="h-1 block bg-blue-500"
+                  style={{ width: `${totalSupporterCardsWidthPercent}%` }}
+               />
+               <div
+                  className="h-1 block bg-orange-500"
+                  style={{ width: `${totalItemCardsWidthPercent}%` }}
+               />
+            </div>
+            <div className="text-sm flex items-center gap-4">
+               {totalPokemonCards > 0 && (
+                  <div>
+                     <span>{totalPokemonCards} </span>
+                     <span className="text-xs text-1">Pokémon</span>
+                  </div>
+               )}
+               {totalItemCards > 0 && (
+                  <div>
+                     <span>{totalItemCards} </span>
+                     <span className="text-xs text-1">
+                        Item{totalItemCards === 1 ? "" : "s"}
+                     </span>
+                  </div>
+               )}
+               {totalSupporterCards > 0 && (
+                  <div>
+                     <span>{totalSupporterCards} </span>
+                     <span className="text-xs text-1">
+                        Supporter{totalSupporterCards === 1 ? "" : "s"}
+                     </span>
+                  </div>
+               )}
+            </div>
          </div>
-         {isOwner ? (
-            <ManaEditor
-               onChange={(value) => {
-                  setDescription(value);
-               }}
-               defaultValue={
-                  (deck.description ?? initialValue()) as Descendant[]
-               }
-            />
+
+         {deckCards?.length > 0 ? (
+            <div className="tablet:grid-cols-5 grid grid-cols-3 gap-2">
+               {deckCards.map((card) => (
+                  <DeckCell
+                     key={card.id}
+                     card={card}
+                     isOwner={isOwner}
+                     count={card.count}
+                     onUpdate={handleUpdateCard}
+                     onHighlight={handleHighlight}
+                  />
+               ))}
+            </div>
          ) : (
-            <EditorView data={deck.description} />
+            <div className="text-center text-sm text-zinc-500">
+               No cards in deck
+            </div>
+         )}
+         {showDescription && (
+            <>
+               <div className="pt-6 text-xs font-semibold flex items-center gap-1.5">
+                  <Icon name="text" className="text-1" size={15} />
+                  Description
+               </div>
+               <div className="mb-4 mt-2 py-3 border-y-2 border-color-sub border-dotted">
+                  {isOwner ? (
+                     <ManaEditor
+                        onChange={(value) => {
+                           setDescription(value);
+                        }}
+                        defaultValue={
+                           (deck.description ?? initialValue()) as Descendant[]
+                        }
+                     />
+                  ) : (
+                     <EditorView data={deck.description} />
+                  )}
+               </div>
+            </>
          )}
       </div>
    );

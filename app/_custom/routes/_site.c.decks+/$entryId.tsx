@@ -25,6 +25,10 @@ export type DeckLoaderData = {
    allCards: Card[];
    deckCards: (Card & { count: number })[];
    archetypes: Archetype[];
+   userInfo: {
+      username: string;
+      avatar: string;
+   };
 };
 
 export async function loader({
@@ -72,10 +76,26 @@ export async function loader({
       };
    });
 
+   const getUser = await payload.find({
+      collection: "users",
+      where: {
+         id: { equals: (entry.data as { deck: { user: string } }).deck.user },
+      },
+      overrideAccess: false,
+      user,
+   });
+
+   const userInfo = {
+      username: getUser.docs[0]?.username,
+      //@ts-ignore
+      avatar: getUser.docs[0]?.avatar?.url,
+   };
+
    return json({
       entry,
       allCards: cleanCards,
       deckCards: deckCards,
+      userInfo,
    });
 }
 
@@ -84,7 +104,8 @@ const SECTIONS = {
 };
 
 export default function EntryPage() {
-   const { entry, allCards, deckCards } = useLoaderData<typeof loader>();
+   const { entry, allCards, deckCards, userInfo } =
+      useLoaderData<typeof loader>();
 
    return (
       <Entry
@@ -96,6 +117,7 @@ export default function EntryPage() {
             archetypes: (
                entry as { data: { archetypes: { docs: Archetype[] } } }
             )?.data.archetypes.docs,
+            userInfo,
          }}
       />
    );
@@ -488,6 +510,7 @@ const QUERY = gql`
          user
          description
          isPublic
+         updatedAt
          types {
             id
             name
@@ -497,6 +520,8 @@ const QUERY = gql`
          }
          archetype {
             id
+            name
+            slug
          }
          highlightCards {
             id
@@ -524,6 +549,7 @@ const QUERY = gql`
                   isEX
                   cardType
                   retreatCost
+                  trainerType
                   rarity {
                      name
                   }
