@@ -86,10 +86,23 @@ export default function ListPage() {
                </Button>
             </div>
             <LoggedOut>
-               <Text className="pt-2.5">
-                  <TextLink href="/login?redirectTo=/c/decks">Login</TextLink>{" "}
-                  to create a deck.
-               </Text>
+               <Link
+                  className="border flex border-blue-200 dark:border-blue-800/70 rounded-xl shadow-sm shadow-1 
+                  dark:bg-blue-900/20 bg-blue-50 py-3 px-4 mt-3  items-center justify-between"
+                  to="/login?redirectTo=/c/decks"
+               >
+                  <Text>
+                     <TextLink href="/login?redirectTo=/c/decks">
+                        Login
+                     </TextLink>{" "}
+                     to create a deck.
+                  </Text>
+                  <Icon
+                     className="text-blue-500"
+                     name="arrow-right"
+                     size={16}
+                  />
+               </Link>
             </LoggedOut>
             <LoggedIn>
                <ListTable
@@ -109,7 +122,7 @@ export default function ListPage() {
                   filters={filters}
                />
             </LoggedIn>
-            <div className="pt-6">
+            <div className="pt-6 -mb-2">
                <H3>All Decks</H3>
             </div>
             <ListTable
@@ -265,7 +278,6 @@ const columns = [
       cell: (info) => {
          return (
             <Link
-               prefetch="intent"
                to={`/c/decks/${info.row.original.slug}`}
                className="flex items-center gap-3 group py-0.5 pl-0.5 w-full group"
             >
@@ -278,7 +290,7 @@ const columns = [
                         <div className="text-xs text-zinc-500 dark:text-zinc-400 ">
                            {info.row.original?.archetype?.name}
                         </div>
-                        <span className="bg-zinc-500 size-0.5 rounded-full dark:bg-zinc-400" />
+                        <span className="bg-zinc-300 size-0.5 rounded-full dark:bg-zinc-600" />
                         <div className="text-[10px] text-zinc-400 dark:text-zinc-500 ">
                            {dt.format(
                               new Date(info.row.original.updatedAt),
@@ -295,7 +307,7 @@ const columns = [
                                  height={32}
                                  url={type.icon?.url}
                                  alt={info.row.original.name ?? ""}
-                                 className="size-4 object-contain"
+                                 className="size-3.5 object-contain"
                               />
                            ))}
                         </div>
@@ -307,7 +319,7 @@ const columns = [
                         {info.row.original?.highlightCards?.map(
                            (card) =>
                               card.icon?.url && (
-                                 <Tooltip placement="right-start" key={card.id}>
+                                 <Tooltip placement="left" key={card.id}>
                                     <TooltipTrigger
                                        className="shadow-sm shadow-1 z-10"
                                        key={card.id}

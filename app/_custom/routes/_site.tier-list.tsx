@@ -47,18 +47,6 @@ export default function TierList() {
             iconUrl="https://static.mana.wiki/tcgwiki-pokemonpocket/tier-list-icon-pokemon-pocket.png"
          />
          <div className="relative z-20 mx-auto max-w-[728px] justify-center max-tablet:px-3 tablet:pb-36">
-            <div className="relative z-20 mx-auto max-w-[728px] justify-center">
-               <AdUnit
-                  enableAds={true}
-                  adType={{
-                     desktop: "leaderboard_atf",
-                     tablet: "leaderboard_atf",
-                     mobile: "med_rect_atf",
-                  }}
-                  className="my-4 mx-auto flex items-center justify-center"
-                  selectorId="tier-list-1"
-               />
-            </div>
             <ListTableContainer
                className="border border-color-sub rounded-lg divide-y divide-color-sub overflow-hidden mb-4"
                filters={tierListFilters}
