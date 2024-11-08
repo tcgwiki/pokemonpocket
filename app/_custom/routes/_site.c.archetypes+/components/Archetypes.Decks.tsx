@@ -1,16 +1,10 @@
 import type { Deck } from "~/db/payload-custom-types";
 import { Image } from "~/components/Image";
-import { EditorView } from "~/routes/_editor+/core/components/EditorView";
-import {
-   cardColumns,
-   cardFilters,
-   cardGridView,
-} from "../../_site.c.cards+/_index";
+import { cardFilters } from "../../_site.c.cards+/_index";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { createColumnHelper } from "@tanstack/react-table";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { Link } from "@remix-run/react";
-import { Icon } from "~/components/Icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 import dt from "date-and-time";
 
@@ -22,13 +16,15 @@ export function ArchetypesDecks({
    const { allDecks } = data;
 
    return (
-      <ListTable
-         gridView={gridView}
-         defaultViewType="grid"
-         data={{ listData: { docs: allDecks } }}
-         columns={columns}
-         filters={cardFilters}
-      />
+      <div className="-mt-2">
+         <ListTable
+            gridView={gridView}
+            defaultViewType="grid"
+            data={{ listData: { docs: allDecks } }}
+            columns={columns}
+            filters={cardFilters}
+         />
+      </div>
    );
 }
 

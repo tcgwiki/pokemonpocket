@@ -562,10 +562,10 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      <span className="text-sm font-semibold">
                         {userInfo.username}
                      </span>
-                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-0.5">
-                           {deck?.types &&
-                              deck.types.map((type) => (
+                     <div className="flex items-center gap-1.5">
+                        {deck?.types && deck?.types?.length > 0 && (
+                           <div className="flex items-center gap-0.5">
+                              {deck.types.map((type) => (
                                  <Image
                                     className="size-3 object-contain"
                                     width={40}
@@ -574,7 +574,8 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                                     loading="lazy"
                                  />
                               ))}
-                        </div>
+                           </div>
+                        )}
                         <Link
                            className="text-xs text-1 hover:underline"
                            to={`/c/archetypes/${deck.archetype?.slug}`}

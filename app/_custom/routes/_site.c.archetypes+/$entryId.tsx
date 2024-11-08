@@ -77,7 +77,7 @@ const QUERY = gql`
    query ($entryId: String!, $jsonEntryId: JSON) {
       allDecks: Decks(
          where: { archetype: { equals: $jsonEntryId } }
-         sort: "updatedAt"
+         sort: "-updatedAt"
       ) {
          docs {
             name
@@ -114,6 +114,14 @@ const QUERY = gql`
          featuredDecks {
             description
             name
+            slug
+            types {
+               id
+               name
+               icon {
+                  url
+               }
+            }
             cards {
                count
                card {
