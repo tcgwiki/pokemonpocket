@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useFetcher } from "@remix-run/react";
+import { Link, useFetcher, useNavigation } from "@remix-run/react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { memo } from "react";
 
@@ -34,7 +34,6 @@ import { initialValue } from "~/routes/_editor+/core/utils";
 
 import type { Descendant } from "slate";
 import { toast } from "sonner";
-import { LoggedIn } from "~/routes/_auth+/components/LoggedIn";
 import { EditorView } from "~/routes/_editor+/core/components/EditorView";
 
 const deckBuilderTrayColumnHelper = createColumnHelper<Card>();
@@ -60,6 +59,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    const isOwner = deck.user === user?.id;
    const fetcher = useFetcher();
    const isMount = useIsMount();
+   const navigation = useNavigation();
 
    const [deckCards, setDeckCards] = useState(initialDeckCards);
 
@@ -129,7 +129,11 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
    const isDeckNameUpdating = isAdding(fetcher, "updateDeckName");
 
    const isArchetypeUpdating = isAdding(fetcher, "updateArchetype");
-   const disabled = isDeckNameUpdating || isArchetypeUpdating;
+
+   const isDeckTypeUpdating = isAdding(fetcher, "updateDeckTypes");
+
+   const disabled =
+      isDeckNameUpdating || isArchetypeUpdating || isDeckTypeUpdating;
 
    const deckLink = `/c/decks/${deck.slug}`;
 
@@ -271,6 +275,14 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
       }
    };
 
+   // Add this state to track optimistic updates
+   const [optimisticTypes, setOptimisticTypes] = useState(deck.types ?? []);
+
+   // Add this effect to sync optimistic state with server state
+   useEffect(() => {
+      setOptimisticTypes(deck.types ?? []);
+   }, [deck.types]);
+
    return (
       <div>
          {isOwner && (
@@ -358,6 +370,64 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      </ListboxOption>
                   ))}
                </Listbox>
+               <div className="grid grid-cols-8 gap-3 flex-grow w-full pb-4">
+                  {deckTypes.map((type) => {
+                     const isSelected = optimisticTypes.some(
+                        (t) => t.id === type.value,
+                     );
+
+                     return (
+                        <button
+                           disabled={disabled}
+                           onClick={() => {
+                              // Check if we're trying to add a new type when already at limit
+                              if (!isSelected && optimisticTypes.length >= 3) {
+                                 toast.error(
+                                    "Maximum of 3 types allowed per deck",
+                                 );
+                                 return;
+                              }
+
+                              // Optimistically update the UI
+                              if (isSelected) {
+                                 setOptimisticTypes((prev) =>
+                                    prev.filter((t) => t.id !== type.value),
+                                 );
+                              } else {
+                                 setOptimisticTypes((prev: any) => [
+                                    ...prev,
+                                    { id: type.value },
+                                 ]);
+                              }
+
+                              fetcher.submit(
+                                 {
+                                    deckId: deck.id,
+                                    deckType: type.value,
+                                    intent: "updateDeckTypes",
+                                 },
+                                 { method: "POST" },
+                              );
+                           }}
+                           key={type.value}
+                           className={clsx(
+                              isSelected
+                                 ? "bg-zinc-200 border-zinc-400 dark:bg-zinc-500/80 dark:border-zinc-400"
+                                 : "bg-white dark:bg-dark450 dark:hover:bg-dark500 border-color-sub hover:bg-zinc-50 hover:border-zinc-300 dark:hover:border-zinc-500",
+                              "flex items-center border justify-center gap-1 rounded-lg py-1 shadow-sm shadow-1",
+                           )}
+                        >
+                           <Image
+                              className="size-5 object-contain"
+                              width={40}
+                              height={40}
+                              url={type.icon}
+                              loading="lazy"
+                           />
+                        </button>
+                     );
+                  })}
+               </div>
                <SwitchField disabled={disabled} fullWidth>
                   <Label className="font-bold">Public</Label>
                   <Description className="flex items-center gap-2 w-full">
@@ -400,6 +470,7 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      </Tooltip>
                   )}
                </SwitchField>
+
                <div className="border border-color-sub px-3 rounded-xl pb-1 mb-4">
                   <ListTable
                      columnViewability={{
@@ -410,8 +481,8 @@ export function DecksDeck({ data }: { data: DeckLoaderData }) {
                      hideViewMode={true}
                      pageSize={allCards.length}
                      gridView={deckBuilderTrayGridView}
-                     gridContainerClassNames="whitespace-nowrap overflow-y-hidden overflow-x-auto space-x-2 
-                     dark:scrollbar-thumb-dark500 dark:scrollbar-track-bg2Dark
+                     gridContainerClassNames="whitespace-nowrap overflow-y-hidden overflow-x-auto  
+                     dark:scrollbar-thumb-dark500 dark:scrollbar-track-bg2Dark grid grid-rows-2 grid-flow-col gap-3
                      scrollbar-thumb-zinc-200 scrollbar-track-zinc-50 scrollbar"
                      gridCellClassNames="relative inline-flex items-center justify-center w-24"
                      defaultViewType="grid"
@@ -665,6 +736,49 @@ export const deckBuilderTrayColumns = [
          return filterValue.includes(row?.original?.isEX?.toString());
       },
    }),
+];
+
+const deckTypes = [
+   {
+      label: "Grass",
+      value: "2",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Grass.png",
+   },
+   {
+      label: "Fire",
+      value: "3",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fire.png",
+   },
+   {
+      label: "Water",
+      value: "4",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Water.png",
+   },
+   {
+      label: "Lightning",
+      value: "5",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Lightning.png",
+   },
+   {
+      label: "Psychic",
+      value: "6",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Psychic.png",
+   },
+   {
+      label: "Fighting",
+      value: "7",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fighting.png",
+   },
+   {
+      label: "Darkness",
+      value: "8",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Darkness.png",
+   },
+   {
+      label: "Metal",
+      value: "9",
+      icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Metal.png",
+   },
 ];
 
 const deckCardFilters: {

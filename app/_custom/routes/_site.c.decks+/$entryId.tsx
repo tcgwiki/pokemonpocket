@@ -116,10 +116,73 @@ export const action: ActionFunction = async ({
          "highlightCard",
          "toggleDeckPublic",
          "updateDeckCards",
+         "updateDeckTypes",
       ]),
    });
 
    switch (intent) {
+      case "updateDeckTypes": {
+         try {
+            const { deckId, deckType } = await zx.parseForm(request, {
+               deckId: z.string(),
+               deckType: z.string(),
+            });
+
+            const deckData = await authRestFetcher({
+               isAuthOverride: true,
+               method: "GET",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}?depth=0`,
+            });
+
+            if (deckData?.user !== user.id) {
+               return jsonWithError(null, "You cannot update this deck");
+            }
+
+            const isTypeAlreadyAdded = deckData?.types?.some(
+               (type: any) => type === deckType,
+            );
+
+            // If type is already added, remove it regardless of total count
+            if (isTypeAlreadyAdded) {
+               const updatedTypes = deckData.types.filter(
+                  (type: any) => type !== deckType,
+               );
+
+               const updatedDeck = await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "PATCH",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+                  body: { types: updatedTypes },
+               });
+
+               if (updatedDeck) {
+                  return jsonWithSuccess(null, "Type removed");
+               }
+            }
+
+            // If adding a new type, check the limit
+            if (deckData?.types?.length >= 3) {
+               return jsonWithError(null, "Maximum of 3 types allowed");
+            }
+
+            const updatedTypes = [...(deckData?.types || []), deckType];
+
+            const updatedDeck = await authRestFetcher({
+               isAuthOverride: true,
+               method: "PATCH",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/decks/${deckId}`,
+               body: { types: updatedTypes },
+            });
+
+            if (updatedDeck) {
+               return jsonWithSuccess(null, "Type added");
+            }
+
+            return jsonWithError(null, "Failed to update types");
+         } catch (error) {
+            return jsonWithError(null, "Something went wrong...");
+         }
+      }
       case "updateDeckCards": {
          const { deckId, deckCards } = await zx.parseForm(request, {
             deckId: z.string(),

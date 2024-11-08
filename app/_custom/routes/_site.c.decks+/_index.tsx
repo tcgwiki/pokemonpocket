@@ -19,7 +19,6 @@ import { z } from "zod";
 import { jsonWithError, redirectWithSuccess } from "remix-toast";
 import { authRestFetcher } from "~/utils/fetchers.server";
 import { manaSlug } from "~/utils/url-slug";
-import { nanoid } from "nanoid";
 import { isAdding } from "~/utils/form";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { H3 } from "~/components/Headers";
@@ -28,7 +27,7 @@ import dt from "date-and-time";
 import { LoggedIn } from "~/routes/_auth+/components/LoggedIn";
 import { LoggedOut } from "~/routes/_auth+/components/LoggedOut";
 import { Text, TextLink } from "~/components/Text";
-import { safeNanoID, siteNanoID } from "~/utils/nanoid";
+import { siteNanoID } from "~/utils/nanoid";
 
 export async function loader({
    context: { payload, user },
@@ -98,6 +97,7 @@ export default function ListPage() {
                border-color-sub shadow-sm dark:shadow-zinc-800/80 hover:border-zinc-300"
                   hideViewMode={true}
                   gridView={gridView}
+                  pageSize={8}
                   defaultViewType="grid"
                   data={{
                      listData: {
@@ -107,7 +107,6 @@ export default function ListPage() {
                   }}
                   columns={columns}
                   filters={filters}
-                  pager={false}
                />
             </LoggedIn>
             <div className="pt-6">
@@ -229,6 +228,20 @@ const gridView = columnHelper.accessor("name", {
             </div>
          )}
          <div className="text-center text-sm border-t p-2 dark:border-zinc-700 space-y-1 flex flex-col justify-center">
+            {info.row.original.types && info.row.original.types.length > 0 && (
+               <div className="flex gap-1 justify-center -mt-4">
+                  {info.row.original.types?.map((type) => (
+                     <Image
+                        key={type.id}
+                        width={32}
+                        height={32}
+                        url={type.icon?.url}
+                        alt={info.row.original.name ?? ""}
+                        className="size-4 object-contain"
+                     />
+                  ))}
+               </div>
+            )}
             <div className="truncate font-bold">{info.getValue()}</div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-center gap-1">
                <Icon
@@ -254,9 +267,83 @@ const columns = [
             <Link
                prefetch="intent"
                to={`/c/decks/${info.row.original.slug}`}
-               className="flex items-center gap-3 group py-0.5"
+               className="flex items-center gap-3 group py-0.5 pl-0.5 w-full group"
             >
-               {info.getValue()}
+               <div className="flex items-center gap-3 justify-between w-full">
+                  <div className="flex-grow">
+                     <div className="font-bold group-hover:underline">
+                        {info.getValue()}
+                     </div>
+                     <div className="pb-0.5 flex items-center gap-1">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400 ">
+                           {info.row.original?.archetype?.name}
+                        </div>
+                        <span className="bg-zinc-500 size-0.5 rounded-full dark:bg-zinc-400" />
+                        <div className="text-[10px] text-zinc-400 dark:text-zinc-500 ">
+                           {dt.format(
+                              new Date(info.row.original.updatedAt),
+                              "MMM DD",
+                           )}
+                        </div>
+                     </div>
+                     {info.row.original.types && (
+                        <div className="flex gap-1 pt-0.5">
+                           {info.row.original.types?.map((type) => (
+                              <Image
+                                 key={type.id}
+                                 width={32}
+                                 height={32}
+                                 url={type.icon?.url}
+                                 alt={info.row.original.name ?? ""}
+                                 className="size-4 object-contain"
+                              />
+                           ))}
+                        </div>
+                     )}
+                  </div>
+                  {info.row.original?.highlightCards?.length &&
+                  info.row.original?.highlightCards?.length > 0 ? (
+                     <div className="inline-flex mx-auto -space-x-8">
+                        {info.row.original?.highlightCards?.map(
+                           (card) =>
+                              card.icon?.url && (
+                                 <Tooltip placement="right-start" key={card.id}>
+                                    <TooltipTrigger
+                                       className="shadow-sm shadow-1 z-10"
+                                       key={card.id}
+                                    >
+                                       <Image
+                                          url={card.icon?.url}
+                                          alt={card.name ?? ""}
+                                          className="w-12 object-contain"
+                                          width={200}
+                                          height={280}
+                                       />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                       <Image
+                                          url={card.icon?.url}
+                                          alt={card.name ?? ""}
+                                          width={367}
+                                          height={512}
+                                          className="w-full object-contain"
+                                       />
+                                    </TooltipContent>
+                                 </Tooltip>
+                              ),
+                        )}
+                     </div>
+                  ) : (
+                     <Image
+                        url={
+                           "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                        }
+                        className="w-12 mx-auto object-contain"
+                        width={200}
+                        height={280}
+                     />
+                  )}
+               </div>
             </Link>
          );
       },
@@ -301,6 +388,9 @@ const DECKS = gql`
             slug
             icon {
                url
+            }
+            archetype {
+               name
             }
             highlightCards {
                id
