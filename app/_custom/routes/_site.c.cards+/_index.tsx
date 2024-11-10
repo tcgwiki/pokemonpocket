@@ -62,6 +62,7 @@ export const cardGridView = columnHelper.accessor("name", {
             {info.getValue()}
          </div>
          <Image
+            loading="lazy"
             className="object-contain"
             width={400}
             url={
@@ -99,6 +100,7 @@ export const cardColumns = [
                className="flex items-center gap-3 group py-0.5"
             >
                <Image
+                  loading="lazy"
                   className="w-9 object-contain"
                   width={100}
                   url={
@@ -113,6 +115,7 @@ export const cardColumns = [
                   <div className="truncate">{info.getValue()}</div>
                   {info.row.original.pokemonType?.icon?.url ? (
                      <Image
+                        loading="lazy"
                         className="size-4 object-contain"
                         width={40}
                         height={40}
@@ -138,6 +141,7 @@ export const cardColumns = [
       cell: (info) => {
          return info.getValue()?.icon?.url ? (
             <Image
+               loading="lazy"
                className="h-6"
                height={40}
                url={info.getValue()?.icon?.url}
@@ -155,6 +159,7 @@ export const cardColumns = [
       cell: (info) => {
          return info.getValue()?.icon?.url ? (
             <Image
+               loading="lazy"
                className="size-4"
                width={40}
                height={40}
