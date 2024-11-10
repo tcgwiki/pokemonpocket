@@ -30,7 +30,7 @@ import { z } from "zod";
 import { zx } from "zodix";
 import { isAdding } from "~/utils/form";
 import clsx from "clsx";
-import { DialogTitle } from "@headlessui/react";
+import { DialogTitle, Label } from "@headlessui/react";
 import {
    Disclosure,
    DisclosureButton,
@@ -40,6 +40,7 @@ import { Badge } from "~/components/Badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 import ListTableContainer from "~/routes/_site+/c_+/_components/ListTableContainer";
 import qs from "qs";
+import { Switch, SwitchField } from "~/components/Switch";
 
 type CollectionData = {
    userCards: {
@@ -322,7 +323,7 @@ export async function loader({
    return json({
       userCards: cardsList,
       user,
-      groupedCards: cleanedGroupedCards,
+      groupedCards: cleanedGroupedCards as ExpansionViewProps["groupedCards"],
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
@@ -349,47 +350,69 @@ export default function CollectionTracker() {
       cardTypeStats,
    } = useLoaderData<typeof loader>();
 
+   const [isSetView, setIsSetView] = useState(false);
+
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
-         <div className="pt-4 desktop:flex items-center gap-3 border-b pb-3 border-color-sub">
-            <div
-               className="border border-zinc-200 shadow-sm bg-zinc-50 divide-y divide-color-sub tablet:min-w-48 desktop:max-w-48å
+         <div className="pt-4 desktop:flex items-start gap-3 border-b pb-3 border-color-sub">
+            <div>
+               <div
+                  className="border border-zinc-200 shadow-sm bg-zinc-50 divide-y divide-color-sub tablet:min-w-48 desktop:max-w-48å
                   shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg flex-none max-desktop:mb-3"
-            >
-               <div className="!text-xs flex items-center justify-between gap-2 p-2">
-                  <span className="font-bold">Unique Owned</span>
-                  <div className="flex items-center gap-0.5">
-                     <span className="font-bold">{totalOwnedCards}</span>
-                     <span className="text-zinc-500">/</span>
-                     <span className="font-bold text-1">
-                        {userCards.length}
-                     </span>
+               >
+                  <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                     <span className="font-bold">Unique Owned</span>
+                     <div className="flex items-center gap-0.5">
+                        <span className="font-bold">{totalOwnedCards}</span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="font-bold text-1">
+                           {userCards.length}
+                        </span>
+                     </div>
+                  </div>
+                  <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                     <span className="font-bold">Pokémon</span>
+                     <div className="flex items-center gap-0.5">
+                        <span className="font-bold">
+                           {cardTypeStats.pokemonOwned}
+                        </span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="font-bold text-1">
+                           {cardTypeStats.pokemonTotal}
+                        </span>
+                     </div>
+                  </div>
+                  <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                     <span className="font-bold">Trainer</span>
+                     <div className="flex items-center gap-0.5">
+                        <span className="font-bold">
+                           {cardTypeStats.trainerOwned}
+                        </span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="font-bold text-1">
+                           {cardTypeStats.trainerTotal}
+                        </span>
+                     </div>
                   </div>
                </div>
-               <div className="!text-xs flex items-center justify-between gap-2 p-2">
-                  <span className="font-bold">Pokémon</span>
-                  <div className="flex items-center gap-0.5">
-                     <span className="font-bold">
-                        {cardTypeStats.pokemonOwned}
-                     </span>
-                     <span className="text-zinc-500">/</span>
-                     <span className="font-bold text-1">
-                        {cardTypeStats.pokemonTotal}
-                     </span>
-                  </div>
-               </div>
-               <div className="!text-xs flex items-center justify-between gap-2 p-2">
-                  <span className="font-bold">Trainer</span>
-                  <div className="flex items-center gap-0.5">
-                     <span className="font-bold">
-                        {cardTypeStats.trainerOwned}
-                     </span>
-                     <span className="text-zinc-500">/</span>
-                     <span className="font-bold text-1">
-                        {cardTypeStats.trainerTotal}
-                     </span>
-                  </div>
-               </div>
+               <SwitchField className="max-desktop:mb-3 mt-2.5 border border-blue-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg pl-2.5 p-2 bg-blue-50 shadow-sm shadow-1">
+                  <Label className="!text-xs font-bold flex items-center gap-1.5">
+                     Expansion View
+                     <Tooltip>
+                        <TooltipTrigger>
+                           <Icon name="info" size={14} className="text-1" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           In-game layout, grouped by expansion.
+                        </TooltipContent>
+                     </Tooltip>
+                  </Label>
+                  <Switch
+                     color="blue"
+                     checked={isSetView}
+                     onChange={setIsSetView}
+                  />
+               </SwitchField>
             </div>
             <div className="flex-grow">
                <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full pb-2">
@@ -453,162 +476,298 @@ export default function CollectionTracker() {
          </div>
          {/* @ts-ignore */}
          <ListTableContainer filters={cardCollectionFilters}>
-            {Object.entries(groupedCards).map(
-               ([expansionName, expansionData]) => (
-                  <div className="mb-2.5">
-                     <Disclosure defaultOpen={true} key={expansionName}>
-                        {({ open: expansionOpen }) => (
-                           <>
-                              <DisclosureButton
-                                 className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
-                                 items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
-                              >
-                                 {expansionData.expansionLogo && (
-                                    <Image
-                                       className="w-16"
-                                       width={160}
-                                       url={expansionData.expansionLogo}
-                                    />
-                                 )}
-                                 <div className="flex-grow text-left">
-                                    <div className="font-bold text-base font-header capitalize">
-                                       {expansionData.expansionName.replace(
-                                          /-/g,
-                                          " ",
-                                       )}
-                                    </div>
-                                    <Badge className="!text-xs flex items-center !gap-0.5">
-                                       <span className="font-bold">
-                                          {expansionData.ownedCards}
-                                       </span>
-                                       <span className="text-zinc-500">/</span>
-                                       <span className="font-bold text-1">
-                                          {expansionData.totalCards}
-                                       </span>
-                                    </Badge>
-                                 </div>
-                                 <div
-                                    className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                              shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
-                                 >
-                                    <Icon
-                                       name="chevron-down"
-                                       className={clsx(
-                                          expansionOpen ? "rotate-180" : "",
-                                          "transform transition duration-300 ease-in-out",
-                                       )}
-                                       size={20}
-                                    />
-                                 </div>
-                              </DisclosureButton>
-                              <DisclosurePanel>
-                                 {Object.entries(expansionData.packs).map(
-                                    ([packName, packData]) => (
-                                       <div className="mb-3 pl-3 border-l-2 border-dotted border-zinc-300 dark:border-zinc-600">
-                                          <Disclosure
-                                             defaultOpen={true}
-                                             key={packName}
-                                          >
-                                             {({ open: packOpen }) => (
-                                                <>
-                                                   <DisclosureButton
-                                                      className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
-                                                      flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
-                                                   >
-                                                      {packData.icon && (
-                                                         <Image
-                                                            className="h-12"
-                                                            height={160}
-                                                            url={packData.icon}
-                                                         />
-                                                      )}
-                                                      <div className="flex-grow text-left">
-                                                         <div className="font-bold text-sm font-header">
-                                                            {packName}
-                                                         </div>
-                                                         <Badge className="!text-xs flex items-center !gap-0.5">
-                                                            <span className="font-bold">
-                                                               {
-                                                                  packData.ownedCards
-                                                               }
-                                                            </span>
-                                                            <span className="text-zinc-500">
-                                                               /
-                                                            </span>
-                                                            <span className="font-bold text-1">
-                                                               {
-                                                                  packData.totalCards
-                                                               }
-                                                            </span>
-                                                         </Badge>
-                                                      </div>
-                                                      <div
-                                                         className="flex size-8 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                                                         shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
-                                                      >
-                                                         <Icon
-                                                            name="chevron-down"
-                                                            className={clsx(
-                                                               packOpen
-                                                                  ? "rotate-180"
-                                                                  : "",
-                                                               "transform transition duration-300 ease-in-out",
-                                                            )}
-                                                            size={16}
-                                                         />
-                                                      </div>
-                                                   </DisclosureButton>
-                                                   <DisclosurePanel
-                                                      contentEditable={false}
-                                                      unmount={false}
-                                                   >
-                                                      <ListTable
-                                                         gridView={gridView}
-                                                         columnViewability={{
-                                                            pokemonType: false,
-                                                            isEX: false,
-                                                            cardType: false,
-                                                            rarity: false,
-                                                            isOwned: false,
-                                                            expansion: false,
-                                                         }}
-                                                         gridCellClassNames="flex items-center justify-center"
-                                                         gridContainerClassNames="grid-cols-2 tablet:grid-cols-6 grid gap-3"
-                                                         defaultViewType="grid"
-                                                         data={{
-                                                            listData: {
-                                                               docs: packData.cards,
-                                                            },
-                                                         }}
-                                                         columns={columns}
-                                                         filters={
-                                                            cardCollectionFilters
-                                                         }
-                                                         pager={
-                                                            packData.cards
-                                                               .length > 50
-                                                               ? true
-                                                               : false
-                                                         }
-                                                         stickyFooter={true}
-                                                      />
-                                                   </DisclosurePanel>
-                                                </>
-                                             )}
-                                          </Disclosure>
-                                       </div>
-                                    ),
-                                 )}
-                              </DisclosurePanel>
-                           </>
-                        )}
-                     </Disclosure>
-                  </div>
-               ),
+            {isSetView ? (
+               <SetView
+                  cards={
+                     userCards as Array<
+                        Card & { user: string; count: number; isOwned: boolean }
+                     >
+                  }
+               />
+            ) : (
+               <ExpansionView groupedCards={groupedCards} />
             )}
          </ListTableContainer>
       </div>
    );
+}
+
+function SetView({
+   cards,
+}: {
+   cards: Array<Card & { user: string; count: number; isOwned: boolean }>;
+}) {
+   // Group cards by expansion and sort by setNum
+   const groupedBySet = cards.reduce(
+      (acc, card) => {
+         const expansionName = card.expansion?.slug || "Unknown Expansion";
+
+         if (!acc[expansionName]) {
+            acc[expansionName] = {
+               name: expansionName,
+               logo: card.expansion?.logo?.url ?? "",
+               cards: [],
+            };
+         }
+
+         acc[expansionName]!.cards.push(card);
+         return acc;
+      },
+      {} as Record<
+         string,
+         { name: string; logo?: string; cards: typeof cards }
+      >,
+   );
+
+   // Sort cards within each expansion by setNum
+   Object.values(groupedBySet).forEach((set) => {
+      set.cards.sort((a, b) => {
+         const aNum = parseInt(a.setNum?.toString() || "0");
+         const bNum = parseInt(b.setNum?.toString() || "0");
+         return aNum - bNum;
+      });
+   });
+
+   return (
+      <div className="space-y-4">
+         {Object.entries(groupedBySet).map(([expansionName, set]) => (
+            <Disclosure defaultOpen={true} key={expansionName}>
+               {({ open }) => (
+                  <>
+                     <DisclosureButton
+                        className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
+                     items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
+                     >
+                        {set.logo && (
+                           <Image className="w-16" width={160} url={set.logo} />
+                        )}
+                        <div className="flex-grow text-left">
+                           <div className="font-bold text-base font-header capitalize">
+                              {set.name.replace(/-/g, " ")}
+                           </div>
+                           <Badge className="!text-xs flex items-center !gap-0.5">
+                              <span className="font-bold">
+                                 {
+                                    set.cards.filter((card) => card.isOwned)
+                                       .length
+                                 }
+                              </span>
+                              <span className="text-zinc-500">/</span>
+                              <span className="font-bold text-1">
+                                 {set.cards.length}
+                              </span>
+                           </Badge>
+                        </div>
+                        <div
+                           className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                        shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                        >
+                           <Icon
+                              name="chevron-down"
+                              className={clsx(
+                                 open ? "rotate-180" : "",
+                                 "transform transition duration-300 ease-in-out",
+                              )}
+                              size={20}
+                           />
+                        </div>
+                     </DisclosureButton>
+                     <DisclosurePanel>
+                        <ListTable
+                           gridView={gridView}
+                           columnViewability={{
+                              pokemonType: false,
+                              isEX: false,
+                              cardType: false,
+                              rarity: false,
+                              isOwned: false,
+                              expansion: false,
+                           }}
+                           gridCellClassNames="flex items-center justify-center"
+                           gridContainerClassNames="grid-cols-3 tablet:grid-cols-5 grid gap-3"
+                           defaultViewType="grid"
+                           data={{
+                              listData: {
+                                 docs: set.cards,
+                              },
+                           }}
+                           pageSize={set.cards.length}
+                           columns={columns}
+                           filters={cardCollectionFilters}
+                           pager={false}
+                           stickyFooter={true}
+                        />
+                     </DisclosurePanel>
+                  </>
+               )}
+            </Disclosure>
+         ))}
+      </div>
+   );
+}
+
+type ExpansionViewProps = {
+   groupedCards: Record<
+      string,
+      {
+         expansionName: string;
+         expansionIcon?: string;
+         expansionLogo?: string;
+         packs: Record<
+            string,
+            {
+               id: string;
+               name: string;
+               icon?: string;
+               cards: Array<
+                  Card & { user: string; count: number; isOwned: boolean }
+               >;
+               totalCards: number;
+               ownedCards: number;
+            }
+         >;
+         totalCards: number;
+         ownedCards: number;
+      }
+   >;
+};
+
+function ExpansionView({ groupedCards }: ExpansionViewProps) {
+   return Object.entries(groupedCards).map(([expansionName, expansionData]) => (
+      <div className="mb-2.5" key={expansionName}>
+         <Disclosure defaultOpen={true}>
+            {({ open: expansionOpen }) => (
+               <>
+                  <DisclosureButton
+                     className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
+                     items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
+                  >
+                     {expansionData.expansionLogo && (
+                        <Image
+                           className="w-16"
+                           width={160}
+                           url={expansionData.expansionLogo}
+                        />
+                     )}
+                     <div className="flex-grow text-left">
+                        <div className="font-bold text-base font-header capitalize">
+                           {expansionData.expansionName.replace(/-/g, " ")}
+                        </div>
+                        <Badge className="!text-xs flex items-center !gap-0.5">
+                           <span className="font-bold">
+                              {expansionData.ownedCards}
+                           </span>
+                           <span className="text-zinc-500">/</span>
+                           <span className="font-bold text-1">
+                              {expansionData.totalCards}
+                           </span>
+                        </Badge>
+                     </div>
+                     <div
+                        className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                        shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                     >
+                        <Icon
+                           name="chevron-down"
+                           className={clsx(
+                              expansionOpen ? "rotate-180" : "",
+                              "transform transition duration-300 ease-in-out",
+                           )}
+                           size={20}
+                        />
+                     </div>
+                  </DisclosureButton>
+                  <DisclosurePanel>
+                     {Object.entries(expansionData.packs).map(
+                        ([packName, packData]) => (
+                           <div
+                              key={packName}
+                              className="mb-3 pl-3 border-l-2 border-dotted border-zinc-300 dark:border-zinc-600"
+                           >
+                              <Disclosure defaultOpen={true}>
+                                 {({ open: packOpen }) => (
+                                    <>
+                                       <DisclosureButton
+                                          className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
+                                       flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
+                                       >
+                                          {packData.icon && (
+                                             <Image
+                                                className="h-12"
+                                                height={160}
+                                                url={packData.icon}
+                                             />
+                                          )}
+                                          <div className="flex-grow text-left">
+                                             <div className="font-bold text-sm font-header">
+                                                {packName}
+                                             </div>
+                                             <Badge className="!text-xs flex items-center !gap-0.5">
+                                                <span className="font-bold">
+                                                   {packData.ownedCards}
+                                                </span>
+                                                <span className="text-zinc-500">
+                                                   /
+                                                </span>
+                                                <span className="font-bold text-1">
+                                                   {packData.totalCards}
+                                                </span>
+                                             </Badge>
+                                          </div>
+                                          <div
+                                             className="flex size-8 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                                          shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                                          >
+                                             <Icon
+                                                name="chevron-down"
+                                                className={clsx(
+                                                   packOpen ? "rotate-180" : "",
+                                                   "transform transition duration-300 ease-in-out",
+                                                )}
+                                                size={16}
+                                             />
+                                          </div>
+                                       </DisclosureButton>
+                                       <DisclosurePanel
+                                          contentEditable={false}
+                                          unmount={false}
+                                       >
+                                          <ListTable
+                                             gridView={gridView}
+                                             columnViewability={{
+                                                pokemonType: false,
+                                                isEX: false,
+                                                cardType: false,
+                                                rarity: false,
+                                                isOwned: false,
+                                                expansion: false,
+                                             }}
+                                             gridCellClassNames="flex items-center justify-center"
+                                             gridContainerClassNames="grid-cols-2 tablet:grid-cols-6 grid gap-3"
+                                             defaultViewType="grid"
+                                             data={{
+                                                listData: {
+                                                   docs: packData.cards,
+                                                },
+                                             }}
+                                             columns={columns}
+                                             filters={cardCollectionFilters}
+                                             pager={packData.cards.length > 50}
+                                             stickyFooter={true}
+                                          />
+                                       </DisclosurePanel>
+                                    </>
+                                 )}
+                              </Disclosure>
+                           </div>
+                        ),
+                     )}
+                  </DisclosurePanel>
+               </>
+            )}
+         </Disclosure>
+      </div>
+   ));
 }
 
 const columnHelper = createColumnHelper<
@@ -686,7 +845,7 @@ const gridView = columnHelper.accessor("name", {
                                  info.row.original?.count === 0
                                     ? "bg-zinc-500 border-transparent"
                                     : "border-red-700 hover:bg-red-600 hover:border-red-600 bg-red-500",
-                                 "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-10  flex items-center justify-center group ",
+                                 "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-8 tablet:size-10  flex items-center justify-center group ",
                               )}
                               onClick={() => {
                                  if (info.row.original?.count === 0) return;
@@ -723,14 +882,15 @@ const gridView = columnHelper.accessor("name", {
                                  info.row.original?.count === 0
                                     ? "tablet:opacity-0"
                                     : "tablet:opacity-100",
-                                 "shadow shadow-1 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-9 flex items-center justify-center text-sm font-mono font-bold",
+                                 "shadow shadow-1 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-8 tablet:size-9 flex items-center justify-center text-sm font-mono font-bold",
                               )}
                            >
                               {info.row.original?.count}
                            </span>
                            <button
                               disabled={isDisabled}
-                              className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                              className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full 
+                              size-8 tablet:size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
                               onClick={() => {
                                  fetcher.submit(
                                     {
@@ -1122,7 +1282,11 @@ const cardCollectionFilters: {
    {
       id: "isOwned",
       label: "Owned",
-      options: [{ label: "Show owned only", value: "true" }],
+      cols: 2,
+      options: [
+         { label: "Show owned", value: "true" },
+         { label: "Show unowned", value: "false" },
+      ],
    },
    {
       id: "cardType",
@@ -1261,6 +1425,7 @@ const QUERY = gql`
             slug
             isEX
             hp
+            setNum
             packs {
                id
                name
@@ -1314,6 +1479,7 @@ const QUERY = gql`
                slug
                isEX
                hp
+               setNum
                packs {
                   id
                   name
