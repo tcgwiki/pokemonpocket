@@ -817,6 +817,7 @@ const gridView = columnHelper.accessor("name", {
                   {/* @ts-ignore */}
                   <ShinyCard supertype={cardType} rarity={rarity}>
                      <Image
+                        loading="lazy"
                         className="object-contain"
                         width={367}
                         height={512}
@@ -929,6 +930,7 @@ const gridView = columnHelper.accessor("name", {
                   onClick={() => setIsOpen(true)}
                >
                   <Image
+                     loading="lazy"
                      className={clsx(
                         "object-contain",
                         info.row.original?.isOwned
@@ -968,7 +970,9 @@ const columns = [
                   className="flex items-center gap-3 group py-0.5"
                >
                   <Image
+                     loading="lazy"
                      className="w-9 object-contain"
+                     height={140}
                      width={100}
                      url={
                         info.row.original.icon?.url ??

@@ -751,6 +751,7 @@ const DeckCell = memo(function DeckCell({
                {/* @ts-ignore */}
                <ShinyCard supertype={cardType} rarity={rarity}>
                   <Image
+                     loading="lazy"
                      className="object-contain"
                      width={367}
                      height={512}
@@ -759,7 +760,6 @@ const DeckCell = memo(function DeckCell({
                         "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                      }
                      alt={card?.name ?? "Card Image"}
-                     loading="lazy"
                   />
                </ShinyCard>
                <Button href={`/c/cards/${card?.slug}`}>
@@ -780,6 +780,7 @@ const DeckCell = memo(function DeckCell({
          >
             <div className="sr-only">{card?.name}</div>
             <Image
+               loading="lazy"
                className="object-contain"
                width={367}
                height={512}
@@ -788,7 +789,6 @@ const DeckCell = memo(function DeckCell({
                   "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                }
                alt={card?.name ?? "Card Image"}
-               loading="lazy"
             />
             <div
                className="absolute bottom-1 right-1 text-xs text-white font-bold
@@ -812,13 +812,14 @@ export const deckBuilderTrayColumns = [
                className="flex items-center gap-3 group py-0.5"
             >
                <Image
+                  loading="lazy"
                   className="w-9 object-contain"
+                  height={140}
                   width={100}
                   url={
                      info.row.original?.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
-                  loading="lazy"
                />
                <span
                   className="space-y-1.5 font-semibold group-hover:underline

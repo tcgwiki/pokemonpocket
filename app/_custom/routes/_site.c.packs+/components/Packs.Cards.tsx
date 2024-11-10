@@ -74,7 +74,9 @@ export const packGridView = columnHelper.accessor("name", {
          <div className="sr-only">{info.getValue()}</div>
          <Image
             className="object-contain"
-            width={400}
+            loading="lazy"
+            width={367}
+            height={512}
             url={
                info.row.original?.icon?.url ??
                "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
@@ -100,8 +102,10 @@ export const packCardColumns = [
                className="flex items-center gap-3 group py-0.5"
             >
                <Image
+                  loading="lazy"
                   className="w-9 object-contain"
                   width={100}
+                  height={140}
                   url={
                      info.row.original.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"

@@ -64,7 +64,8 @@ export const cardGridView = columnHelper.accessor("name", {
          <Image
             loading="lazy"
             className="object-contain"
-            width={400}
+            width={367}
+            height={512}
             url={
                info.row.original.icon?.url ??
                "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
@@ -78,6 +79,7 @@ export const cardGridView = columnHelper.accessor("name", {
             />
             {info.row.original.pokemonType?.icon?.url ? (
                <Image
+                  loading="lazy"
                   className="size-4 object-contain"
                   width={40}
                   height={40}
@@ -102,6 +104,7 @@ export const cardColumns = [
                <Image
                   loading="lazy"
                   className="w-9 object-contain"
+                  height={140}
                   width={100}
                   url={
                      info.row.original.icon?.url ??
