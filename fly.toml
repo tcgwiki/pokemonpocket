@@ -40,5 +40,5 @@ handlers = ["tls", "http"]
 
 [[vm]]
 cpu_kind = "shared"
-cpus = 2
+cpus = 4
 memory_mb = 1024
