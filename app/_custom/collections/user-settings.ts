@@ -17,9 +17,17 @@ export const UserSettings: CollectionConfig = {
    },
    fields: [
       {
+         name: "id",
+         type: "text",
+      },
+      {
          name: "isCollectionPublic",
          type: "checkbox",
          defaultValue: false,
+      },
+      {
+         name: "friendId",
+         type: "text",
       },
       {
          name: "user",
