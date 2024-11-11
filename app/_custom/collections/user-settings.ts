@@ -30,6 +30,11 @@ export const UserSettings: CollectionConfig = {
          type: "text",
       },
       {
+         name: "username",
+         type: "text",
+         required: true,
+      },
+      {
          name: "user",
          type: "text",
          index: true,
