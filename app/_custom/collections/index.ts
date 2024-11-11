@@ -17,7 +17,7 @@ import { RentalDecks } from "./rental-decks";
 import { SoloBattles } from "./solo-battles";
 import { Types } from "./types";
 import { UserCards } from "./user-cards";
-
+import { UserSettings } from "./user-settings";
 export const CustomCollections = [
    Archetypes,
    UserCards,
@@ -38,4 +38,5 @@ export const CustomCollections = [
    RentalDecks,
    SoloBattles,
    Types,
+   UserSettings,
 ];
