@@ -368,7 +368,7 @@ export async function loader({
       cardsByRarity,
       cardTypeStats,
       userSettings,
-      isOwnCollection: userSettings?.id === user?.id,
+      isOwnCollection: user && userSettings?.id === user?.id,
    });
 }
 
@@ -414,6 +414,13 @@ export default function CollectionTracker() {
       fetcher,
       "toggleCollectionPublic",
    );
+
+   const showFriendIdSaveButton =
+      (hasChanges && isOwnCollection) ||
+      (hasChanges && !userSettings?.user && user);
+
+   const showPublicToggle =
+      isOwnCollection || (!userSettings?.isCollectionPublic && user);
 
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
@@ -572,9 +579,9 @@ export default function CollectionTracker() {
                            <input
                               type="hidden"
                               name="userId"
-                              value={user?.id ?? ""}
+                              value={user?.id}
                            />
-                           {hasChanges && user && (
+                           {showFriendIdSaveButton && (
                               <Button
                                  color="blue"
                                  type="submit"
@@ -639,7 +646,7 @@ export default function CollectionTracker() {
                               <Icon name="copy" size={14} />
                            </button>
                         )}
-                        {isOwnCollection && user && (
+                        {showPublicToggle && (
                            <Tooltip placement="left">
                               <TooltipTrigger asChild>
                                  <Switch
@@ -647,10 +654,7 @@ export default function CollectionTracker() {
                                     checked={
                                        userSettings?.isCollectionPublic ?? false
                                     }
-                                    disabled={
-                                       !isOwnCollection ||
-                                       isCollectionPublicToggling
-                                    }
+                                    disabled={isCollectionPublicToggling}
                                     className="!absolute top-1/2 -translate-y-1/2 right-2"
                                     onChange={() => {
                                        fetcher.submit(
@@ -1333,9 +1337,11 @@ export const action: ActionFunction = async ({
                friendId: z.string(),
                userId: z.string(),
             });
+
             if (user.id !== userId) {
-               return jsonWithError(null, "You cannot update your friend id");
+               return jsonWithError(null, "You cannot update this friend id");
             }
+
             const userData = await authRestFetcher({
                isAuthOverride: true,
                method: "GET",
@@ -1343,29 +1349,37 @@ export const action: ActionFunction = async ({
             });
 
             if (userData?.errors?.length > 0) {
-               await authRestFetcher({
+               const newUserSettings = await authRestFetcher({
                   isAuthOverride: true,
                   method: "POST",
                   path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings`,
                   body: {
-                     id: userId,
-                     user: userId,
+                     id: user.id,
+                     user: user.id,
                      isCollectionPublic: false,
                      username: user.username,
                      friendId,
                   },
                });
-               return jsonWithSuccess(null, "Friend Id updated");
+
+               if (newUserSettings.doc.user === user.id) {
+                  return jsonWithSuccess(null, "Friend Id updated");
+               }
+            }
+
+            if (userData.user !== user.id) {
+               return jsonWithError(null, "You cannot update your friend id");
             }
 
             const updatedUserSettings = await authRestFetcher({
                isAuthOverride: true,
                method: "PATCH",
-               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}`,
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${user.id}`,
                body: {
                   friendId,
                },
             });
+
             if (updatedUserSettings) {
                return jsonWithSuccess(null, "Friend Id updated");
             }
@@ -1380,40 +1394,52 @@ export const action: ActionFunction = async ({
             });
 
             if (user.id !== userId) {
-               return jsonWithError(null, "You cannot update this deck");
+               return jsonWithError(null, "You cannot update this collection");
             }
+
             const userData = await authRestFetcher({
                isAuthOverride: true,
                method: "GET",
                path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}?depth=0`,
             });
 
-            if (!userData) {
-               await authRestFetcher({
+            if (userData?.errors?.length > 0) {
+               const newUserSettings = await authRestFetcher({
                   isAuthOverride: true,
                   method: "POST",
                   path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings`,
                   body: {
-                     id: userId,
-                     user: userId,
+                     id: user.id,
+                     user: user.id,
                      isCollectionPublic: true,
                      username: user.username,
                   },
                });
-               return jsonWithSuccess(null, "Collection is now public");
+               if (newUserSettings.doc.user === user.id) {
+                  return jsonWithSuccess(null, "Collection is now public");
+               }
+            }
+
+            if (userData.user !== user.id) {
+               return jsonWithError(null, "You cannot update your collection");
             }
 
             const updatedCollection = await authRestFetcher({
                isAuthOverride: true,
                method: "PATCH",
-               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}`,
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${user.id}`,
                body: {
                   isCollectionPublic: !userData.isCollectionPublic,
                },
             });
 
             if (updatedCollection) {
-               return jsonWithSuccess(null, "Collection is now private");
+               return jsonWithSuccess(
+                  null,
+                  userData.isCollectionPublic
+                     ? "Collection is now private"
+                     : "Collection is now public",
+               );
             }
          } catch (error) {
             return jsonWithError(null, "Something went wrong...");
