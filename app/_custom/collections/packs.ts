@@ -42,6 +42,11 @@ export const Packs: CollectionConfig = {
          relationTo: "images",
       },
       {
+         name: "logo",
+         type: "upload",
+         relationTo: "images",
+      },
+      {
          name: "expansion",
          type: "relationship",
          relationTo: "expansions",
