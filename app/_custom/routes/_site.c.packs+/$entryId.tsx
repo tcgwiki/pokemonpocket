@@ -58,6 +58,16 @@ const PACK_QUERY = gql`
             logo {
                url
             }
+            packs {
+               slug
+               name
+               icon {
+                  url
+               }
+               logo {
+                  url
+               }
+            }
          }
          cards {
             slot

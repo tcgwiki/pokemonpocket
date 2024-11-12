@@ -110,13 +110,15 @@ export function CardsMain({ data }: EntryCardData) {
                   <div className="p-3 justify-between flex items-center gap-2">
                      <span className="font-semibold text-sm text-1">Type</span>
                      <span className="text-sm font-semibold flex items-center gap-2">
-                        <span>{card.pokemonType?.name}</span>
                         <Image
                            height={40}
                            width={40}
                            className="size-4"
                            url={card.pokemonType?.icon?.url}
                         />
+                        <span className="sr-only">
+                           {card.pokemonType?.name}
+                        </span>
                      </span>
                   </div>
                ) : undefined}
@@ -127,13 +129,16 @@ export function CardsMain({ data }: EntryCardData) {
                         Weakness
                      </span>
                      <span className="text-sm font-semibold flex items-center gap-2">
-                        <span>{card.weaknessType?.name}</span>
                         <Image
                            height={40}
                            width={40}
                            className="size-4"
                            url={card.weaknessType?.icon?.url}
                         />
+                        <span className="sr-only">
+                           {card.weaknessType?.name}
+                        </span>
+                        <span className="text-sm text-1">+20</span>
                      </span>
                   </div>
                ) : undefined}

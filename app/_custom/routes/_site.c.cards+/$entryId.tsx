@@ -213,6 +213,7 @@ const CARD_QUERY = gql`
                   url
                }
             }
+            pool
             slot
             percent
          }
