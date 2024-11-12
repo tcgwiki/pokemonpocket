@@ -12,6 +12,7 @@ import { CardsMain } from "./components/Cards.Main";
 import { CardsRelated } from "./components/Cards.Related";
 import { gqlFetch } from "~/utils/fetchers.server";
 import { CardsDecks } from "./components/Cards.Decks";
+import { CardPacks } from "./components/Card.Packs";
 
 export { entryMeta as meta };
 
@@ -58,6 +59,7 @@ const SECTIONS = {
    main: CardsMain,
    related: CardsRelated,
    decks: CardsDecks,
+   packs: CardPacks,
 };
 
 export function useEntryLoaderData() {
@@ -143,6 +145,7 @@ const CARD_QUERY = gql`
          slug
          name
          hp
+         stage
          retreatCost
          cardType
          trainerType
@@ -152,6 +155,16 @@ const CARD_QUERY = gql`
          }
          illustrators {
             name
+         }
+         packs {
+            name
+            slug
+            icon {
+               url
+            }
+            logo {
+               url
+            }
          }
          movesInfo {
             damage
@@ -191,6 +204,17 @@ const CARD_QUERY = gql`
             icon {
                url
             }
+         }
+         packRates {
+            pack {
+               name
+               slug
+               icon {
+                  url
+               }
+            }
+            slot
+            percent
          }
          expansion {
             name

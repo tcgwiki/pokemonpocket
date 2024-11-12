@@ -5,6 +5,7 @@ import { TextLink } from "~/components/Text";
 
 import { ShinyCard } from "./ShinyCard";
 import type { EntryCardData } from "../$entryId";
+import { Link } from "~/components/Link";
 
 export const cardRarityEnum = {
    C: "common",
@@ -30,50 +31,72 @@ export function CardsMain({ data }: EntryCardData) {
 
    return (
       <div className="tablet:flex tablet:items-start tablet:gap-4">
-         <div
-            className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle"
-            style={{
-               viewTransitionName: card.slug ?? undefined,
-            }}
-         >
-            {/* @ts-ignore */}
-            <ShinyCard supertype={cardType} rarity={rarity}>
-               <Image
-                  width={367}
-                  height={512}
-                  url={
-                     card.icon?.url ??
-                     "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
-                  }
-                  alt={card.name ?? "Card Image"}
-               />
-            </ShinyCard>
+         <div className="rounded-lg max-w-72 object-contain flex-none mx-auto max-tablet:mb-4 align-middle">
+            <div
+               style={{
+                  viewTransitionName: card.slug ?? undefined,
+               }}
+            >
+               {/* @ts-ignore */}
+               <ShinyCard supertype={cardType} rarity={rarity}>
+                  <Image
+                     width={367}
+                     height={512}
+                     url={
+                        card.icon?.url ??
+                        "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                     }
+                     alt={card.name ?? "Card Image"}
+                  />
+               </ShinyCard>
+            </div>
          </div>
          <section className="flex-grow">
+            <div
+               className="py-2 px-3 justify-between flex items-center gap-2 bg-2-sub 
+               rounded-lg shadow-sm shadow-1 border border-color-sub mb-3 overflow-hidden"
+            >
+               <Link href={`/c/expansions/${card.expansion?.slug}`}>
+                  <span className="sr-only">{card.expansion?.name}</span>
+                  {card.expansion?.logo?.url ? (
+                     <Image
+                        height={120}
+                        className="h-8"
+                        url={card.expansion?.logo?.url}
+                     />
+                  ) : (
+                     card.expansion?.name
+                  )}
+               </Link>
+               <div className="flex items-center gap-8">
+                  {card.packs?.length && card.packs?.length > 0
+                     ? card.packs.map((pack) => (
+                          <Link
+                             className="relative"
+                             href={`/c/packs/${pack.slug}`}
+                             key={pack.slug}
+                          >
+                             <Image
+                                height={120}
+                                className="h-10 object-contain z-10 relative"
+                                url={pack.logo?.url}
+                             />
+                             <Image
+                                height={120}
+                                className="h-20 absolute -top-5 -left-6 z-0 object-contain -rotate-[10deg]"
+                                url={pack.icon?.url}
+                             />
+                          </Link>
+                       ))
+                     : undefined}
+               </div>
+            </div>
             <div
                className="border border-color-sub divide-y divide-color-sub shadow-sm shadow-1 rounded-lg
                mb-3 [&>*:nth-of-type(odd)]:bg-zinc-50 dark:[&>*:nth-of-type(odd)]:bg-dark350 overflow-hidden"
             >
                <div className="p-3 justify-between flex items-center gap-2">
-                  <span className="font-semibold text-sm">Set</span>
-                  <TextLink
-                     href={`/c/expansions/${card.expansion?.slug}`}
-                     className="text-sm font-semibold flex items-center gap-2"
-                  >
-                     <span className="sr-only">{card.expansion?.name}</span>
-                     {card.expansion?.logo?.url ? (
-                        <Image
-                           height={40}
-                           className="h-7"
-                           url={card.expansion?.logo?.url}
-                        />
-                     ) : (
-                        card.expansion?.name
-                     )}
-                  </TextLink>
-               </div>
-               <div className="p-3 justify-between flex items-center gap-2">
-                  <span className="font-semibold text-sm">Rarity</span>
+                  <span className="font-semibold text-sm text-1">Rarity</span>
                   <span className="text-sm font-semibold flex items-center gap-2">
                      <span>{card.rarity?.name}</span>
                      <Image
@@ -85,7 +108,7 @@ export function CardsMain({ data }: EntryCardData) {
                </div>
                {card?.pokemonType ? (
                   <div className="p-3 justify-between flex items-center gap-2">
-                     <span className="font-semibold text-sm">Type</span>
+                     <span className="font-semibold text-sm text-1">Type</span>
                      <span className="text-sm font-semibold flex items-center gap-2">
                         <span>{card.pokemonType?.name}</span>
                         <Image
@@ -97,9 +120,12 @@ export function CardsMain({ data }: EntryCardData) {
                      </span>
                   </div>
                ) : undefined}
+
                {card?.weaknessType ? (
                   <div className="p-3 justify-between flex items-center gap-2">
-                     <span className="font-semibold text-sm">Weakness</span>
+                     <span className="font-semibold text-sm text-1">
+                        Weakness
+                     </span>
                      <span className="text-sm font-semibold flex items-center gap-2">
                         <span>{card.weaknessType?.name}</span>
                         <Image
@@ -113,15 +139,35 @@ export function CardsMain({ data }: EntryCardData) {
                ) : undefined}
                {card?.hp ? (
                   <div className="p-3 justify-between flex items-center gap-2">
-                     <span className="font-semibold text-sm">HP</span>
+                     <span className="font-semibold text-sm text-1">HP</span>
                      <span className="text-sm font-semibold">{card.hp}</span>
                   </div>
                ) : undefined}
                {card?.retreatCost ? (
                   <div className="p-3 justify-between flex items-center gap-2">
-                     <span className="font-semibold text-sm">Retreat Cost</span>
-                     <span className="text-sm font-semibold">
-                        {card.retreatCost}
+                     <span className="font-semibold text-sm text-1">
+                        Retreat Cost
+                     </span>
+                     <span className="text-sm font-semibold flex items-center gap-1">
+                        {Array.from({ length: card.retreatCost }).map(
+                           (_, index) => (
+                              <Image
+                                 key={index}
+                                 height={40}
+                                 width={40}
+                                 className="size-4"
+                                 url="https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Colorless.png"
+                              />
+                           ),
+                        )}
+                     </span>
+                  </div>
+               ) : undefined}
+               {card?.stage ? (
+                  <div className="p-3 justify-between flex items-center gap-2">
+                     <span className="font-semibold text-sm text-1">Stage</span>
+                     <span className="text-sm font-semibold flex items-center gap-2">
+                        <span>{card.stage}</span>
                      </span>
                   </div>
                ) : undefined}
@@ -207,6 +253,25 @@ export function CardsMain({ data }: EntryCardData) {
                   className="text-sm text-1 p-3 border border-color-sub rounded-lg bg-2-sub shadow-sm shadow-1 mt-3"
                />
             ) : undefined}
+            <div
+               className="p-3 justify-between flex items-center gap-2 bg-2-sub rounded-lg 
+               shadow-sm shadow-1 mt-3 border border-color-sub"
+            >
+               <span className="font-semibold text-sm text-1">
+                  Illustrators
+               </span>
+               <span className="text-sm font-semibold flex items-center gap-2">
+                  <span>
+                     {card.illustrators?.length && card.illustrators?.length > 0
+                        ? card.illustrators.map((illustrator) => (
+                             <span key={illustrator.id}>
+                                {illustrator.name}
+                             </span>
+                          ))
+                        : "Unknown"}
+                  </span>
+               </span>
+            </div>
          </section>
       </div>
    );
