@@ -98,10 +98,10 @@ export function CardsMain({ data }: EntryCardData) {
                <div className="p-3 justify-between flex items-center gap-2">
                   <span className="font-semibold text-sm text-1">Rarity</span>
                   <span className="text-sm font-semibold flex items-center gap-2">
-                     <span>{card.rarity?.name}</span>
+                     <span className="sr-only">{card.rarity?.name}</span>
                      <Image
                         height={40}
-                        className="h-5"
+                        className="h-6"
                         url={card.rarity?.icon?.url}
                      />
                   </span>

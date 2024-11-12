@@ -82,6 +82,7 @@ export default function EntryPage() {
       <>
          <Entry
             customComponents={SECTIONS}
+            //@ts-ignore
             customData={{ ...(entry?.data || {}), decks: decks?.docs }}
          />
          <Outlet />
@@ -95,10 +96,14 @@ const RELATED_DECKS_QUERY = gql`
          totalDocs
          docs {
             id
+            updatedAt
             name
             slug
             icon {
                url
+            }
+            archetype {
+               name
             }
             highlightCards {
                id

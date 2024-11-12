@@ -15,6 +15,8 @@ import { gql } from "graphql-request";
 
 import { Image } from "~/components/Image";
 
+import type { UserSetting } from "payload/generated-custom-types";
+
 import type { Card, User } from "payload/generated-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
@@ -41,6 +43,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/Tooltip";
 import ListTableContainer from "~/routes/_site+/c_+/_components/ListTableContainer";
 import qs from "qs";
 import { Switch, SwitchField } from "~/components/Switch";
+import { Input } from "~/components/Input";
+import { useRootLoaderData } from "~/utils/useSiteLoaderData";
+import { toast } from "sonner";
 
 type CollectionData = {
    userCards: {
@@ -60,8 +65,43 @@ type CollectionData = {
 
 export async function loader({
    request,
-   context: { user },
+   context: { user, payload },
 }: LoaderFunctionArgs) {
+   const userQuery = zx.parseQuerySafe(request, {
+      u: z.string().optional(),
+   });
+
+   const userId = userQuery.data?.u
+      ? (
+           await payload.find({
+              collection: "users",
+              where: {
+                 username: {
+                    equals: userQuery.data?.u,
+                 },
+              },
+              depth: 0,
+              user,
+           })
+        ).docs[0]?.id
+      : user?.id;
+
+   // Fetch target user details
+   const userSettings = userId
+      ? ((await authRestFetcher({
+           isAuthOverride: true,
+           method: "GET",
+           path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}?depth=0`,
+        })) as UserSetting & { errors: string[] })
+      : null;
+
+   if (
+      userSettings?.id !== user?.id &&
+      userSettings?.isCollectionPublic == false
+   ) {
+      throw new Error("This collection is private");
+   }
+
    const userCards = (await gqlFetch({
       isAuthOverride: true,
       isCustomDB: true,
@@ -69,7 +109,7 @@ export async function loader({
       query: QUERY,
       request,
       variables: {
-         userId: user?.id ?? "",
+         userId: userId ?? "",
       },
    })) as CollectionData["userCards"];
 
@@ -322,19 +362,25 @@ export async function loader({
 
    return json({
       userCards: cardsList,
-      user,
       groupedCards: cleanedGroupedCards as ExpansionViewProps["groupedCards"],
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
       cardTypeStats,
+      userSettings,
+      isOwnCollection: userSettings?.id === user?.id,
    });
 }
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+   const username = data?.userSettings?.username;
+   const titlePrefix = username ? `${username}'s ` : "";
+
    return [
       {
-         title: "Collection Tracker | Pokémon TCG Pocket - TCG Wiki",
+         title: username
+            ? `${titlePrefix}Collection | Pokémon TCG Pocket - TCG Wiki`
+            : "Collection Tracker | Pokémon TCG Pocket - TCG Wiki",
       },
    ];
 };
@@ -342,18 +388,46 @@ export const meta: MetaFunction = () => {
 export default function CollectionTracker() {
    const {
       userCards,
-      user,
       groupedCards,
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
       cardTypeStats,
+      userSettings,
+      isOwnCollection,
    } = useLoaderData<typeof loader>();
 
    const [isSetView, setIsSetView] = useState(false);
 
+   const fetcher = useFetcher();
+
+   const { user } = useRootLoaderData();
+
+   const [friendIdValue, setFriendIdValue] = useState(
+      userSettings?.friendId ?? "",
+   );
+   const hasChanges = friendIdValue !== userSettings?.friendId;
+
+   const isFreindIdSaving = isAdding(fetcher, "saveFriendId");
+
+   const isCollectionPublicToggling = isAdding(
+      fetcher,
+      "toggleCollectionPublic",
+   );
+
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
+         {userSettings?.username && !isOwnCollection && (
+            <div
+               className="py-3 px-4 mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg 
+            border border-gray-300 dark:border-gray-700"
+            >
+               <h1 className="font-bold">
+                  {userSettings?.username}'s Collection
+               </h1>
+            </div>
+         )}
+
          <div className="pt-4 desktop:flex items-start gap-3 border-b pb-3 border-color-sub">
             <div>
                <div
@@ -471,6 +545,133 @@ export default function CollectionTracker() {
                         </Tooltip>
                      ),
                   )}
+               </div>
+               <div
+                  className="mt-3 max-tablet:flex-col flex gap-5 tablet:gap-6 
+                  border-t border-dashed border-color-sub pt-4 pb-1"
+               >
+                  <div className="flex max-tablet:flex-col max-tablet:items-start items-center gap-2 tablet:gap-3">
+                     <div className="text-xs font-bold text-1 flex-none">
+                        Friend Id
+                     </div>
+                     <div className="w-full relative">
+                        <fetcher.Form method="POST">
+                           <Input
+                              name="friendId"
+                              type="text"
+                              className="!w-full tablet:min-w-60"
+                              placeholder="0000-0000-0000-0000"
+                              defaultValue={userSettings?.friendId ?? ""}
+                              onChange={(e) => setFriendIdValue(e.target.value)}
+                           />
+                           <input
+                              type="hidden"
+                              name="intent"
+                              value="saveFriendId"
+                           />
+                           <input
+                              type="hidden"
+                              name="userId"
+                              value={user?.id ?? ""}
+                           />
+                           {hasChanges && user && (
+                              <Button
+                                 color="blue"
+                                 type="submit"
+                                 className="!absolute w-10 !py-1 !text-xs right-2 tablet:right-1 top-1/2 -translate-y-1/2"
+                              >
+                                 {isFreindIdSaving ? "..." : "Save"}
+                              </Button>
+                           )}
+                        </fetcher.Form>
+                        {userSettings?.friendId && !hasChanges && (
+                           <button
+                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                              onClick={() => {
+                                 navigator.clipboard.writeText(
+                                    userSettings?.friendId ?? "",
+                                 );
+                                 toast.success(
+                                    "Friend Id copied to clipboard!",
+                                 );
+                              }}
+                           >
+                              <Icon name="copy" size={14} />
+                           </button>
+                        )}
+                     </div>
+                  </div>
+                  <div className="flex max-tablet:flex-col max-tablet:items-start items-center gap-2 tablet:gap-3 flex-grow">
+                     <div className="text-xs font-bold text-1 flex-none">
+                        Public Link
+                     </div>
+                     <div
+                        className="flex items-center py-3 tablet:py-2 p-2 gap-2 w-full flex-grow bg-zinc-50 border border-zinc-200 shadow-sm
+                      shadow-zinc-100 truncate dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg relative"
+                     >
+                        <Icon
+                           className="text-zinc-500 dark:text-zinc-400"
+                           name="link"
+                           size={14}
+                        />
+                        <span className="flex-none truncate text-sm">
+                           {`collection-tracker?u=${
+                              userSettings?.username ?? ""
+                           }`}
+                        </span>
+                        {userSettings?.isCollectionPublic && (
+                           <button
+                              className={clsx(
+                                 "absolute  top-1/2 -translate-y-1/2",
+                                 isOwnCollection
+                                    ? "right-16 tablet:right-14"
+                                    : "right-3",
+                              )}
+                              onClick={() => {
+                                 navigator.clipboard.writeText(
+                                    `https://pokemonpocket.tcg.wiki/collection-tracker?u=${
+                                       userSettings?.username ?? ""
+                                    }`,
+                                 );
+                                 toast.success("Link copied to clipboard!");
+                              }}
+                           >
+                              <Icon name="copy" size={14} />
+                           </button>
+                        )}
+                        {isOwnCollection && user && (
+                           <Tooltip placement="left">
+                              <TooltipTrigger asChild>
+                                 <Switch
+                                    color="green"
+                                    checked={
+                                       userSettings?.isCollectionPublic ?? false
+                                    }
+                                    disabled={
+                                       !isOwnCollection ||
+                                       isCollectionPublicToggling
+                                    }
+                                    className="!absolute top-1/2 -translate-y-1/2 right-2"
+                                    onChange={() => {
+                                       fetcher.submit(
+                                          {
+                                             userId: user?.id ?? "",
+                                             intent: "toggleCollectionPublic",
+                                          },
+                                          {
+                                             method: "POST",
+                                          },
+                                       );
+                                    }}
+                                 />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                 Toggle collection visibility
+                              </TooltipContent>
+                           </Tooltip>
+                        )}
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
@@ -1117,10 +1318,107 @@ export const action: ActionFunction = async ({
    if (!user || !user.id) return redirect("/login", { status: 302 });
 
    const { intent } = await zx.parseForm(request, {
-      intent: z.enum(["updateUserCard", "deleteUserCard"]),
+      intent: z.enum([
+         "updateUserCard",
+         "deleteUserCard",
+         "toggleCollectionPublic",
+         "saveFriendId",
+      ]),
    });
 
    switch (intent) {
+      case "saveFriendId": {
+         try {
+            const { friendId, userId } = await zx.parseForm(request, {
+               friendId: z.string(),
+               userId: z.string(),
+            });
+            if (user.id !== userId) {
+               return jsonWithError(null, "You cannot update your friend id");
+            }
+            const userData = await authRestFetcher({
+               isAuthOverride: true,
+               method: "GET",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}?depth=0`,
+            });
+
+            if (userData?.errors?.length > 0) {
+               await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "POST",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings`,
+                  body: {
+                     id: userId,
+                     user: userId,
+                     isCollectionPublic: false,
+                     username: user.username,
+                     friendId,
+                  },
+               });
+               return jsonWithSuccess(null, "Friend Id updated");
+            }
+
+            const updatedUserSettings = await authRestFetcher({
+               isAuthOverride: true,
+               method: "PATCH",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}`,
+               body: {
+                  friendId,
+               },
+            });
+            if (updatedUserSettings) {
+               return jsonWithSuccess(null, "Friend Id updated");
+            }
+         } catch (error) {
+            return jsonWithError(null, "Something went wrong...");
+         }
+      }
+      case "toggleCollectionPublic": {
+         try {
+            const { userId } = await zx.parseForm(request, {
+               userId: z.string(),
+            });
+
+            if (user.id !== userId) {
+               return jsonWithError(null, "You cannot update this deck");
+            }
+            const userData = await authRestFetcher({
+               isAuthOverride: true,
+               method: "GET",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}?depth=0`,
+            });
+
+            if (!userData) {
+               await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "POST",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings`,
+                  body: {
+                     id: userId,
+                     user: userId,
+                     isCollectionPublic: true,
+                     username: user.username,
+                  },
+               });
+               return jsonWithSuccess(null, "Collection is now public");
+            }
+
+            const updatedCollection = await authRestFetcher({
+               isAuthOverride: true,
+               method: "PATCH",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-settings/${userId}`,
+               body: {
+                  isCollectionPublic: !userData.isCollectionPublic,
+               },
+            });
+
+            if (updatedCollection) {
+               return jsonWithSuccess(null, "Collection is now private");
+            }
+         } catch (error) {
+            return jsonWithError(null, "Something went wrong...");
+         }
+      }
       case "updateUserCard": {
          try {
             const { cardId, cardCount, cardUserId } = await zx.parseForm(

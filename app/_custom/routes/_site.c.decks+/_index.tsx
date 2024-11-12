@@ -59,8 +59,8 @@ export default function ListPage() {
       <>
          <List
             columnViewability={{}}
-            gridView={gridView}
-            columns={columns}
+            gridView={deckGridView}
+            columns={deckColumns}
             defaultViewType="grid"
             //@ts-ignore
             filters={filters}
@@ -109,7 +109,7 @@ export default function ListPage() {
                   gridCellClassNames="dark:hover:border-zinc-600 border rounded-md bg-zinc-50 truncate dark:bg-dark350 
                border-color-sub shadow-sm dark:shadow-zinc-800/80 hover:border-zinc-300"
                   hideViewMode={true}
-                  gridView={gridView}
+                  gridView={deckGridView}
                   pageSize={8}
                   defaultViewType="grid"
                   data={{
@@ -118,7 +118,7 @@ export default function ListPage() {
                            .docs,
                      },
                   }}
-                  columns={columns}
+                  columns={deckColumns}
                   filters={filters}
                />
             </LoggedIn>
@@ -127,7 +127,7 @@ export default function ListPage() {
             </div>
             <ListTable
                hideViewMode={true}
-               gridView={gridView}
+               gridView={deckGridView}
                defaultViewType="list"
                data={{
                   listData: {
@@ -135,7 +135,7 @@ export default function ListPage() {
                         .publicDecks.docs,
                   },
                }}
-               columns={columns}
+               columns={deckColumns}
                filters={filters}
                pager={false}
             />
@@ -184,7 +184,7 @@ export const action: ActionFunction = async ({
 
 const columnHelper = createColumnHelper<Deck>();
 
-const gridView = columnHelper.accessor("name", {
+export const deckGridView = columnHelper.accessor("name", {
    filterFn: fuzzyFilter,
    cell: (info) => (
       <Link
@@ -271,7 +271,7 @@ const gridView = columnHelper.accessor("name", {
    ),
 });
 
-const columns = [
+export const deckColumns = [
    columnHelper.accessor("name", {
       header: "Deck",
       filterFn: fuzzyFilter,
