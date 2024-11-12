@@ -1,8 +1,9 @@
 import { Expansion } from "~/db/payload-custom-types";
 
 import { Image } from "~/components/Image";
-import { Link } from "@remix-run/react";
+import { Link, NavLink } from "@remix-run/react";
 import dt from "date-and-time";
+import clsx from "clsx";
 export function ExpansionsMain({ data }: { data: Expansion }) {
    const expansion = data;
 
@@ -26,27 +27,26 @@ export function ExpansionsMain({ data }: { data: Expansion }) {
                </span>
             </div>
          </div>
-         {expansion?.packs && expansion?.packs?.length > 0 && (
-            <div className="flex items-center justify-between gap-3">
-               {expansion.packs.map((pack) => (
-                  <Link
-                     key={pack.name}
-                     to={`/c/packs/${pack.slug}`}
-                     className="text-sm font-semibold w-full bg-zinc-50 dark:bg-dark400
-                      border border-zinc-200 dark:border-zinc-600/70 shadow-sm shadow-1 p-3 rounded-lg space-y-2"
-                  >
-                     {pack.icon?.url ? (
-                        <Image
-                           className="object-contain h-14 mx-auto"
-                           height={100}
-                           url={pack.icon?.url}
-                        />
-                     ) : undefined}
-                     <div className="text-center text-xs">{pack.name}</div>
-                  </Link>
-               ))}
-            </div>
-         )}
+         <div className="flex max-tablet:flex-col justify-between gap-3">
+            {expansion.packs?.map((p) => (
+               <NavLink
+                  className={({ isActive }) =>
+                     clsx(
+                        "flex items-center dark:hover:bg-dark500 hover:bg-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-500 dark:hover:shadow-zinc-800/50 justify-between w-full  gap-2 border shadow-1 pl-3 pr-1 py-2 rounded-xl shadow-sm",
+                        isActive
+                           ? "dark:bg-dark500 bg-zinc-200/80  border-zinc-400/70 dark:border-zinc-500 dark:shadow-zinc-800/50"
+                           : "bg-zinc-50 dark:bg-dark400 border-zinc-200 dark:border-zinc-600",
+                     )
+                  }
+                  to={`/c/packs/${p.slug}`}
+                  key={p.slug}
+               >
+                  <Image className="h-11" height={80} url={p.logo?.url} />
+                  <Image className="h-14" height={80} url={p.icon?.url} />
+                  <span className="sr-only">{p.name}</span>
+               </NavLink>
+            ))}
+         </div>
       </div>
    );
 }

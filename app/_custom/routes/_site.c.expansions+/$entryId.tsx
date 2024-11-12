@@ -62,6 +62,9 @@ const QUERY = gql`
             icon {
                url
             }
+            logo {
+               url
+            }
          }
          cards {
             id

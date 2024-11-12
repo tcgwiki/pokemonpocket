@@ -15,7 +15,7 @@ export function PacksMain({ data }: { data: Pack }) {
       <>
          <Link
             to={`/c/expansions/${pack.expansion?.slug}`}
-            className="justify-between flex items-center gap-2 border py-1 px-3 rounded-xl shadow-sm dark:shadow-zinc-800/50
+            className="justify-between flex items-center gap-2 border pl-2 py-1 pr-3 rounded-xl shadow-sm dark:shadow-zinc-800/50
                border-zinc-200 bg-zinc-100 dark:border-zinc-600 dark:bg-dark450 group"
          >
             <span className="text-sm font-semibold flex items-center gap-3">
