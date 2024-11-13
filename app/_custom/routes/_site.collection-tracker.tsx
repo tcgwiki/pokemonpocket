@@ -122,7 +122,7 @@ export async function loader({
          const userCard = userCardMap.get(card.id);
          return {
             ...card,
-            id: userCard?.id ?? card.id,
+            id: card.id,
             user: userCard?.user,
             count: userCard?.count ?? 0,
             isOwned: !!userCard,
@@ -1002,6 +1002,47 @@ const gridView = columnHelper.accessor("name", {
       const isCardUpdating = isAdding(fetcher, "updateUserCard");
       const isDisabled = isCardDeleting || isCardAdding || isCardUpdating;
 
+      const { user } = useRootLoaderData();
+
+      const [isEditing, setIsEditing] = useState(false);
+      const [editValue, setEditValue] = useState(
+         info.row.original?.count?.toString() || "0",
+      );
+
+      const handleSave = async () => {
+         const newCount = parseInt(editValue);
+         if (isNaN(newCount) || newCount < 0) {
+            // Reset to original value if invalid input
+            setEditValue(info.row.original?.count?.toString() || "0");
+            setIsEditing(false);
+            return;
+         }
+
+         setIsEditing(false);
+
+         // Only submit if the value has actually changed
+         if (newCount !== info.row.original?.count) {
+            fetcher.submit(
+               //@ts-ignore
+               {
+                  cardId: info.row.original?.id,
+                  cardCount: newCount,
+                  isInput: "true", // Changed to string to match zod schema
+                  intent: "updateUserCard",
+               },
+               {
+                  method: "PATCH",
+               },
+            );
+         }
+      };
+
+      const showEditButtons =
+         info?.row?.original?.user == user?.id ||
+         (!info?.row?.original?.user &&
+            !info?.row?.original?.count &&
+            user?.id);
+
       return (
          <div key={info.row.original?.id}>
             <Dialog
@@ -1045,87 +1086,121 @@ const gridView = columnHelper.accessor("name", {
                   <div className="flex items-center gap-1.5 w-full">
                      <div className="flex items-center justify-center gap-1 p-1.5 pr-1 w-full">
                         <div className="items-center justify-center gap-1.5 flex">
-                           <button
-                              disabled={isDisabled}
-                              className={clsx(
-                                 info.row.original?.count === 0
-                                    ? "bg-zinc-500 border-transparent"
-                                    : "border-red-700 hover:bg-red-600 hover:border-red-600 bg-red-500",
-                                 "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-8 tablet:size-10  flex items-center justify-center group ",
-                              )}
-                              onClick={() => {
-                                 if (info.row.original?.count === 0) return;
-                                 fetcher.submit(
-                                    {
-                                       cardId: info.row.original?.id,
-                                       cardCount: info.row.original?.count,
-                                       cardUserId: info.row.original?.user,
-                                       intent: "deleteUserCard",
-                                    },
-                                    {
-                                       method: "DELETE",
-                                    },
-                                 );
-                              }}
-                           >
-                              {isCardDeleting ? (
-                                 <Icon
-                                    name="loader-2"
-                                    size={20}
-                                    className="animate-spin text-white"
-                                 />
-                              ) : (
-                                 <Icon
-                                    title="Remove card"
-                                    className="text-white"
-                                    name="minus"
-                                    size={20}
-                                 />
-                              )}
-                           </button>
-                           <span
+                           {showEditButtons && (
+                              <button
+                                 disabled={isDisabled}
+                                 className={clsx(
+                                    info.row.original?.count === 0
+                                       ? "bg-zinc-500 border-transparent"
+                                       : "border-red-700 hover:bg-red-600 hover:border-red-600 bg-red-500",
+                                    "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-8 tablet:size-10  flex items-center justify-center group ",
+                                 )}
+                                 onClick={() => {
+                                    if (info.row.original?.count === 0) return;
+                                    fetcher.submit(
+                                       {
+                                          cardId: info.row.original?.id,
+                                          cardCount: info.row.original?.count,
+                                          intent: "deleteUserCard",
+                                       },
+                                       {
+                                          method: "DELETE",
+                                       },
+                                    );
+                                 }}
+                              >
+                                 {isCardDeleting ? (
+                                    <Icon
+                                       name="loader-2"
+                                       size={20}
+                                       className="animate-spin text-white"
+                                    />
+                                 ) : (
+                                    <Icon
+                                       title="Remove card"
+                                       className="text-white"
+                                       name="minus"
+                                       size={20}
+                                    />
+                                 )}
+                              </button>
+                           )}
+                           <div
+                              onClick={(e) => e.stopPropagation()}
                               className={clsx(
                                  info.row.original?.count === 0
                                     ? "tablet:opacity-0"
                                     : "tablet:opacity-100",
-                                 "shadow shadow-1 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-8 tablet:size-9 flex items-center justify-center text-sm font-mono font-bold",
+                                 "shadow cursor-pointer shadow-1 hover:border-zinc-600 hover:bg-zinc-700 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-8 tablet:size-9 flex items-center justify-center text-sm font-mono font-bold",
                               )}
                            >
-                              {info.row.original?.count}
-                           </span>
-                           <button
-                              disabled={isDisabled}
-                              className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full 
-                              size-8 tablet:size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
-                              onClick={() => {
-                                 fetcher.submit(
-                                    {
-                                       cardId: info.row.original?.id,
-                                       cardCount: info.row.original?.count,
-                                       cardUserId: info.row.original?.user,
-                                       intent: "updateUserCard",
-                                    },
-                                    {
-                                       method: "PATCH",
-                                    },
-                                 );
-                              }}
-                           >
-                              {isCardUpdating ? (
-                                 <Icon
-                                    name="loader-2"
-                                    size={20}
-                                    className="animate-spin text-white"
+                              {isEditing ? (
+                                 <input
+                                    type="number"
+                                    min="0"
+                                    className="w-full h-full bg-transparent text-center focus:outline-none"
+                                    value={editValue}
+                                    onChange={(e) =>
+                                       setEditValue(e.target.value)
+                                    }
+                                    onBlur={handleSave}
+                                    onKeyDown={(e) => {
+                                       if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          handleSave();
+                                       } else if (e.key === "Escape") {
+                                          setEditValue(
+                                             info.row.original?.count?.toString() ||
+                                                "0",
+                                          );
+                                          setIsEditing(false);
+                                       }
+                                    }}
+                                    autoFocus
                                  />
                               ) : (
-                                 <Icon
-                                    title="Update card"
-                                    name="plus"
-                                    className="text-white"
-                                    size={20}
-                                 />
+                                 <span
+                                    className="cursor-pointer w-full h-full flex items-center justify-center"
+                                    onClick={() => setIsEditing(true)}
+                                 >
+                                    {info.row.original?.count}
+                                 </span>
                               )}
-                           </button>
+                           </div>
+                           {showEditButtons && (
+                              <button
+                                 disabled={isDisabled}
+                                 className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full 
+                              size-8 tablet:size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                                 onClick={() => {
+                                    fetcher.submit(
+                                       {
+                                          cardId: info.row.original?.id,
+                                          cardCount: info.row.original?.count,
+                                          intent: "updateUserCard",
+                                       },
+                                       {
+                                          method: "PATCH",
+                                       },
+                                    );
+                                 }}
+                              >
+                                 {isCardUpdating ? (
+                                    <Icon
+                                       name="loader-2"
+                                       size={20}
+                                       className="animate-spin text-white"
+                                    />
+                                 ) : (
+                                    <Icon
+                                       title="Update card"
+                                       name="plus"
+                                       className="text-white"
+                                       size={20}
+                                    />
+                                 )}
+                              </button>
+                           )}
                         </div>
                      </div>
                   </div>
@@ -1208,7 +1283,6 @@ const columns = [
                               {
                                  cardId: info.row.original?.id,
                                  cardCount: info.row.original?.count,
-                                 cardUserId: info.row.original?.user,
                                  intent: "deleteUserCard",
                               },
                               {
@@ -1233,9 +1307,6 @@ const columns = [
                         )}
                      </button>
                   )}
-                  <span className="shadow shadow-1 rounded-md bg-zinc-800 text-white size-7 flex items-center justify-center text-sm font-mono font-bold">
-                     {info.row.original?.count}
-                  </span>
                   <button
                      disabled={isDisabled}
                      className="shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full size-7 bg-green-500 flex items-center justify-center group hover:border-green-600"
@@ -1244,7 +1315,6 @@ const columns = [
                            {
                               cardId: info.row.original?.id,
                               cardCount: info.row.original?.count,
-                              cardUserId: info.row.original?.user,
                               intent: "updateUserCard",
                            },
                            {
@@ -1447,15 +1517,91 @@ export const action: ActionFunction = async ({
       }
       case "updateUserCard": {
          try {
-            const { cardId, cardCount, cardUserId } = await zx.parseForm(
-               request,
-               {
-                  cardId: z.string(),
-                  cardCount: z.coerce.number(),
-                  cardUserId: z.string(),
-               },
-            );
-            if (cardCount === 0) {
+            const { cardId, cardCount, isInput } = await zx.parseForm(request, {
+               cardId: z.string(),
+               cardCount: z.coerce.number(),
+               isInput: z.string().optional(),
+            });
+
+            if (isInput === "true") {
+               // Check if user card already exists
+               const userCardQuery = qs.stringify(
+                  {
+                     where: {
+                        card: {
+                           equals: cardId,
+                        },
+                        user: {
+                           equals: user.id,
+                        },
+                     },
+                     depth: 0,
+                  },
+                  { addQueryPrefix: true },
+               );
+               // Check if user card already exists
+               const existingUserCard = await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "GET",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards${userCardQuery}`,
+               });
+
+               if (existingUserCard?.docs[0]?.user === user.id) {
+                  if (existingUserCard?.totalDocs === 1) {
+                     //Delete card if 0
+                     if (cardCount === 0) {
+                        const deletedUserCard = await authRestFetcher({
+                           isAuthOverride: true,
+                           method: "DELETE",
+                           path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
+                        });
+                        if (deletedUserCard) {
+                           return jsonWithSuccess(
+                              null,
+                              `${deletedUserCard.doc.card.name} deleted`,
+                           );
+                        }
+                     }
+                     // Update existing card instead of creating new one
+                     const updatedUserCard = await authRestFetcher({
+                        isAuthOverride: true,
+                        method: "PATCH",
+                        path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
+                        body: {
+                           count: cardCount,
+                        },
+                     });
+
+                     if (updatedUserCard) {
+                        return jsonWithSuccess(
+                           null,
+                           `${updatedUserCard.doc.card.name} updated`,
+                        );
+                     }
+                  }
+               }
+               // Create new user card if none exists
+               const addUserCard = await authRestFetcher({
+                  isAuthOverride: true,
+                  method: "POST",
+                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards`,
+                  body: {
+                     card: cardId,
+                     count: cardCount,
+                     user: user.id,
+                  },
+               });
+
+               if (addUserCard) {
+                  return jsonWithSuccess(
+                     null,
+                     `${addUserCard.doc.card.name} added`,
+                  );
+               }
+            }
+
+            //Plus Button
+            if (!isInput) {
                const userCardQuery = qs.stringify(
                   {
                      where: {
@@ -1478,24 +1624,25 @@ export const action: ActionFunction = async ({
                   path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards${userCardQuery}`,
                });
 
-               if (existingUserCard?.docs?.length > 0) {
-                  // Update existing card instead of creating new one
-                  const updatedUserCard = await authRestFetcher({
-                     isAuthOverride: true,
-                     method: "PATCH",
-                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
-                     body: {
-                        count: existingUserCard.docs[0].count + 1,
-                     },
-                  });
-                  if (updatedUserCard) {
-                     return jsonWithSuccess(
-                        null,
-                        `${updatedUserCard.doc.card.name} updated`,
-                     );
+               if (existingUserCard?.docs[0]?.user === user?.id) {
+                  if (existingUserCard?.totalDocs === 1) {
+                     // Update existing card instead of creating new one
+                     const updatedUserCard = await authRestFetcher({
+                        isAuthOverride: true,
+                        method: "PATCH",
+                        path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
+                        body: {
+                           count: existingUserCard.docs[0].count + 1,
+                        },
+                     });
+                     if (updatedUserCard) {
+                        return jsonWithSuccess(
+                           null,
+                           `${updatedUserCard.doc.card.name} updated`,
+                        );
+                     }
                   }
                }
-
                // Create new user card if none exists
                const addUserCard = await authRestFetcher({
                   isAuthOverride: true,
@@ -1514,28 +1661,8 @@ export const action: ActionFunction = async ({
                   );
                }
             }
-            //Users can only mutate their own cards
-            if (user.id === cardUserId) {
-               const updatedUserCard = await authRestFetcher({
-                  isAuthOverride: true,
-                  method: "PATCH",
-                  path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
-                  body: {
-                     count: cardCount + 1,
-                  },
-               });
-               if (updatedUserCard) {
-                  return jsonWithSuccess(
-                     null,
-                     `${updatedUserCard.doc.card.name} updated`,
-                  );
-               }
-            }
 
-            return jsonWithError(
-               null,
-               "Something went wrong...unable to update card",
-            );
+            return jsonWithError(null, "Something went wrong...");
          } catch (error) {
             return jsonWithError(
                null,
@@ -1545,22 +1672,39 @@ export const action: ActionFunction = async ({
       }
       case "deleteUserCard": {
          try {
-            const { cardId, cardCount, cardUserId } = await zx.parseForm(
-               request,
-               {
-                  cardId: z.string(),
-                  cardCount: z.coerce.number(),
-                  cardUserId: z.string(),
-               },
-            );
+            const { cardId, cardCount } = await zx.parseForm(request, {
+               cardId: z.string(),
+               cardCount: z.coerce.number(),
+            });
 
-            //Users can only mutate their own cards
-            if (user.id === cardUserId) {
+            // Check if user card already exists
+            const userCardQuery = qs.stringify(
+               {
+                  where: {
+                     card: {
+                        equals: cardId,
+                     },
+                     user: {
+                        equals: user.id,
+                     },
+                  },
+                  depth: 0,
+               },
+               { addQueryPrefix: true },
+            );
+            // Check if user card already exists
+            const existingUserCard = await authRestFetcher({
+               isAuthOverride: true,
+               method: "GET",
+               path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards${userCardQuery}`,
+            });
+
+            if (existingUserCard.docs[0].user === user.id) {
                if (cardCount === 1) {
                   const deletedUserCard = await authRestFetcher({
                      isAuthOverride: true,
                      method: "DELETE",
-                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
+                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
                   });
                   if (deletedUserCard) {
                      return jsonWithSuccess(
@@ -1573,7 +1717,7 @@ export const action: ActionFunction = async ({
                   const updatedUserCard = await authRestFetcher({
                      isAuthOverride: true,
                      method: "PATCH",
-                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${cardId}`,
+                     path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
                      body: {
                         count: cardCount - 1,
                      },
@@ -1586,6 +1730,7 @@ export const action: ActionFunction = async ({
                   }
                }
             }
+
             return jsonWithError(
                null,
                `Something went wrong...unable to delete card`,
