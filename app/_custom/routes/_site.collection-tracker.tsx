@@ -102,22 +102,31 @@ export async function loader({
       throw new Error("This collection is private");
    }
 
-   const userCards = (await gqlFetch({
-      isAuthOverride: true,
-      isCustomDB: true,
-      isCached: user ? false : true,
-      query: QUERY,
-      request,
-      variables: {
-         userId: userId ?? "",
-      },
-   })) as CollectionData["userCards"];
+   const [fetchAllCards, userCards] = await Promise.all([
+      gqlFetch({
+         isAuthOverride: true,
+         isCustomDB: true,
+         isCached: true,
+         query: ALL_CARDS_QUERY,
+      }) as Promise<CollectionData["userCards"]>,
+
+      gqlFetch({
+         isAuthOverride: true,
+         isCustomDB: true,
+         isCached: false,
+         query: USER_CARDS_QUERY,
+         request,
+         variables: {
+            userId: userId ?? "",
+         },
+      }) as Promise<CollectionData["userCards"]>,
+   ]);
 
    const userCardMap = new Map(
       userCards.cards.docs.map((item) => [item.card.id, item]),
    );
 
-   const cardsList = userCards.allCards.docs
+   const cardsList = fetchAllCards?.allCards.docs
       .map((card) => {
          const userCard = userCardMap.get(card.id);
          return {
@@ -165,6 +174,7 @@ export async function loader({
          // If card has no packs or empty packs array, add to "No Pack"
          if (!card.packs || card.packs.length === 0) {
             const noPack = "No Pack";
+            // Create pack if it doesn't exist
             if (!groups[expansionName]!.packs[noPack]) {
                groups[expansionName]!.packs[noPack] = {
                   id: "no-pack",
@@ -175,16 +185,16 @@ export async function loader({
                   ownedCards: 0,
                };
             }
-            groups[expansionName]!.packs[noPack]!.cards.push(card);
-            groups[expansionName]!.packs[noPack]!.totalCards++;
-            if (card.isOwned) {
-               groups[expansionName]!.packs[noPack]!.ownedCards++;
-            }
+            // Add card to pack in one operation
+            const pack = groups[expansionName]!.packs[noPack]!;
+            pack.cards.push(card);
+            pack.totalCards++;
+            if (card.isOwned) pack.ownedCards++;
          } else {
-            // Handle cards with packs
+            // Handle cards with packs more efficiently
             card.packs.forEach((packData) => {
                const packName = packData.name ?? "Unknown Pack";
-
+               // Create pack if it doesn't exist
                if (!groups[expansionName]!.packs[packName]) {
                   groups[expansionName]!.packs[packName] = {
                      id: packData.id,
@@ -195,12 +205,11 @@ export async function loader({
                      ownedCards: 0,
                   };
                }
-
-               groups[expansionName]!.packs[packName]!.cards.push(card);
-               groups[expansionName]!.packs[packName]!.totalCards++;
-               if (card.isOwned) {
-                  groups[expansionName]!.packs[packName]!.ownedCards++;
-               }
+               // Add card to pack in one operation
+               const pack = groups[expansionName]!.packs[packName]!;
+               pack.cards.push(card);
+               pack.totalCards++;
+               if (card.isOwned) pack.ownedCards++;
             });
          }
 
@@ -1888,8 +1897,67 @@ const cardCollectionFilters: {
    },
 ];
 
-const QUERY = gql`
+const USER_CARDS_QUERY = gql`
    query ($userId: String!) {
+      cards: UserCards(where: { user: { equals: $userId } }, limit: 5000) {
+         totalDocs
+         docs {
+            id
+            count
+            user
+            card {
+               id
+               name
+               slug
+               isEX
+               setNum
+               packs {
+                  id
+                  name
+                  icon {
+                     url
+                  }
+               }
+               expansion {
+                  id
+                  slug
+                  icon {
+                     url
+                  }
+                  logo {
+                     url
+                  }
+               }
+               cardType
+               icon {
+                  url
+               }
+               pokemonType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               weaknessType {
+                  name
+                  icon {
+                     url
+                  }
+               }
+               rarity {
+                  name
+                  icon {
+                     url
+                  }
+               }
+            }
+         }
+      }
+   }
+`;
+
+const ALL_CARDS_QUERY = gql`
+   query {
       allCards: Cards(limit: 5000, sort: "-rarity") {
          docs {
             id
@@ -1935,61 +2003,6 @@ const QUERY = gql`
                name
                icon {
                   url
-               }
-            }
-         }
-      }
-      cards: UserCards(where: { user: { equals: $userId } }, limit: 1000) {
-         totalDocs
-         docs {
-            id
-            count
-            user
-            card {
-               id
-               name
-               slug
-               isEX
-               hp
-               setNum
-               packs {
-                  id
-                  name
-                  icon {
-                     url
-                  }
-               }
-               expansion {
-                  id
-                  slug
-                  icon {
-                     url
-                  }
-                  logo {
-                     url
-                  }
-               }
-               cardType
-               icon {
-                  url
-               }
-               pokemonType {
-                  name
-                  icon {
-                     url
-                  }
-               }
-               weaknessType {
-                  name
-                  icon {
-                     url
-                  }
-               }
-               rarity {
-                  name
-                  icon {
-                     url
-                  }
                }
             }
          }
