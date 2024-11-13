@@ -40,5 +40,9 @@ export const UserSettings: CollectionConfig = {
          index: true,
          required: true,
       },
+      {
+         name: "totalUniqueCards",
+         type: "number",
+      },
    ],
 };
