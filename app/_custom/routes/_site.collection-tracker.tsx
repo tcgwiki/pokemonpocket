@@ -21,7 +21,7 @@ import type { Card, User } from "payload/generated-custom-types";
 import { fuzzyFilter } from "~/routes/_site+/c_+/_components/fuzzyFilter";
 import { ListTable } from "~/routes/_site+/c_+/_components/ListTable";
 import { authRestFetcher, gqlFetch } from "~/utils/fetchers.server";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cardRarityEnum } from "./_site.c.cards+/components/Cards.Main";
 import { Dialog } from "~/components/Dialog";
 import { Button } from "~/components/Button";
@@ -144,99 +144,94 @@ export async function loader({
          return 0;
       });
 
-   const groupedCards = cardsList.reduce(
-      (groups, card) => {
-         const expansionName = card.expansion?.slug || "Unknown Expansion";
-         const cardId = card.id;
+   // Pre-process cards into a Map for O(1) lookup
+   const cardsByExpansion = new Map();
+   cardsList.forEach((card) => {
+      const expansionName = card.expansion?.slug || "Unknown Expansion";
+      if (!cardsByExpansion.has(expansionName)) {
+         cardsByExpansion.set(expansionName, {
+            cards: [],
+            expansionIcon: card.expansion?.icon?.url,
+            expansionLogo: card.expansion?.logo?.url,
+         });
+      }
+      cardsByExpansion.get(expansionName).cards.push(card);
+   });
 
-         // Initialize expansion group if it doesn't exist
-         if (!groups[expansionName]) {
-            groups[expansionName] = {
-               expansionName: expansionName,
-               expansionIcon: card.expansion?.icon?.url ?? undefined,
-               expansionLogo: card.expansion?.logo?.url ?? undefined,
-               packs: {},
-               totalCards: 0,
-               ownedCards: 0,
-               processedCardIds: new Set<string>(),
-            };
-         }
+   // Then process packs with pre-grouped cards
+   const groupedCards = Array.from(cardsByExpansion.entries()).reduce(
+      (groups, [expansionName, data]) => {
+         groups[expansionName] = {
+            expansionName,
+            expansionIcon: data.expansionIcon,
+            expansionLogo: data.expansionLogo,
+            packs: {},
+            totalCards: 0,
+            ownedCards: 0,
+            processedCardIds: new Set(),
+         };
 
-         // Only increment expansion totals if this is the first time we've seen this card
-         if (!groups[expansionName]!.processedCardIds.has(cardId)) {
-            groups[expansionName]!.processedCardIds.add(cardId);
-            groups[expansionName]!.totalCards++;
-            if (card.isOwned) {
-               groups[expansionName]!.ownedCards++;
+         // Process cards for this expansion
+         data.cards.forEach((card) => {
+            const cardId = card.id;
+
+            // Initialize expansion group if it doesn't exist
+            if (!groups[expansionName]!.processedCardIds.has(cardId)) {
+               groups[expansionName]!.processedCardIds.add(cardId);
+               groups[expansionName]!.totalCards++;
+               if (card.isOwned) {
+                  groups[expansionName]!.ownedCards++;
+               }
             }
-         }
 
-         // If card has no packs or empty packs array, add to "No Pack"
-         if (!card.packs || card.packs.length === 0) {
-            const noPack = "No Pack";
-            // Create pack if it doesn't exist
-            if (!groups[expansionName]!.packs[noPack]) {
-               groups[expansionName]!.packs[noPack] = {
-                  id: "no-pack",
-                  name: noPack,
-                  icon: undefined,
-                  cards: [],
-                  totalCards: 0,
-                  ownedCards: 0,
-               };
-            }
-            // Add card to pack in one operation
-            const pack = groups[expansionName]!.packs[noPack]!;
-            pack.cards.push(card);
-            pack.totalCards++;
-            if (card.isOwned) pack.ownedCards++;
-         } else {
-            // Handle cards with packs more efficiently
-            card.packs.forEach((packData) => {
-               const packName = packData.name ?? "Unknown Pack";
+            // If card has no packs or empty packs array, add to "No Pack"
+            if (!card.packs || card.packs.length === 0) {
+               const noPack = "No Pack";
                // Create pack if it doesn't exist
-               if (!groups[expansionName]!.packs[packName]) {
-                  groups[expansionName]!.packs[packName] = {
-                     id: packData.id,
-                     name: packData.name ?? "",
-                     icon: packData.icon?.url ?? undefined,
+               if (!groups[expansionName]!.packs[noPack]) {
+                  groups[expansionName]!.packs[noPack] = {
+                     id: "no-pack",
+                     name: noPack,
+                     icon: undefined,
                      cards: [],
                      totalCards: 0,
                      ownedCards: 0,
                   };
                }
                // Add card to pack in one operation
-               const pack = groups[expansionName]!.packs[packName]!;
+               const pack = groups[expansionName]!.packs[noPack]!;
                pack.cards.push(card);
                pack.totalCards++;
                if (card.isOwned) pack.ownedCards++;
-            });
-         }
+            } else {
+               // Handle cards with packs more efficiently
+               card.packs.forEach((packData) => {
+                  const packName = packData.name ?? "Unknown Pack";
+                  // Create pack if it doesn't exist
+                  if (!groups[expansionName]!.packs[packName]) {
+                     groups[expansionName]!.packs[packName] = {
+                        id: packData.id,
+                        name: packData.name ?? "",
+                        icon: packData.icon?.url ?? undefined,
+                        cards: [],
+                        totalCards: 0,
+                        ownedCards: 0,
+                     };
+                  }
+                  // Add card to pack in one operation
+                  const pack = groups[expansionName]!.packs[packName]!;
+                  pack.cards.push(card);
+                  pack.totalCards++;
+                  if (card.isOwned) pack.ownedCards++;
+               });
+            }
+
+            return groups;
+         });
 
          return groups;
       },
-      {} as Record<
-         string,
-         {
-            expansionName: string;
-            expansionIcon?: string;
-            expansionLogo?: string;
-            packs: Record<
-               string,
-               {
-                  id: string;
-                  name: string;
-                  icon?: string;
-                  cards: typeof cardsList;
-                  totalCards: number;
-                  ownedCards: number;
-               }
-            >;
-            totalCards: number;
-            ownedCards: number;
-            processedCardIds: Set<string>;
-         }
-      >,
+      {},
    );
 
    // Clean up by removing the processedCardIds set before using the data
@@ -253,39 +248,6 @@ export async function loader({
       0,
    );
 
-   // Calculate both owned and total cards by type
-   const cardsByType = cardsList.reduce(
-      (acc, card) => {
-         if (card.pokemonType?.name) {
-            const typeName = card.pokemonType.name;
-            if (!acc[typeName]) {
-               acc[typeName] = {
-                  owned: 0,
-                  total: 0,
-                  icon: card.pokemonType.icon?.url ?? undefined,
-               };
-            }
-
-            // Only increment total once per unique card
-            acc[typeName]!.total++;
-
-            // If owned, only count it once (not by count)
-            if (card.isOwned) {
-               acc[typeName]!.owned++;
-            }
-         }
-         return acc;
-      },
-      {} as Record<
-         string,
-         {
-            owned: number;
-            total: number;
-            icon?: string;
-         }
-      >,
-   );
-
    // Updated rarity order mapping (reversed)
    const rarityOrder = {
       UR: 0, // Ultra Rare (highest)
@@ -299,74 +261,61 @@ export async function loader({
       C: 8, // Common (lowest)
    };
 
-   const cardsByRarity = Object.entries(
-      cardsList.reduce(
-         (acc, card) => {
-            if (card.rarity?.name) {
-               const rarityName = card.rarity.name;
-               if (!acc[rarityName]) {
-                  acc[rarityName] = {
-                     owned: 0,
-                     total: 0,
-                     icon: card.rarity.icon?.url ?? undefined,
-                     order:
-                        rarityOrder[rarityName as keyof typeof rarityOrder] ??
-                        999,
-                  };
-               }
-
-               acc[rarityName]!.total++;
-               if (card.isOwned) {
-                  acc[rarityName]!.owned++;
-               }
-            }
-            return acc;
-         },
-         {} as Record<
-            string,
-            {
-               owned: number;
-               total: number;
-               icon?: string;
-               order: number;
-            }
-         >,
-      ),
-   )
-      .sort(([, a], [, b]) => a.order - b.order) // Keeping this the same since we reversed the order values
-      .reduce(
-         (obj, [key, value]) => {
-            const { order, ...rest } = value;
-            obj[key] = rest;
-            return obj;
-         },
-         {} as Record<string, { owned: number; total: number; icon?: string }>,
-      );
-
-   // Calculate total owned and available Pokemon/Trainer cards
-   const cardTypeStats = cardsList.reduce(
+   // Combine multiple reducers into one pass
+   const { cardsByType, cardsByRarity, cardTypeStats } = cardsList.reduce(
       (acc, card) => {
+         // Handle card type stats
          const isTrainer = card.cardType === "trainer";
-
-         // Increment total counts
          if (isTrainer) {
-            acc.trainerTotal++;
+            acc.cardTypeStats.trainerTotal++;
+            if (card.isOwned) acc.cardTypeStats.trainerOwned++;
          } else {
-            acc.pokemonTotal++;
+            acc.cardTypeStats.pokemonTotal++;
+            if (card.isOwned) acc.cardTypeStats.pokemonOwned++;
          }
 
-         // Increment owned counts
-         if (card.isOwned) {
-            if (isTrainer) {
-               acc.trainerOwned++;
-            } else {
-               acc.pokemonOwned++;
+         // Handle card types
+         if (card.pokemonType?.name) {
+            const typeName = card.pokemonType.name;
+            if (!acc.cardsByType[typeName]) {
+               acc.cardsByType[typeName] = {
+                  owned: 0,
+                  total: 0,
+                  icon: card.pokemonType.icon?.url,
+               };
             }
+            acc.cardsByType[typeName]!.total++;
+            if (card.isOwned) acc.cardsByType[typeName]!.owned++;
+         }
+
+         // Handle rarity
+         if (card.rarity?.name) {
+            const rarityName = card.rarity.name;
+            if (!acc.cardsByRarity[rarityName]) {
+               acc.cardsByRarity[rarityName] = {
+                  owned: 0,
+                  total: 0,
+                  icon: card.rarity.icon?.url,
+                  order:
+                     rarityOrder[rarityName as keyof typeof rarityOrder] ?? 999,
+               };
+            }
+            acc.cardsByRarity[rarityName]!.total++;
+            if (card.isOwned) acc.cardsByRarity[rarityName]!.owned++;
          }
 
          return acc;
       },
-      { pokemonOwned: 0, pokemonTotal: 0, trainerOwned: 0, trainerTotal: 0 },
+      {
+         cardsByType: {},
+         cardsByRarity: {},
+         cardTypeStats: {
+            pokemonOwned: 0,
+            pokemonTotal: 0,
+            trainerOwned: 0,
+            trainerTotal: 0,
+         },
+      },
    );
 
    return json({
@@ -430,6 +379,69 @@ export default function CollectionTracker() {
 
    const showPublicToggle =
       isOwnCollection || (!userSettings?.isCollectionPublic && user);
+
+   // Memoize card type grid rendering
+   const cardTypeGrid = useMemo(
+      () => (
+         <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full pb-2">
+            {Object.entries(cardsByType).map(([typeName, typeData]) => (
+               <div key={typeName} className="flex items-center gap-1">
+                  <div
+                     className="!text-xs flex items-center gap-1 rounded-md p-1 pr-1.5 bg-zinc-50 border border-zinc-200 
+                  shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800  w-full justify-between"
+                  >
+                     <Image
+                        className="size-4"
+                        height={40}
+                        width={40}
+                        alt={typeName}
+                        url={typeData.icon}
+                     />
+                     <div className="flex items-center flex-none gap-0.5">
+                        <span className="font-bold">{typeData.owned}</span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="text-1">{typeData.total}</span>
+                     </div>
+                  </div>
+                  <span className="sr-only">{typeName}</span>
+               </div>
+            ))}
+         </div>
+      ),
+      [cardsByType],
+   );
+
+   // Memoize rarity grid rendering
+   const rarityGrid = useMemo(
+      () => (
+         <div className="grid grid-cols-2 tablet:grid-cols-5 gap-2 flex-grow w-full">
+            {Object.entries(cardsByRarity).map(([rarityName, rarityData]) => (
+               <Tooltip key={rarityName}>
+                  <TooltipTrigger className="flex items-center w-full gap-1">
+                     <div
+                        className="!text-xs flex items-center gap-0.5 rounded-md py-0.5 bg-zinc-50 border border-zinc-200 
+                     shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 px-1.5 min-w-12 w-full justify-between"
+                     >
+                        <Image
+                           className="h-5 flex-none object-contain"
+                           height={40}
+                           alt={rarityName}
+                           url={rarityData.icon}
+                        />
+                        <div className="flex items-center flex-none gap-0.5">
+                           <span className="font-bold">{rarityData.owned}</span>
+                           <span className="text-zinc-500">/</span>
+                           <span className="text-1">{rarityData.total}</span>
+                        </div>
+                     </div>
+                  </TooltipTrigger>
+                  <TooltipContent>{rarityName}</TooltipContent>
+               </Tooltip>
+            ))}
+         </div>
+      ),
+      [cardsByRarity],
+   );
 
    return (
       <div className="relative z-20 mx-auto max-w-[1200px] justify-center px-3 pb-4">
@@ -505,63 +517,8 @@ export default function CollectionTracker() {
                </SwitchField>
             </div>
             <div className="flex-grow">
-               <div className="grid grid-cols-4 tablet:grid-cols-10 gap-2 flex-grow w-full pb-2">
-                  {Object.entries(cardsByType).map(([typeName, typeData]) => (
-                     <div key={typeName} className="flex items-center gap-1">
-                        <div
-                           className="!text-xs flex items-center gap-1 rounded-md p-1 pr-1.5 bg-zinc-50 border border-zinc-200 
-                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800  w-full justify-between"
-                        >
-                           <Image
-                              className="size-4"
-                              height={40}
-                              width={40}
-                              alt={typeName}
-                              url={typeData.icon}
-                           />
-                           <div className="flex items-center flex-none gap-0.5">
-                              <span className="font-bold">
-                                 {typeData.owned}
-                              </span>
-                              <span className="text-zinc-500">/</span>
-                              <span className="text-1">{typeData.total}</span>
-                           </div>
-                        </div>
-                        <span className="sr-only">{typeName}</span>
-                     </div>
-                  ))}
-               </div>
-               <div className="grid grid-cols-2 tablet:grid-cols-5 gap-2 flex-grow w-full">
-                  {Object.entries(cardsByRarity).map(
-                     ([rarityName, rarityData]) => (
-                        <Tooltip key={rarityName}>
-                           <TooltipTrigger className="flex items-center w-full gap-1">
-                              <div
-                                 className="!text-xs flex items-center gap-0.5 rounded-md py-0.5 bg-zinc-50 border border-zinc-200 
-                           shadow-sm shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 px-1.5 min-w-12 w-full justify-between"
-                              >
-                                 <Image
-                                    className="h-5 flex-none object-contain"
-                                    height={40}
-                                    alt={rarityName}
-                                    url={rarityData.icon}
-                                 />
-                                 <div className="flex items-center flex-none gap-0.5">
-                                    <span className="font-bold">
-                                       {rarityData.owned}
-                                    </span>
-                                    <span className="text-zinc-500">/</span>
-                                    <span className="text-1">
-                                       {rarityData.total}
-                                    </span>
-                                 </div>
-                              </div>
-                           </TooltipTrigger>
-                           <TooltipContent>{rarityName}</TooltipContent>
-                        </Tooltip>
-                     ),
-                  )}
-               </div>
+               {cardTypeGrid}
+               {rarityGrid}
                <div
                   className="mt-3 max-tablet:flex-col flex gap-5 tablet:gap-6 
                   border-t border-dashed border-color-sub pt-4 pb-1"
@@ -1102,7 +1059,7 @@ const gridView = columnHelper.accessor("name", {
                                     info.row.original?.count === 0
                                        ? "bg-zinc-500 border-transparent"
                                        : "border-red-700 hover:bg-red-600 hover:border-red-600 bg-red-500",
-                                    "tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-8 tablet:size-10  flex items-center justify-center group ",
+                                    "tablet:opacity-0 flex-none tablet:group-hover/card:opacity-100 shadow shadow-1 border rounded-full size-8 tablet:size-10  flex items-center justify-center group ",
                                  )}
                                  onClick={() => {
                                     if (info.row.original?.count === 0) return;
@@ -1137,10 +1094,13 @@ const gridView = columnHelper.accessor("name", {
                            <div
                               onClick={(e) => e.stopPropagation()}
                               className={clsx(
+                                 isEditing
+                                    ? "bg-zinc-700 h-9 w-12"
+                                    : "bg-zinc-800 hover:bg-zinc-600 size-8 tablet:size-9",
                                  info.row.original?.count === 0
                                     ? "tablet:opacity-0"
                                     : "tablet:opacity-100",
-                                 "shadow cursor-pointer shadow-1 hover:border-zinc-600 hover:bg-zinc-700 group-hover/card:opacity-100 rounded-md bg-zinc-800 text-white size-8 tablet:size-9 flex items-center justify-center text-sm font-mono font-bold",
+                                 "shadow cursor-pointer shadow-1 group-hover/card:opacity-100 rounded-md text-white flex items-center justify-center text-sm font-mono font-bold",
                               )}
                            >
                               {isEditing ? (
@@ -1180,7 +1140,7 @@ const gridView = columnHelper.accessor("name", {
                               <button
                                  disabled={isDisabled}
                                  className="tablet:opacity-0 tablet:group-hover/card:opacity-100 shadow shadow-1 border border-green-600 hover:bg-green-600 rounded-full 
-                              size-8 tablet:size-10 bg-green-500 flex items-center justify-center group hover:border-green-600"
+                              size-8 tablet:size-10  bg-green-500 flex items-center justify-center group hover:border-green-600"
                                  onClick={() => {
                                     fetcher.submit(
                                        {
