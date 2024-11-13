@@ -1555,10 +1555,11 @@ export const action: ActionFunction = async ({
                            method: "DELETE",
                            path: `https://pokemonpocket.tcg.wiki:4000/api/user-cards/${existingUserCard.docs[0].id}`,
                         });
+
                         if (deletedUserCard) {
                            return jsonWithSuccess(
                               null,
-                              `${deletedUserCard.doc.card.name} deleted`,
+                              `${deletedUserCard?.card?.name} deleted`,
                            );
                         }
                      }
@@ -1661,8 +1662,6 @@ export const action: ActionFunction = async ({
                   );
                }
             }
-
-            return jsonWithError(null, "Something went wrong...");
          } catch (error) {
             return jsonWithError(
                null,
