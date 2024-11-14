@@ -804,141 +804,176 @@ type ExpansionViewProps = {
 };
 
 function ExpansionView({ groupedCards }: ExpansionViewProps) {
-   return Object.entries(groupedCards).map(([expansionName, expansionData]) => (
-      <div className="mb-2.5" key={expansionName}>
-         <Disclosure defaultOpen={true}>
-            {({ open: expansionOpen }) => (
-               <>
-                  <DisclosureButton
-                     className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
-                     items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
-                  >
-                     {expansionData.expansionLogo && (
-                        <Image
-                           className="w-16"
-                           width={160}
-                           url={expansionData.expansionLogo}
-                        />
-                     )}
-                     <div className="flex-grow text-left">
-                        <div className="font-bold text-base font-header capitalize">
-                           {expansionData.expansionName.replace(/-/g, " ")}
-                        </div>
-                        <Badge className="!text-xs flex items-center !gap-0.5">
-                           <span className="font-bold">
-                              {expansionData.ownedCards}
-                           </span>
-                           <span className="text-zinc-500">/</span>
-                           <span className="font-bold text-1">
-                              {expansionData.totalCards}
-                           </span>
-                        </Badge>
-                     </div>
-                     <div
-                        className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                        shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+   return Object.entries(groupedCards).map(([expansionName, expansionData]) => {
+      // Calculate completion percentage for expansion
+      const expansionCompletionPercentage = Math.round(
+         (expansionData.ownedCards / expansionData.totalCards) * 100,
+      );
+
+      return (
+         <div className="mb-2.5" key={expansionName}>
+            <Disclosure defaultOpen={true}>
+               {({ open: expansionOpen }) => (
+                  <>
+                     <DisclosureButton
+                        className="shadow-1 dark:border-zinc-600 broder-zinc-300 sticky top-[122px] z-20 bg-zinc-100 dark:bg-dark450 flex w-full 
+                        items-center gap-3 overflow-hidden rounded-lg border p-1.5 px-2 mb-3 shadow-sm shadow-1"
                      >
-                        <Icon
-                           name="chevron-down"
-                           className={clsx(
-                              expansionOpen ? "rotate-180" : "",
-                              "transform transition duration-300 ease-in-out",
-                           )}
-                           size={20}
-                        />
-                     </div>
-                  </DisclosureButton>
-                  <DisclosurePanel>
-                     {Object.entries(expansionData.packs).map(
-                        ([packName, packData]) => (
-                           <div
-                              key={packName}
-                              className="mb-3 pl-3 border-l-2 border-dotted border-zinc-300 dark:border-zinc-600"
-                           >
-                              <Disclosure defaultOpen={true}>
-                                 {({ open: packOpen }) => (
-                                    <>
-                                       <DisclosureButton
-                                          className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
-                                       flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
-                                       >
-                                          {packData.icon && (
-                                             <Image
-                                                className="h-12"
-                                                height={160}
-                                                url={packData.icon}
-                                             />
-                                          )}
-                                          <div className="flex-grow text-left">
-                                             <div className="font-bold text-sm font-header">
-                                                {packName}
-                                             </div>
-                                             <Badge className="!text-xs flex items-center !gap-0.5">
-                                                <span className="font-bold">
-                                                   {packData.ownedCards}
-                                                </span>
-                                                <span className="text-zinc-500">
-                                                   /
-                                                </span>
-                                                <span className="font-bold text-1">
-                                                   {packData.totalCards}
-                                                </span>
-                                             </Badge>
-                                          </div>
-                                          <div
-                                             className="flex size-8 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
-                                          shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
-                                          >
-                                             <Icon
-                                                name="chevron-down"
-                                                className={clsx(
-                                                   packOpen ? "rotate-180" : "",
-                                                   "transform transition duration-300 ease-in-out",
-                                                )}
-                                                size={16}
-                                             />
-                                          </div>
-                                       </DisclosureButton>
-                                       <DisclosurePanel
-                                          contentEditable={false}
-                                          unmount={false}
-                                       >
-                                          <ListTable
-                                             gridView={gridView}
-                                             columnViewability={{
-                                                pokemonType: false,
-                                                isEX: false,
-                                                cardType: false,
-                                                rarity: false,
-                                                isOwned: false,
-                                                expansion: false,
-                                             }}
-                                             gridCellClassNames="flex items-center justify-center"
-                                             gridContainerClassNames="grid-cols-2 tablet:grid-cols-6 grid gap-3"
-                                             defaultViewType="grid"
-                                             data={{
-                                                listData: {
-                                                   docs: packData.cards,
-                                                },
-                                             }}
-                                             columns={columns}
-                                             filters={cardCollectionFilters}
-                                             pager={packData.cards.length > 50}
-                                             stickyFooter={true}
-                                          />
-                                       </DisclosurePanel>
-                                    </>
-                                 )}
-                              </Disclosure>
+                        {expansionData.expansionLogo && (
+                           <Image
+                              className="w-16"
+                              width={160}
+                              url={expansionData.expansionLogo}
+                           />
+                        )}
+                        <div className="flex-grow text-left">
+                           <div className="font-bold text-base font-header capitalize pb-1">
+                              {expansionData.expansionName.replace(/-/g, " ")}
                            </div>
-                        ),
-                     )}
-                  </DisclosurePanel>
-               </>
-            )}
-         </Disclosure>
-      </div>
-   ));
+                           <div className="flex items-center gap-2">
+                              <Badge className="!text-xs flex items-center !gap-0.5">
+                                 <span className="font-bold">
+                                    {expansionData.ownedCards}
+                                 </span>
+                                 <span className="text-zinc-500">/</span>
+                                 <span className="font-bold text-1">
+                                    {expansionData.totalCards}
+                                 </span>
+                              </Badge>
+                              <div className="text-xs text-1">
+                                 {expansionCompletionPercentage}%
+                              </div>
+                           </div>
+                        </div>
+                        <div
+                           className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                           shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                        >
+                           <Icon
+                              name="chevron-down"
+                              className={clsx(
+                                 expansionOpen ? "rotate-180" : "",
+                                 "transform transition duration-300 ease-in-out",
+                              )}
+                              size={20}
+                           />
+                        </div>
+                     </DisclosureButton>
+                     <DisclosurePanel>
+                        {Object.entries(expansionData.packs).map(
+                           ([packName, packData]) => {
+                              // Calculate completion percentage
+                              const completionPercentage = Math.round(
+                                 (packData.ownedCards / packData.totalCards) *
+                                    100,
+                              );
+
+                              return (
+                                 <div
+                                    key={packName}
+                                    className="mb-3 pl-3 border-l-2 border-dotted border-zinc-300 dark:border-zinc-600"
+                                 >
+                                    <Disclosure defaultOpen={true}>
+                                       {({ open: packOpen }) => (
+                                          <>
+                                             <DisclosureButton
+                                                className="shadow-1 sticky top-[190px] z-10 border-color-sub bg-zinc-50 dark:bg-dark400 
+                                                flex w-full items-center gap-2 overflow-hidden rounded-lg border p-1.5 px-2 pr-3 mb-3 shadow-sm shadow-1"
+                                             >
+                                                {packData.icon && (
+                                                   <Image
+                                                      className="h-12"
+                                                      height={160}
+                                                      url={packData.icon}
+                                                   />
+                                                )}
+                                                <div className="flex-grow text-left">
+                                                   <div className="text-sm font-header pb-1">
+                                                      {packName}
+                                                   </div>
+                                                   <div className="flex items-center gap-2">
+                                                      <Badge className="!text-xs flex items-center !gap-0.5">
+                                                         <span className="font-bold">
+                                                            {
+                                                               packData.ownedCards
+                                                            }
+                                                         </span>
+                                                         <span className="text-zinc-500">
+                                                            /
+                                                         </span>
+                                                         <span className="font-bold text-1">
+                                                            {
+                                                               packData.totalCards
+                                                            }
+                                                         </span>
+                                                      </Badge>
+                                                      <div className="text-xs text-1">
+                                                         {completionPercentage}%
+                                                      </div>
+                                                   </div>
+                                                </div>
+                                                <div
+                                                   className="flex size-8 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
+                                                shadow-sm shadow-zinc-200 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800"
+                                                >
+                                                   <Icon
+                                                      name="chevron-down"
+                                                      className={clsx(
+                                                         packOpen
+                                                            ? "rotate-180"
+                                                            : "",
+                                                         "transform transition duration-300 ease-in-out",
+                                                      )}
+                                                      size={16}
+                                                   />
+                                                </div>
+                                             </DisclosureButton>
+                                             <DisclosurePanel
+                                                contentEditable={false}
+                                                unmount={false}
+                                             >
+                                                <ListTable
+                                                   gridView={gridView}
+                                                   columnViewability={{
+                                                      pokemonType: false,
+                                                      isEX: false,
+                                                      cardType: false,
+                                                      rarity: false,
+                                                      isOwned: false,
+                                                      expansion: false,
+                                                   }}
+                                                   gridCellClassNames="flex items-center justify-center"
+                                                   gridContainerClassNames="grid-cols-2 tablet:grid-cols-6 grid gap-3"
+                                                   defaultViewType="grid"
+                                                   data={{
+                                                      listData: {
+                                                         docs: packData.cards,
+                                                      },
+                                                   }}
+                                                   columns={columns}
+                                                   filters={
+                                                      cardCollectionFilters
+                                                   }
+                                                   pager={
+                                                      packData.cards.length > 50
+                                                   }
+                                                   stickyFooter={true}
+                                                />
+                                             </DisclosurePanel>
+                                          </>
+                                       )}
+                                    </Disclosure>
+                                 </div>
+                              );
+                           },
+                        )}
+                     </DisclosurePanel>
+                  </>
+               )}
+            </Disclosure>
+         </div>
+      );
+   });
 }
 
 const columnHelper = createColumnHelper<
