@@ -11,7 +11,7 @@ import { DecksDeck } from "./components/Decks.Deck";
 import type { Archetype, Card, Deck } from "~/db/payload-custom-types";
 import { z } from "zod";
 import { zx } from "zodix";
-import { authRestFetcher } from "~/utils/fetchers.server";
+import { authRestFetcher, gqlFetch } from "~/utils/fetchers.server";
 import {
    jsonWithError,
    jsonWithSuccess,
@@ -47,6 +47,19 @@ export async function loader({
       },
    });
 
+   const userCards = user
+      ? await gqlFetch({
+           isAuthOverride: true,
+           isCustomDB: true,
+           isCached: false,
+           query: USER_CARDS_QUERY,
+           request,
+           variables: {
+              userId: user?.id ?? "",
+           },
+        })
+      : null;
+
    const cleanCards = (
       entry.data as {
          allCards: { docs: any[] };
@@ -61,13 +74,30 @@ export async function loader({
          ).deck.highlightCards?.some((highlight) => highlight.id === card.id),
       };
    });
+
    const deckCards = (
       entry.data as { deck: { cards: any[]; highlightCards?: any[] } }
    ).deck.cards.map((card) => {
+      //@ts-ignore
+      const userOwnedVariants = userCards?.cards.docs.filter((userCard) =>
+         card.card.cards.some(
+            //@ts-ignore
+            (deckCardVersion) => userCard.card.id === deckCardVersion.id,
+         ),
+      );
+
+      const totalCount =
+         userOwnedVariants?.reduce(
+            //@ts-ignore
+            (sum, variant) => sum + (variant.count || 0),
+            0,
+         ) || 0;
+
       return {
          ...card.card.cards[0],
          id: card.card.id,
          count: card.count,
+         userHasCard: totalCount,
          isHighlighted: (
             entry.data as { deck: { highlightCards?: any[] } }
          ).deck.highlightCards?.some(
@@ -443,6 +473,22 @@ export const action: ActionFunction = async ({
       }
    }
 };
+
+const USER_CARDS_QUERY = gql`
+   query ($userId: String!) {
+      cards: UserCards(where: { user: { equals: $userId } }, limit: 5000) {
+         totalDocs
+         docs {
+            id
+            count
+            user
+            card {
+               id
+            }
+         }
+      }
+   }
+`;
 
 const QUERY = gql`
    query ($entryId: String!) {

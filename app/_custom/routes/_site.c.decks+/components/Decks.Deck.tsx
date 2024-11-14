@@ -677,7 +677,11 @@ const DeckCell = memo(function DeckCell({
    onUpdate,
    onHighlight,
 }: {
-   card: Card & { count?: number; isHighlighted?: boolean };
+   card: Card & {
+      count?: number;
+      isHighlighted?: boolean;
+      userHasCard?: number;
+   };
    count: number;
    isOwner: boolean;
    onUpdate: (cardId: string, newCount: number) => void;
@@ -702,6 +706,8 @@ const DeckCell = memo(function DeckCell({
       await onHighlight(card.id, !!card.isHighlighted);
       setIsHighlighting(false);
    };
+
+   const { user } = useRootLoaderData();
 
    return (
       <div className="relative group flex items-center justify-center">
@@ -768,17 +774,86 @@ const DeckCell = memo(function DeckCell({
                </Button>
             </div>
          </Dialog>
-         <button
-            onClick={
-               !isOwner
-                  ? () => setIsOpen(true)
-                  : () => {
-                       onUpdate(card?.id ?? "", (count ?? 1) - 1);
-                    }
-            }
-            className="relative"
+         <div
+            onClick={() => setIsOpen(true)}
+            className="relative cursor-pointer"
          >
-            <div className="sr-only">{card?.name}</div>
+            {user && card?.userHasCard !== undefined && (
+               <div>
+                  {card?.userHasCard >= (count ?? 0) ? (
+                     <>
+                        <Tooltip placement="right">
+                           <TooltipTrigger
+                              className={clsx(
+                                 "absolute flex items-center justify-center shadow-sm z-20",
+                                 "-top-0.5 -left-0.5 rounded-full size-5 bg-green-500 shadow-green-800",
+                              )}
+                           >
+                              <div className="flex items-center justify-center gap-1 w-full h-full">
+                                 <Icon
+                                    title="You have this card in your collection"
+                                    name="check"
+                                    className="text-white"
+                                    size={14}
+                                 />
+                              </div>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                              <div className="flex items-center gap-1 py-0.5">
+                                 <span className="size-4 rounded-full inline-flex items-center justify-center bg-zinc-600">
+                                    {card?.userHasCard}
+                                 </span>{" "}
+                                 in your collection
+                              </div>
+                           </TooltipContent>
+                        </Tooltip>
+                     </>
+                  ) : (
+                     <>
+                        <Tooltip placement="right">
+                           <TooltipTrigger
+                              className={clsx(
+                                 "absolute flex items-center justify-center shadow-sm z-20",
+                                 "top-1 left-1 rounded-md h-3 w-6",
+                                 card.userHasCard >= (count ?? 0)
+                                    ? "bg-green-500 shadow-green-800"
+                                    : "bg-zinc-500 shadow-zinc-600",
+                              )}
+                           >
+                              <div className="flex items-center gap-1">
+                                 {Array.from({
+                                    length: count - (card.userHasCard ?? 0),
+                                 }).map((_, i) => (
+                                    <div
+                                       key={i}
+                                       className="size-[3px] bg-white rounded-full"
+                                    />
+                                 ))}
+                              </div>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                              <div className="flex items-center gap-1 py-0.5">
+                                 <span className="size-4 rounded-full inline-flex items-center justify-center bg-zinc-600">
+                                    {count - (card.userHasCard ?? 0)}
+                                 </span>{" "}
+                                 needed
+                              </div>
+                           </TooltipContent>
+                        </Tooltip>
+                     </>
+                  )}
+               </div>
+            )}
+            {isOwner && (
+               <Button
+                  color="red"
+                  onClick={() => onUpdate(card?.id ?? "", (count ?? 1) - 1)}
+                  className="!absolute tablet:hidden max-tablet:flex group-hover:flex top-0.5 right-0.5 !size-7 !p-0 z-20"
+               >
+                  <Icon name="trash" className="text-white" size={14} />
+               </Button>
+            )}
+
             <Image
                loading="lazy"
                className="object-contain"
@@ -796,7 +871,7 @@ const DeckCell = memo(function DeckCell({
             >
                <span className="text-xs">x</span> {count}
             </div>
-         </button>
+         </div>
       </div>
    );
 });
