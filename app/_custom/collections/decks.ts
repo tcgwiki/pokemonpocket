@@ -63,6 +63,20 @@ export const Decks: CollectionConfig = {
          hasMany: true,
       },
       {
+         name: "upVotes",
+         type: "relationship",
+         relationTo: "users",
+         hasMany: true,
+      },
+      {
+         name: "maxCommentDepth",
+         type: "number",
+      },
+      {
+         name: "totalComments",
+         type: "number",
+      },
+      {
          name: "cards",
          type: "array",
          maxRows: 20,
