@@ -799,21 +799,61 @@ function SetView({
                            <Image className="w-16" width={160} url={set.logo} />
                         )}
                         <div className="flex-grow text-left">
-                           <div className="font-bold text-base font-header capitalize">
+                           <div className="font-bold text-base font-header capitalize pb-1">
                               {set.name.replace(/-/g, " ")}
                            </div>
-                           <Badge className="!text-xs flex items-center !gap-0.5">
-                              <span className="font-bold">
-                                 {
-                                    set.cards.filter((card) => card.isOwned)
-                                       .length
-                                 }
-                              </span>
-                              <span className="text-zinc-500">/</span>
-                              <span className="font-bold text-1">
-                                 {set.cards.length}
-                              </span>
-                           </Badge>
+                           <div className="flex items-center gap-2">
+                              <Badge className="!text-xs flex items-center !gap-0.5">
+                                 <span className="font-bold">
+                                    {
+                                       set.cards.filter((card) => card.isOwned)
+                                          .length
+                                    }
+                                 </span>
+                                 <span className="text-zinc-500">/</span>
+                                 <span className="font-bold text-1">
+                                    {set.cards.length}
+                                 </span>
+                              </Badge>
+                              <Badge className="!text-xs flex items-center !gap-0.5 !pl-1">
+                                 <Image
+                                    className="size-3.5"
+                                    width={40}
+                                    height={40}
+                                    url="https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png"
+                                 />{" "}
+                                 <span className="font-bold">
+                                    {
+                                       set.cards.filter(
+                                          (card) =>
+                                             card.isOwned &&
+                                             card.rarity?.name &&
+                                             ["IM", "SR", "SAR", "AR"].includes(
+                                                card.rarity.name,
+                                             ),
+                                       ).length
+                                    }
+                                 </span>{" "}
+                              </Badge>
+                              <Badge className="!text-xs flex items-center !gap-1 !pl-1">
+                                 <Image
+                                    className="size-4"
+                                    width={40}
+                                    height={40}
+                                    url="https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png"
+                                 />
+                                 <span className="font-bold">
+                                    {
+                                       set.cards.filter(
+                                          (card) =>
+                                             card.isOwned &&
+                                             card.rarity?.name &&
+                                             ["UR"].includes(card.rarity.name),
+                                       ).length
+                                    }
+                                 </span>
+                              </Badge>
+                           </div>
                         </div>
                         <div
                            className="flex size-10 flex-none items-center justify-center rounded-full border border-zinc-200 bg-white 
@@ -924,6 +964,61 @@ function ExpansionView({ groupedCards }: ExpansionViewProps) {
                                  <span className="text-zinc-500">/</span>
                                  <span className="font-bold text-1">
                                     {expansionData.totalCards}
+                                 </span>
+                              </Badge>
+                              <Badge className="!text-xs flex items-center !gap-0.5 !pl-1">
+                                 <Image
+                                    className="size-3.5"
+                                    width={40}
+                                    height={40}
+                                    url="https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_AR.png"
+                                 />{" "}
+                                 <span className="font-bold">
+                                    {
+                                       Object.values(expansionData.packs)
+                                          .flatMap((pack) => pack.cards)
+                                          .filter(
+                                             (card, index, self) =>
+                                                card.isOwned &&
+                                                card.rarity?.name &&
+                                                [
+                                                   "IM",
+                                                   "SR",
+                                                   "SAR",
+                                                   "AR",
+                                                ].includes(card.rarity.name) &&
+                                                index ===
+                                                   self.findIndex(
+                                                      (c) => c.id === card.id,
+                                                   ), // ensure uniqueness
+                                          ).length
+                                    }
+                                 </span>
+                              </Badge>
+                              <Badge className="!text-xs flex items-center !gap-1 !pl-1">
+                                 <Image
+                                    className="size-4"
+                                    width={40}
+                                    height={40}
+                                    url="https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_UR.png"
+                                 />
+                                 <span className="font-bold">
+                                    {
+                                       Object.values(expansionData.packs)
+                                          .flatMap((pack) => pack.cards)
+                                          .filter(
+                                             (card, index, self) =>
+                                                card.isOwned &&
+                                                card.rarity?.name &&
+                                                ["UR"].includes(
+                                                   card.rarity.name,
+                                                ) &&
+                                                index ===
+                                                   self.findIndex(
+                                                      (c) => c.id === card.id,
+                                                   ), // ensure uniqueness
+                                          ).length
+                                    }
                                  </span>
                               </Badge>
                               <div className="text-xs text-1">
