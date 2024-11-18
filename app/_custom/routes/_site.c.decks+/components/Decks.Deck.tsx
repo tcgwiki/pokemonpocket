@@ -716,7 +716,7 @@ const DeckCell = memo(function DeckCell({
                <TooltipTrigger
                   onClick={handleHighlightClick}
                   className={clsx(
-                     "hidden group-hover:block absolute top-1 right-1 rounded-md p-1 z-20",
+                     "hidden group-hover:block absolute bottom-1 left-1 rounded-md p-1 z-20",
                      card.isHighlighted ? "bg-yellow-500" : "bg-zinc-900",
                   )}
                >
@@ -728,7 +728,7 @@ const DeckCell = memo(function DeckCell({
                         className={clsx(
                            card.isHighlighted
                               ? "text-yellow-800"
-                              : "text-white",
+                              : "text-white hover:text-yellow-500",
                         )}
                         title="Add to Highlights"
                         size={12}

@@ -1,5 +1,5 @@
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import { defer, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { gql } from "graphql-request";
 
@@ -17,6 +17,9 @@ import {
    jsonWithSuccess,
    redirectWithSuccess,
 } from "remix-toast";
+
+import { fetchComments } from "~/routes/_comments+/utils/fetchComments.server";
+import { Comments } from "~/routes/_comments+/components/Comments";
 
 export { entryMeta as meta };
 
@@ -45,6 +48,14 @@ export async function loader({
       gql: {
          query: QUERY,
       },
+   });
+
+   const comments = fetchComments({
+      maxCommentDepth: (entry.data as { deck: { maxCommentDepth: number } })
+         .deck.maxCommentDepth,
+      //@ts-ignore
+      parentId: entry.id ?? "",
+      user,
    });
 
    const userCards = user
@@ -121,11 +132,12 @@ export async function loader({
       avatar: getUser.docs[0]?.avatar?.url,
    };
 
-   return json({
+   return defer({
       entry,
       allCards: cleanCards,
       deckCards: deckCards,
       userInfo,
+      comments,
    });
 }
 
@@ -134,22 +146,35 @@ const SECTIONS = {
 };
 
 export default function EntryPage() {
-   const { entry, allCards, deckCards, userInfo } =
+   const { entry, allCards, deckCards, userInfo, comments } =
       useLoaderData<typeof loader>();
 
+   const totalComments = (entry.data as { deck: { totalComments: number } })
+      .deck.totalComments;
+
    return (
-      <Entry
-         customComponents={SECTIONS}
-         customData={{
-            deck: (entry as { data: { deck: Deck } })?.data.deck,
-            allCards: allCards,
-            deckCards: deckCards,
-            archetypes: (
-               entry as { data: { archetypes: { docs: Archetype[] } } }
-            )?.data.archetypes.docs,
-            userInfo,
-         }}
-      />
+      <>
+         <Entry
+            customComponents={SECTIONS}
+            customData={{
+               deck: (entry as { data: { deck: Deck } })?.data.deck,
+               allCards: allCards,
+               deckCards: deckCards,
+               archetypes: (
+                  entry as { data: { archetypes: { docs: Archetype[] } } }
+               )?.data.archetypes.docs,
+               userInfo,
+            }}
+         />
+         <Comments
+            comments={comments}
+            parentId={entry.id ?? ""}
+            parentSlug="decks"
+            siteId={entry.siteId}
+            totalComments={totalComments}
+            isCustomSite={true}
+         />
+      </>
    );
 }
 
@@ -557,6 +582,8 @@ const QUERY = gql`
          description
          isPublic
          updatedAt
+         maxCommentDepth
+         totalComments
          types {
             id
             name
