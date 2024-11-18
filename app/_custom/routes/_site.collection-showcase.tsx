@@ -65,7 +65,7 @@ export default function TierList() {
             name="Collection Showcase"
             iconUrl="https://static.mana.wiki/character-showcase-icon.png"
          />
-         <div className="relative z-20 mx-auto max-w-[728px] justify-center max-tablet:px-3 tablet:pb-36">
+         <div className="relative z-20 mx-auto max-w-[728px] justify-center max-tablet:px-3 pb-3 tablet:pb-36">
             <div className="text-sm bg-2-sub text-1 shadow-sm rounded-lg p-3 mt-4 border border-color-sub shadow-1 mb-1">
                <div className="pb-1.5">
                   Connect with fellow players, share your{" "}

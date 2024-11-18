@@ -243,8 +243,14 @@ export async function loader({
       {} as typeof groupedCards,
    );
 
-   const totalOwnedCards = Object.values(cleanedGroupedCards).reduce(
+   const totalUniqueOwnedCards = Object.values(cleanedGroupedCards).reduce(
       (total, packData) => total + packData.ownedCards,
+      0,
+   );
+
+   // Add calculation for total cards including duplicates
+   const totalOwnedCards = userCards.cards.docs.reduce(
+      (total, card) => total + card.count,
       0,
    );
 
@@ -318,15 +324,48 @@ export async function loader({
       },
    );
 
+   // Calculate Kanto Pokedex completion
+   const kantoSetNums = new Set(); // Track unique setNums found
+   const collectedKantoSetNums = new Set(); // Track collected setNums
+
+   // First pass - identify all valid Kanto setNums (1-150)
+   cardsList.forEach((card) => {
+      const setNum = parseInt(card.setNum?.toString() || "0");
+      if (setNum > 0 && setNum <= 150) {
+         kantoSetNums.add(setNum);
+      }
+   });
+
+   // Second pass - check which setNums the user has collected
+   cardsList.forEach((card) => {
+      const setNum = parseInt(card.setNum?.toString() || "0");
+      if (setNum > 0 && setNum <= 150 && card.isOwned) {
+         collectedKantoSetNums.add(setNum);
+      }
+   });
+
+   const kantoCompletion = {
+      collected: collectedKantoSetNums.size,
+      total: kantoSetNums.size,
+      isComplete:
+         collectedKantoSetNums.size === kantoSetNums.size &&
+         kantoSetNums.size === 150,
+      percentage: Math.round(
+         (collectedKantoSetNums.size / kantoSetNums.size) * 100,
+      ),
+   };
+
    return json({
       userCards: cardsList,
       groupedCards: cleanedGroupedCards as ExpansionViewProps["groupedCards"],
+      totalUniqueOwnedCards,
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
       cardTypeStats,
       userSettings,
       isOwnCollection: user && userSettings?.id === user?.id,
+      kantoCompletion,
    });
 }
 
@@ -347,13 +386,20 @@ export default function CollectionTracker() {
    const {
       userCards,
       groupedCards,
+      totalUniqueOwnedCards,
       totalOwnedCards,
       cardsByType,
       cardsByRarity,
       cardTypeStats,
       userSettings,
       isOwnCollection,
+      kantoCompletion,
    } = useLoaderData<typeof loader>();
+
+   // Calculate unique owned percentage
+   const uniqueOwnedPercentage = Math.round(
+      (totalUniqueOwnedCards / userCards.length) * 100,
+   );
 
    const [isSetView, setIsSetView] = useState(false);
 
@@ -459,13 +505,22 @@ export default function CollectionTracker() {
          <div className="pt-4 desktop:flex items-start gap-3 border-b pb-3 border-color-sub">
             <div>
                <div
-                  className="border border-zinc-200 shadow-sm bg-zinc-50 divide-y divide-color-sub tablet:min-w-48 desktop:max-w-48å
+                  className="border border-zinc-200 shadow-sm bg-zinc-50 divide-y divide-color-sub tablet:min-w-52 desktop:max-w-52
                   shadow-zinc-100 dark:border-zinc-600 dark:bg-dark450 dark:shadow-zinc-800 rounded-lg flex-none max-desktop:mb-3"
                >
                   <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                     <span className="font-bold">Total Owned</span>
+                     <span className="font-bold">{totalOwnedCards}</span>
+                  </div>
+                  <div className="!text-xs flex items-center justify-between gap-2 p-2">
                      <span className="font-bold">Unique Owned</span>
-                     <div className="flex items-center gap-0.5">
-                        <span className="font-bold">{totalOwnedCards}</span>
+                     <div className="flex items-baseline gap-0.5">
+                        <span className="text-[10px] text-1 mr-1">
+                           {uniqueOwnedPercentage}%
+                        </span>
+                        <span className="font-bold">
+                           {totalUniqueOwnedCards}
+                        </span>
                         <span className="text-zinc-500">/</span>
                         <span className="font-bold text-1">
                            {userCards.length}
@@ -493,6 +548,37 @@ export default function CollectionTracker() {
                         <span className="text-zinc-500">/</span>
                         <span className="font-bold text-1">
                            {cardTypeStats.trainerTotal}
+                        </span>
+                     </div>
+                  </div>
+                  <div className="!text-xs flex items-center justify-between gap-2 p-2">
+                     <Tooltip>
+                        <TooltipTrigger className="flex items-center gap-1.5">
+                           <span className="font-bold">Mew</span>
+                           <Icon name="info" size={12} />
+                           {kantoCompletion.isComplete && (
+                              <Icon
+                                 name="check-circle"
+                                 className="text-green-500"
+                                 size={14}
+                              />
+                           )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           Collect one of each original 150 Pokémon to unlock
+                           Mew!
+                        </TooltipContent>
+                     </Tooltip>
+                     <div className="flex items-baseline gap-0.5">
+                        <span className="text-[10px] text-1 mr-1">
+                           {kantoCompletion.percentage}%
+                        </span>
+                        <span className="font-bold">
+                           {kantoCompletion.collected}
+                        </span>
+                        <span className="text-zinc-500">/</span>
+                        <span className="font-bold text-1">
+                           {kantoCompletion.total}
                         </span>
                      </div>
                   </div>
@@ -1075,6 +1161,29 @@ const gridView = columnHelper.accessor("name", {
                         alt={info.row.original?.name ?? "Card Image"}
                      />
                   </ShinyCard>
+                  {info.row.original?.packs?.length &&
+                  info.row.original?.packs?.length > 0 ? (
+                     <div className="flex items-center gap-8 pt-4">
+                        {info.row.original?.packs.map((pack) => (
+                           <Link
+                              className="relative"
+                              to={`/c/packs/${pack.slug}`}
+                              key={pack.slug}
+                           >
+                              <Image
+                                 height={120}
+                                 className="h-10 object-contain z-10 relative"
+                                 url={pack.logo?.url}
+                              />
+                              <Image
+                                 height={120}
+                                 className="h-16 absolute -top-5 -left-6 z-0 object-contain -rotate-[10deg]"
+                                 url={pack.icon?.url}
+                              />
+                           </Link>
+                        ))}
+                     </div>
+                  ) : undefined}
                   <Button href={`/c/cards/${info.row.original?.slug}`}>
                      Go to card
                      <Icon name="chevron-right" size={16} />
@@ -1964,7 +2073,11 @@ const ALL_CARDS_QUERY = gql`
             packs {
                id
                name
+               slug
                icon {
+                  url
+               }
+               logo {
                   url
                }
             }
