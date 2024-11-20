@@ -3,24 +3,23 @@ import { DefaultElement, useReadOnly } from "slate-react";
 
 import { Icon } from "~/components/Icon";
 
-import { ExampleBlock } from "./Example";
+import { DeckBlock } from "./DeckBlock";
+
 enum BlockType {
    CustomComponent = "customComponent",
+   DeckBlock = "deckBlock",
 }
 
 type CustomComponent = {
    id: string;
    type: BlockType.CustomComponent;
-   stringField: string | null;
    children: [{ text: "" }];
 };
 
 export const CustomBlocks = ({ element, children, attributes }: any) => {
-   const readOnly = useReadOnly();
-
    switch (element.type) {
-      case BlockType.CustomComponent: {
-         return <ExampleBlock element={element} children={children} />;
+      case BlockType.DeckBlock: {
+         return <DeckBlock element={element} children={children} />;
       }
       default:
          //Render default element if no custom blocks match
@@ -50,5 +49,20 @@ export const CustomBlocksAddConfig = (onSelect: any) => {
       //       },
       //    },
       // ],
+      label: "Deck",
+      items: [
+         {
+            label: "Embed Deck",
+            icon: <Icon name="component" size={20} />,
+            description: "Embed a deck from a deck link",
+            onSelect: () => {
+               onSelect({
+                  id: nanoid(),
+                  type: BlockType.DeckBlock,
+                  children: [{ text: "" }],
+               });
+            },
+         },
+      ],
    };
 };

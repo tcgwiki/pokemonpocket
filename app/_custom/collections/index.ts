@@ -15,6 +15,8 @@ import { Packs } from "./packs";
 import { Rarities } from "./rarities";
 import { RentalDecks } from "./rental-decks";
 import { SoloBattles } from "./solo-battles";
+import { Tournaments } from "./tournaments";
+import { TournamentUsers } from "./tournamentUsers";
 import { Types } from "./types";
 import { UserCards } from "./user-cards";
 import { UserSettings } from "./user-settings";
@@ -39,4 +41,6 @@ export const CustomCollections = [
    SoloBattles,
    Types,
    UserSettings,
+   Tournaments,
+   TournamentUsers,
 ];

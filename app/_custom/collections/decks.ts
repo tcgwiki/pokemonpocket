@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload/types";
 
 import { isStaff } from "../../db/collections/users/users.access";
 import { User } from "payload/dist/auth";
+import { number } from "zod";
 
 export const Decks: CollectionConfig = {
    slug: "decks",
@@ -75,6 +76,38 @@ export const Decks: CollectionConfig = {
       {
          name: "totalComments",
          type: "number",
+      },
+      {
+         name: "tournament",
+         type: "group",
+         fields: [
+            {
+               name: "user",
+               type: "relationship",
+               relationTo: "tournament-users",
+               hasMany: false,
+            },
+            {
+               name: "placing",
+               type: "number",
+            },
+            {
+               name: "wins",
+               type: "number",
+            },
+            {
+               name: "losses",
+               type: "number",
+            },
+            {
+               name: "ties",
+               type: "number",
+            },
+            {
+               name: "drop",
+               type: "number",
+            },
+         ],
       },
       {
          name: "cards",

@@ -29,6 +29,10 @@ export const Archetypes: CollectionConfig = {
          type: "text",
       },
       {
+         name: "limitlessArchetypeId",
+         type: "text",
+      },
+      {
          name: "slug",
          type: "text",
       },
