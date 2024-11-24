@@ -46,6 +46,7 @@ import { Switch, SwitchField } from "~/components/Switch";
 import { Input } from "~/components/Input";
 import { useRootLoaderData } from "~/utils/useSiteLoaderData";
 import { toast } from "sonner";
+import { kantoSetNums } from "~/_custom/utils/kantoSetNums";
 
 type CollectionData = {
    userCards: {
@@ -325,33 +326,25 @@ export async function loader({
    );
 
    // Calculate Kanto Pokedex completion
-   const kantoSetNums = new Set(); // Track unique setNums found
    const collectedKantoSetNums = new Set(); // Track collected setNums
+   const ownedSetNums = new Set(cardsList.filter(card => card.isOwned).map(card => card.setNum)); // Grab all owned setNums
 
-   // First pass - identify all valid Kanto setNums (1-150)
-   cardsList.forEach((card) => {
-      const setNum = parseInt(card.setNum?.toString() || "0");
-      if (setNum > 0 && setNum <= 150) {
-         kantoSetNums.add(setNum);
-      }
-   });
+   // Loop through set of kanto pokemon and check if at least one of setNum is owned
+   for (const [name, setNums] of Object.entries(kantoSetNums)) {
+      const hasMatch = setNums.some((setNum: number) => ownedSetNums.has(setNum));
 
-   // Second pass - check which setNums the user has collected
-   cardsList.forEach((card) => {
-      const setNum = parseInt(card.setNum?.toString() || "0");
-      if (setNum > 0 && setNum <= 150 && card.isOwned) {
-         collectedKantoSetNums.add(setNum);
+      if (hasMatch) {
+         collectedKantoSetNums.add(name)
       }
-   });
+   }
 
    const kantoCompletion = {
       collected: collectedKantoSetNums.size,
-      total: kantoSetNums.size,
+      total: 150,
       isComplete:
-         collectedKantoSetNums.size === kantoSetNums.size &&
-         kantoSetNums.size === 150,
+         collectedKantoSetNums.size === 150,
       percentage: Math.round(
-         (collectedKantoSetNums.size / kantoSetNums.size) * 100,
+         (collectedKantoSetNums.size / 150) * 100,
       ),
    };
 
