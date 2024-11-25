@@ -127,15 +127,47 @@ export async function loader({
       userCards.cards.docs.map((item) => [item.card.id, item]),
    );
 
+   // Pre-process owned setNums for Kanto collection check
+   const ownedSetNums = new Set(
+      fetchAllCards.allCards.docs
+         .filter((card) => userCardMap.has(card.id))
+         .filter((card) => card.expansion?.id === "A1")
+         .map((card) => card.setNum),
+   );
+
    const cardsList = fetchAllCards?.allCards.docs
       .map((card) => {
          const userCard = userCardMap.get(card.id);
+
+         // Check if this card is part of Kanto collection
+         const isKantoCard =
+            card.expansion?.id === "A1" &&
+            Object.entries(kantoSetNums).some(([pokemonName, setNums]) =>
+               setNums.includes(card.setNum),
+            );
+
+         // If it's a Kanto card, check if any other card of same Pokemon is owned
+         let isKantoPokemonCollected = false;
+         if (isKantoCard) {
+            const pokemonName = Object.entries(kantoSetNums).find(
+               ([name, setNums]) => setNums.includes(card.setNum),
+            )?.[0];
+            if (pokemonName) {
+               isKantoPokemonCollected = kantoSetNums[pokemonName].some(
+                  (setNum) => ownedSetNums.has(setNum),
+               );
+            }
+         }
+
          return {
             ...card,
             id: card.id,
             user: userCard?.user,
             count: userCard?.count ?? 0,
             isOwned: !!userCard,
+            isKantoCard,
+            isKantoPokemonCollected,
+            isKantoMissing: isKantoCard && !isKantoPokemonCollected,
          };
       })
       .sort((a, b) => {
@@ -327,12 +359,6 @@ export async function loader({
 
    // Calculate Kanto Pokedex completion
    const collectedKantoSetNums = new Set(); // Track collected setNums
-   const ownedSetNums = new Set(
-      cardsList
-         .filter((card) => card.isOwned)
-         .filter((card) => card.expansion?.id == "A1")
-         .map((card) => card.setNum),
-   ); // Grab all owned A1 expansion setNums
    const kantoSetMissing = []; // Track missing setNums
 
    // Loop through set of kanto pokemon and check if at least one of setNum is owned
@@ -1587,6 +1613,12 @@ const columns = [
          return filterValue.includes(row?.original?.cardType?.toString());
       },
    }),
+   columnHelper.accessor("isKantoMissing", {
+      filterFn: (row, columnId, filterValue) => {
+         if (!row.original.isKantoCard) return false;
+         return filterValue.includes(row.original.isKantoMissing.toString());
+      },
+   }),
 ];
 
 export const UserCardSchema = z.object({
@@ -2094,6 +2126,15 @@ const cardCollectionFilters: {
             value: "C",
             icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/RarityIcon_C.png",
          },
+      ],
+   },
+   {
+      id: "isKantoMissing",
+      label: "Unlock Mew",
+      cols: 2,
+      options: [
+         { label: "Show Missing", value: "true" },
+         { label: "Show Collected", value: "false" },
       ],
    },
 ];
