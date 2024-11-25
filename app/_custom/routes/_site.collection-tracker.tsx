@@ -327,25 +327,33 @@ export async function loader({
 
    // Calculate Kanto Pokedex completion
    const collectedKantoSetNums = new Set(); // Track collected setNums
-   const ownedSetNums = new Set(cardsList.filter(card => card.isOwned).filter(card => card.expansion.id == "A1" ).map(card => card.setNum)); // Grab all owned A1 expansion setNums
+   const ownedSetNums = new Set(
+      cardsList
+         .filter((card) => card.isOwned)
+         .filter((card) => card.expansion?.id == "A1")
+         .map((card) => card.setNum),
+   ); // Grab all owned A1 expansion setNums
+   const kantoSetMissing = []; // Track missing setNums
 
    // Loop through set of kanto pokemon and check if at least one of setNum is owned
    for (const [name, setNums] of Object.entries(kantoSetNums)) {
-      const hasMatch = setNums.some((setNum: number) => ownedSetNums.has(setNum));
+      const hasMatch = setNums.some((setNum: number) =>
+         ownedSetNums.has(setNum),
+      );
 
       if (hasMatch) {
-         collectedKantoSetNums.add(name)
+         collectedKantoSetNums.add(name);
+      } else {
+         kantoSetMissing.push(name);
       }
    }
 
    const kantoCompletion = {
       collected: collectedKantoSetNums.size,
       total: 150,
-      isComplete:
-         collectedKantoSetNums.size === 150,
-      percentage: Math.round(
-         (collectedKantoSetNums.size / 150) * 100,
-      ),
+      isComplete: collectedKantoSetNums.size === 150,
+      percentage: Math.round((collectedKantoSetNums.size / 150) * 100),
+      missing: kantoSetMissing,
    };
 
    return json({
@@ -559,7 +567,8 @@ export default function CollectionTracker() {
                         </TooltipTrigger>
                         <TooltipContent>
                            Collect one of each original 150 Pokémon to unlock
-                           Mew!
+                           Mew! Still need: {kantoCompletion.missing.join(", ")}
+                           .
                         </TooltipContent>
                      </Tooltip>
                      <div className="flex items-baseline gap-0.5">
