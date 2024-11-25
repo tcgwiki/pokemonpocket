@@ -327,7 +327,7 @@ export async function loader({
 
    // Calculate Kanto Pokedex completion
    const collectedKantoSetNums = new Set(); // Track collected setNums
-   const ownedSetNums = new Set(cardsList.filter(card => card.isOwned).map(card => card.setNum)); // Grab all owned setNums
+   const ownedSetNums = new Set(cardsList.filter(card => card.isOwned).filter(card => card.expansion.id == "A1" ).map(card => card.setNum)); // Grab all owned A1 expansion setNums
 
    // Loop through set of kanto pokemon and check if at least one of setNum is owned
    for (const [name, setNums] of Object.entries(kantoSetNums)) {
