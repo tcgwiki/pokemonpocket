@@ -47,7 +47,9 @@ export function CardPacks({ data }: { data: Pack }) {
                                  >
                                     <div className="flex items-center gap-2 px-3">
                                        <Image
+                                          loading="lazy"
                                           height={120}
+                                          width={71}
                                           className="h-14 object-contain"
                                           url={c.pack.icon?.url}
                                        />

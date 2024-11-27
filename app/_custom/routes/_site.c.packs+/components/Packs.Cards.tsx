@@ -81,6 +81,7 @@ export const packGridView = columnHelper.accessor("name", {
                info.row.original?.icon?.url ??
                "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
             }
+            alt={info.row.original?.name ?? "Card Back"}
          />
          {info.row.original.percent ? (
             <div className="text-sm font-bold absolute top-1.5 right-1.5 bg-zinc-900 text-white rounded-md px-1.5 py-0.5">
@@ -110,6 +111,7 @@ export const packCardColumns = [
                      info.row.original.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
+                  alt={info.row.original.name ?? "Card Back"}
                />
                <span
                   className="space-y-1.5 font-semibold group-hover:underline

@@ -72,6 +72,7 @@ const gridView = columnHelper.accessor("name", {
                                  className="w-12 object-contain"
                                  width={200}
                                  height={280}
+                                 loading="lazy"
                               />
                            </TooltipTrigger>
                            <TooltipContent>
@@ -81,6 +82,7 @@ const gridView = columnHelper.accessor("name", {
                                  width={367}
                                  height={512}
                                  className="w-full object-contain"
+                                 loading="lazy"
                               />
                            </TooltipContent>
                         </Tooltip>
@@ -92,6 +94,7 @@ const gridView = columnHelper.accessor("name", {
                url={
                   "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                }
+               alt="Card Back"
                className="w-12 mx-auto object-contain"
                width={200}
                height={280}

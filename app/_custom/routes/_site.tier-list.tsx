@@ -178,7 +178,7 @@ const gridView = columnHelper.accessor("name", {
          >
             <div className="inline-flex mx-auto -space-x-8">
                {info.row.original?.highlightCards?.map((card) => (
-                  <Tooltip placement="bottom">
+                  <Tooltip placement="bottom" key={card.id}>
                      <TooltipTrigger
                         className="shadow-sm shadow-1 z-10"
                         key={card.id}
@@ -189,6 +189,7 @@ const gridView = columnHelper.accessor("name", {
                            className="w-14 object-contain"
                            width={200}
                            height={280}
+                           loading="lazy"
                         />
                      </TooltipTrigger>
                      <TooltipContent className="!p-0 !bg-transparent !border-0 !z-50">
@@ -198,6 +199,7 @@ const gridView = columnHelper.accessor("name", {
                            width={367}
                            height={512}
                            className="w-full object-contain"
+                           loading="lazy"
                         />
                      </TooltipContent>
                   </Tooltip>
@@ -218,6 +220,7 @@ const gridView = columnHelper.accessor("name", {
                            url={type.icon?.url}
                            alt={info.row.original.name ?? ""}
                            className="size-4 object-contain"
+                           key={type.id}
                         />
                      ))}
                   </div>
@@ -280,6 +283,7 @@ const columns = [
                         options="height=80&width=80"
                         url={type.icon?.url}
                         alt={type.name}
+                        key={type.id}
                      />
                   ))}
             </div>

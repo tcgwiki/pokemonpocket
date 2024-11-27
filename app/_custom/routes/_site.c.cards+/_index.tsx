@@ -66,6 +66,7 @@ export const cardGridView = columnHelper.accessor("name", {
             className="object-contain"
             width={367}
             height={512}
+            alt={info.row.original.name ?? ""}
             url={
                info.row.original.icon?.url ??
                "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
@@ -84,6 +85,7 @@ export const cardGridView = columnHelper.accessor("name", {
                   width={40}
                   height={40}
                   url={info.row.original.pokemonType?.icon?.url}
+                  alt={info.row.original.pokemonType?.name ?? ""}
                />
             ) : undefined}
          </div>
@@ -110,6 +112,7 @@ export const cardColumns = [
                      info.row.original.icon?.url ??
                      "https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
                   }
+                  alt={info.row.original.name ?? ""}
                />
                <span
                   className="space-y-1.5 font-semibold group-hover:underline
@@ -123,6 +126,7 @@ export const cardColumns = [
                         width={40}
                         height={40}
                         url={info.row.original.pokemonType?.icon?.url}
+                        alt={info.row.original.pokemonType?.name ?? ""}
                      />
                   ) : undefined}
                </span>

@@ -216,6 +216,7 @@ export const deckGridView = columnHelper.accessor("name", {
                                  className="w-12 object-contain"
                                  width={200}
                                  height={280}
+                                 loading="lazy"
                               />
                            </TooltipTrigger>
                            <TooltipContent>
@@ -225,6 +226,7 @@ export const deckGridView = columnHelper.accessor("name", {
                                  width={367}
                                  height={512}
                                  className="w-full object-contain"
+                                 loading="lazy"
                               />
                            </TooltipContent>
                         </Tooltip>
@@ -237,6 +239,7 @@ export const deckGridView = columnHelper.accessor("name", {
                   className="w-12 object-contain"
                   width={100}
                   url="https://static.mana.wiki/tcgwiki-pokemonpocket/CardIcon_Card_Back.png"
+                  alt="Card Back"
                />
             </div>
          )}
@@ -330,6 +333,7 @@ export const deckColumns = [
                                           className="w-12 object-contain"
                                           width={200}
                                           height={280}
+                                          loading="lazy"
                                        />
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -339,6 +343,7 @@ export const deckColumns = [
                                           width={367}
                                           height={512}
                                           className="w-full object-contain"
+                                          loading="lazy"
                                        />
                                     </TooltipContent>
                                  </Tooltip>
@@ -353,6 +358,7 @@ export const deckColumns = [
                         className="w-12 mx-auto object-contain"
                         width={200}
                         height={280}
+                        alt="Card Back"
                      />
                   )}
                </div>
