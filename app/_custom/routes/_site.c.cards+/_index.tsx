@@ -203,6 +203,15 @@ export const cardColumns = [
          return info.getValue() ? info.getValue() : "-";
       },
    }),
+   columnHelper.accessor("expansion", {
+      header: "Expansion",
+      cell: (info) => {
+         return info.getValue() ? info.getValue() : "-";
+      },
+      filterFn: (row, columnId, filterValue) => {
+         return filterValue.includes(row?.original?.expansion?.id);
+      },
+   }),
 ];
 
 const CARDS = gql`
@@ -219,6 +228,10 @@ const CARDS = gql`
             cardType
             icon {
                url
+            }
+            expansion {
+               id
+               name
             }
             pokemonType {
                name
@@ -249,6 +262,25 @@ export const cardFilters: {
    cols?: 1 | 2 | 3 | 4 | 5;
    options: { label?: string; value: string; icon?: string }[];
 }[] = [
+   {
+      id: "expansion",
+      label: "Expansion",
+      cols: 2,
+      options: [
+         {
+            label: "Mythical Island",
+            value: "A1a",
+         },
+         {
+            label: "Genetic Apex",
+            value: "A1",
+         },
+         {
+            label: "PROMO-A",
+            value: "PROMO-A",
+         },
+      ],
+   },
    {
       id: "cardType",
       label: "Card Type",

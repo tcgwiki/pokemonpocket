@@ -35,7 +35,7 @@ export async function loader({
 export default function ListPage() {
    return (
       <List
-         columnViewability={{}}
+         columnViewability={{ types: false }}
          gridView={gridView}
          columns={columns}
          defaultViewType="grid"
@@ -142,6 +142,19 @@ const columns = [
          );
       },
    }),
+   columnHelper.accessor("types", {
+      header: "Types",
+      filterFn: (row, columnId, filterValue) => {
+         const existingFilter =
+            filterValue && filterValue.length > 0
+               ? row?.original?.types?.some((type: any) =>
+                    filterValue.includes(type.name),
+                 )
+               : true;
+
+         return existingFilter ?? true;
+      },
+   }),
 ];
 
 const ARCHETYPES = gql`
@@ -179,4 +192,63 @@ const filters: {
    label: string;
    cols?: 1 | 2 | 3 | 4 | 5;
    options: { label?: string; value: string; icon?: string }[];
-}[] = [];
+}[] = [
+   {
+      id: "types",
+      label: "Deck Type",
+      cols: 3,
+      options: [
+         {
+            label: "Colorless",
+            value: "Colorless",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Colorless.png",
+         },
+         {
+            label: "Metal",
+            value: "Metal",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Metal.png",
+         },
+         {
+            label: "Darkness",
+            value: "Darkness",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Darkness.png",
+         },
+         {
+            label: "Dragon",
+            value: "Dragon",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Dragon.png",
+         },
+         {
+            label: "Fighting",
+            value: "Fighting",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fighting.png",
+         },
+         {
+            label: "Fire",
+            value: "Fire",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Fire.png",
+         },
+         {
+            label: "Grass",
+            value: "Grass",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Grass.png",
+         },
+         {
+            label: "Lightning",
+            value: "Lightning",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Lightning.png",
+         },
+         {
+            label: "Psychic",
+            value: "Psychic",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Psychic.png",
+         },
+
+         {
+            label: "Water",
+            value: "Water",
+            icon: "https://static.mana.wiki/tcgwiki-pokemonpocket/TypeIcon_Water.png",
+         },
+      ],
+   },
+];
