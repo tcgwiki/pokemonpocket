@@ -74,6 +74,10 @@ export const Cards: CollectionConfig = {
          relationTo: "expansions",
       },
       {
+         name: "tradeable",
+         type: "checkbox",
+      },
+      {
          name: "setNum",
          type: "number",
       },
