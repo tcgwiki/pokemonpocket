@@ -107,6 +107,7 @@ export const Cards: CollectionConfig = {
             { label: "Supporter", value: "supporter" },
             { label: "Item", value: "item" },
             { label: "Fossil", value: "fossil" },
+            { label: "Pokémon Tool", value: "pokemontool" }
          ],
          admin: {
             condition: (_, siblingData) => siblingData.cardType === "trainer",
