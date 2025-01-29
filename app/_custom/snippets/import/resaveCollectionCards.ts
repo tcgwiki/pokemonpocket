@@ -27,7 +27,7 @@ const resaveCollection = async () => {
       depth: 1,
       where: {
          expansion: {
-            equals: "A1a",
+            equals: "A2",
          },
       },
       sort: "cardType",

@@ -268,6 +268,10 @@ export const cardFilters: {
       cols: 2,
       options: [
          {
+            label: "Space-Time Smackdown",
+            value: "A2",
+         },
+         {
             label: "Mythical Island",
             value: "A1a",
          },
