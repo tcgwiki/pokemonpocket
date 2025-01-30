@@ -50,18 +50,18 @@ const resaveCollection = async () => {
             },
          },
       });
-      console.log(existingCard, "existingCard");
+      // console.log(existingCard, "existingCard");
 
       const moves =
          result?.moves && result.moves.length > 0
             ? result.moves.map((move: any) => move.id)
             : undefined;
 
-      console.log(moves, "moves");
+      // console.log(moves, "moves");
 
       const existingCardsArray = existingCard.docs[0]?.cards;
 
-      console.log(existingCardsArray, "existingCardsArray");
+      // console.log(existingCardsArray, "existingCardsArray");
 
       // Find cards with matching moves
       const matchingCards = existingCardsArray?.filter((card: any) => {
@@ -80,7 +80,7 @@ const resaveCollection = async () => {
             card.moves.every((move: string) => moves.includes(move))
          );
       });
-      console.log(matchingCards, "matchingCards");
+      // console.log(matchingCards, "matchingCards");
 
       if (matchingCards && matchingCards.length > 0) {
          console.log("adding existing card", existingCard.docs[0]?.name);
@@ -105,18 +105,28 @@ const resaveCollection = async () => {
          }
       } else {
          // Create new card group with new name
-
          const setName = result.expansion.name;
 
          const charactersUpTillFirstSpace = result.name.split("-")[0].trim();
+         const newId = manaSlug(
+            `${charactersUpTillFirstSpace}-${setName}-${result.id}`,
+         );
+
+         console.log("Attempting to create card group with:", {
+            cardName: result.name,
+            newId,
+            resultId: result.id,
+            expansionName: setName,
+         });
+
          await payload.create({
             collection: "card-groups",
             data: {
-               id: manaSlug(`${charactersUpTillFirstSpace}-${setName}`),
+               id: newId,
                name: `${charactersUpTillFirstSpace} - ${setName}`,
                cards: [result.id],
                icon: result.icon.id,
-               slug: manaSlug(`${charactersUpTillFirstSpace}-${setName}`),
+               slug: newId,
             },
          });
       }

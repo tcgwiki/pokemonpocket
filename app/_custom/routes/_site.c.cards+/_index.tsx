@@ -265,7 +265,7 @@ export const cardFilters: {
    {
       id: "expansion",
       label: "Expansion",
-      cols: 2,
+      cols: 1,
       options: [
          {
             label: "Space-Time Smackdown",
