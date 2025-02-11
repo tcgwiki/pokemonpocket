@@ -70,7 +70,7 @@ export const Cards: CollectionConfig = {
       {
          name: "expansion",
          type: "relationship",
-         hasMany: false,
+         hasMany: true,
          relationTo: "expansions",
       },
       {
