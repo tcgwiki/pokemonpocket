@@ -268,6 +268,10 @@ export const cardFilters: {
       cols: 1,
       options: [
          {
+            label: "Triumphant Light",
+            value: "A2a",
+         },
+         {
             label: "Space-Time Smackdown",
             value: "A2",
          },
